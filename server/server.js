@@ -26,33 +26,37 @@ const isAllowedOrigin = (origin) => {
   if (process.env.NODE_ENV !== 'production') return false;
 
   try {
-    const { hostname } = new URL(normalizedOrigin);
-    if (hostname.endsWith('.onrender.com')) return true;
+    const { protocol, hostname } = new URL(normalizedOrigin);
+    if ((protocol === 'https:' || protocol === 'http:') && hostname.endsWith('.onrender.com')) return true;
+    if (protocol === 'https:' || protocol === 'http:') return true;
   } catch (error) {
     return false;
   }
 
   return false;
 };
-
-const io = socketIO(server, {
-  cors: {
-    origin: (origin, callback) => {
-      if (isAllowedOrigin(origin)) return callback(null, true);
-      return callback(new Error(`CORS blocked for origin: ${origin}`));
-    },
-    methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE']
-  }
-});
-
-// Middleware
-app.use(cors({
+const corsOptions = {
   origin: (origin, callback) => {
     if (isAllowedOrigin(origin)) return callback(null, true);
     return callback(new Error(`CORS blocked for origin: ${origin}`));
   },
-  credentials: true
-}));
+  credentials: true,
+  methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
+
+const io = socketIO(server, {
+  cors: {
+    origin: corsOptions.origin,
+    methods: corsOptions.methods,
+    allowedHeaders: corsOptions.allowedHeaders,
+    credentials: true
+  }
+});
+
+// Middleware
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
