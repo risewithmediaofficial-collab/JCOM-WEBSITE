@@ -9,8 +9,9 @@ const multer = require('multer');
 
 const app = express();
 const server = http.createServer(app);
+const defaultFrontendUrl = 'https://jcom-website-1.onrender.com';
 const normalizeOrigin = (value) => (value || '').trim().replace(/\/+$/, '');
-const productionOrigins = (process.env.FRONTEND_URL || '')
+const productionOrigins = (process.env.FRONTEND_URL || defaultFrontendUrl)
   .split(',')
   .map(normalizeOrigin)
   .filter(Boolean);

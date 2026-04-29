@@ -1,4 +1,7 @@
-const rawApiBaseUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const productionApiUrl = 'https://jcom-website.onrender.com/api';
+const developmentApiUrl = 'http://localhost:5000/api';
+const rawApiBaseUrl = process.env.REACT_APP_API_URL
+  || (process.env.NODE_ENV === 'production' ? productionApiUrl : developmentApiUrl);
 
 export const API_BASE_URL = rawApiBaseUrl.replace(/\/+$/, '');
 export const API_ORIGIN = API_BASE_URL.replace(/\/api\/?$/, '');
