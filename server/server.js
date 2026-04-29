@@ -17,7 +17,23 @@ const productionOrigins = (process.env.FRONTEND_URL || defaultFrontendUrl)
   .filter(Boolean);
 const developmentOrigins = ['http://localhost:3000', 'http://localhost:3001'];
 const allowedOrigins = process.env.NODE_ENV === 'production' ? productionOrigins : developmentOrigins;
-const isAllowedOrigin = (origin) => !origin || allowedOrigins.includes(normalizeOrigin(origin));
+const isAllowedOrigin = (origin) => {
+  if (!origin) return true;
+
+  const normalizedOrigin = normalizeOrigin(origin);
+  if (allowedOrigins.includes(normalizedOrigin)) return true;
+
+  if (process.env.NODE_ENV !== 'production') return false;
+
+  try {
+    const { hostname } = new URL(normalizedOrigin);
+    if (hostname.endsWith('.onrender.com')) return true;
+  } catch (error) {
+    return false;
+  }
+
+  return false;
+};
 
 const io = socketIO(server, {
   cors: {
