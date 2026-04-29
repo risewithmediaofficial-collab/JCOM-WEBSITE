@@ -9,20 +9,31 @@ const multer = require('multer');
 
 const app = express();
 const server = http.createServer(app);
+const normalizeOrigin = (value) => (value || '').trim().replace(/\/+$/, '');
+const productionOrigins = (process.env.FRONTEND_URL || '')
+  .split(',')
+  .map(normalizeOrigin)
+  .filter(Boolean);
+const developmentOrigins = ['http://localhost:3000', 'http://localhost:3001'];
+const allowedOrigins = process.env.NODE_ENV === 'production' ? productionOrigins : developmentOrigins;
+const isAllowedOrigin = (origin) => !origin || allowedOrigins.includes(normalizeOrigin(origin));
+
 const io = socketIO(server, {
   cors: {
-    origin: process.env.NODE_ENV === 'production'
-      ? process.env.FRONTEND_URL
-      : ['http://localhost:3000', 'http://localhost:3001'],
+    origin: (origin, callback) => {
+      if (isAllowedOrigin(origin)) return callback(null, true);
+      return callback(new Error(`CORS blocked for origin: ${origin}`));
+    },
     methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE']
   }
 });
 
 // Middleware
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production'
-    ? process.env.FRONTEND_URL
-    : ['http://localhost:3000', 'http://localhost:3001'],
+  origin: (origin, callback) => {
+    if (isAllowedOrigin(origin)) return callback(null, true);
+    return callback(new Error(`CORS blocked for origin: ${origin}`));
+  },
   credentials: true
 }));
 app.use(express.json({ limit: '50mb' }));
