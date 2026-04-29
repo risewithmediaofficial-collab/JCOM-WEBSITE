@@ -100,6 +100,14 @@ app.use('/api/notifications',require('./routes/notifications'));
 app.use('/api/stats',       require('./routes/stats'));
 app.use('/api/crm',         require('./routes/crm'));
 
+app.get('/', (req, res) => {
+  if (process.env.NODE_ENV === 'production' && process.env.FRONTEND_URL) {
+    return res.redirect(process.env.FRONTEND_URL);
+  }
+
+  return res.status(200).send('JCOM API is running. Use /api/health to verify the backend.');
+});
+
 // Health check
 app.get('/api/health', (req, res) => {
   res.status(200).json({ message: 'JCOM Server running ✅', timestamp: new Date() });
