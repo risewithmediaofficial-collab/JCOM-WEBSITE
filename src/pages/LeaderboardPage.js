@@ -3,7 +3,9 @@ import axios from 'axios';
 import SidebarLayout from '../components/SidebarLayout';
 import { TrophyOutlined } from '@ant-design/icons';
 
-const API = 'http://localhost:5000/api';
+import { API_BASE_URL } from '../config/api';
+
+const API = API_BASE_URL;
 
 const LeaderboardPage = () => {
   const [leaderboard, setLeaderboard] = useState([]);
@@ -166,3 +168,4 @@ const LeaderboardPage = () => {
 };
 
 export default LeaderboardPage;
+

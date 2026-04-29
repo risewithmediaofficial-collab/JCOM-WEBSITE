@@ -5,7 +5,9 @@ import Navbar from '../components/Navbar';
 import Breadcrumbs from '../components/Breadcrumbs';
 import { EnvironmentOutlined, GlobalOutlined, MailOutlined, PhoneOutlined, SearchOutlined } from '@ant-design/icons';
 
-const API = 'http://localhost:5000/api';
+import { API_BASE_URL, API_ORIGIN } from '../config/api';
+
+const API = API_BASE_URL;
 
 const getInitials = (member) => `${member?.firstName?.[0] || ''}${member?.lastName?.[0] || ''}`;
 
@@ -170,7 +172,7 @@ const SearchBusinessDetailPage = () => {
                   <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 18 }}>
                     <div className="avatar avatar-xl">
                       {member.profilePic ? (
-                        <img src={`http://localhost:5000${member.profilePic}`} alt={`${member.firstName} ${member.lastName}`} />
+                        <img src={`${API_ORIGIN}${member.profilePic}`} alt={`${member.firstName} ${member.lastName}`} />
                       ) : (
                         getInitials(member)
                       )}
@@ -342,3 +344,5 @@ const SearchBusinessDetailPage = () => {
 };
 
 export default SearchBusinessDetailPage;
+
+

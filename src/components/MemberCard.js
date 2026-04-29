@@ -1,5 +1,6 @@
 import React from 'react';
 import { GlobalOutlined, InfoCircleOutlined, LinkOutlined, PlusOutlined } from '@ant-design/icons';
+import { API_ORIGIN } from '../config/api';
 
 const roleBadge = {
   'Vice Chairman': 'badge-teal',
@@ -32,7 +33,7 @@ const MemberCard = ({ member, onConnect, onInfo, isConnected, isPending }) => {
         >
           {member.profilePic ? (
             <img
-              src={`http://localhost:5000${member.profilePic}`}
+              src={`${API_ORIGIN}${member.profilePic}`}
               alt={displayName}
               style={{ width: '100%', height: '100%', objectFit: 'cover' }}
             />
@@ -183,3 +184,4 @@ const MemberCard = ({ member, onConnect, onInfo, isConnected, isPending }) => {
 };
 
 export default MemberCard;
+

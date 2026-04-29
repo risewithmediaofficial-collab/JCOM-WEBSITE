@@ -7,6 +7,7 @@ import {
   LogoutOutlined, MenuOutlined, CloseOutlined, BellOutlined,
   CrownOutlined, SearchOutlined, SettingOutlined
 } from '@ant-design/icons';
+import { API_ORIGIN } from '../config/api';
 
 const Navbar = ({ sidebarWidth, onMobileMenuToggle, mobileMenuOpen }) => {
   const { user, isAuthenticated, logout } = useContext(AuthContext);
@@ -102,7 +103,7 @@ const Navbar = ({ sidebarWidth, onMobileMenuToggle, mobileMenuOpen }) => {
               <div style={styles.profileSection}>
                 <div style={styles.avatar}>
                   {user?.profilePic
-                    ? <img src={`http://localhost:5000${user.profilePic}`} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+                    ? <img src={`${API_ORIGIN}${user.profilePic}`} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
                     : initials
                   }
                 </div>
@@ -253,3 +254,4 @@ const styles = {
 };
 
 export default Navbar;
+

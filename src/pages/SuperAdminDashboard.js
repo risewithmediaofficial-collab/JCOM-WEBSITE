@@ -4,7 +4,9 @@ import axios from 'axios';
 import SidebarLayout from '../components/SidebarLayout';
 import { PlusOutlined, CrownOutlined, CheckCircleOutlined, CloseCircleOutlined, CopyOutlined } from '@ant-design/icons';
 
-const API = 'http://localhost:5000/api';
+import { API_BASE_URL, API_ORIGIN } from '../config/api';
+
+const API = API_BASE_URL;
 
 // ── Profile Avatar with fallback to initials ──────────────────────────────────
 const ProfileAvatar = ({ member }) => {
@@ -23,7 +25,7 @@ const ProfileAvatar = ({ member }) => {
     }}>
       {hasPhoto ? (
         <img
-          src={`http://localhost:5000${member.profilePic}`}
+          src={`${API_ORIGIN}${member.profilePic}`}
           alt={`${member.firstName} ${member.lastName}`}
           style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
           onError={() => setImgError(true)}
@@ -712,3 +714,5 @@ const SuperAdminDashboard = () => {
 };
 
 export default SuperAdminDashboard;
+
+

@@ -5,7 +5,9 @@ import Navbar from '../components/Navbar';
 import Breadcrumbs from '../components/Breadcrumbs';
 import { SearchOutlined, InfoCircleOutlined } from '@ant-design/icons';
 
-const API = 'http://localhost:5000/api';
+import { API_BASE_URL, API_ORIGIN } from '../config/api';
+
+const API = API_BASE_URL;
 
 const getInitials = (member) => `${member.firstName?.[0] || ''}${member.lastName?.[0] || ''}`;
 
@@ -169,7 +171,7 @@ const SearchResultsPage = () => {
                         <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start', flexWrap: 'wrap' }}>
                           <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'var(--grad-gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '1rem', color: '#000', flexShrink: 0, overflow: 'hidden' }}>
                             {member.profilePic ? (
-                              <img src={`http://localhost:5000${member.profilePic}`} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              <img src={`${API_ORIGIN}${member.profilePic}`} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                             ) : (
                               getInitials(member)
                             )}
@@ -244,3 +246,5 @@ const SearchResultsPage = () => {
 };
 
 export default SearchResultsPage;
+
+

@@ -4,7 +4,9 @@ import axios from 'axios';
 import SidebarLayout from '../components/SidebarLayout';
 import { PlusOutlined, CalendarOutlined, EnvironmentOutlined, TeamOutlined, CheckCircleOutlined, QrcodeOutlined, CopyOutlined, DeleteOutlined } from '@ant-design/icons';
 
-const API = 'http://localhost:5000/api';
+import { API_BASE_URL } from '../config/api';
+
+const API = API_BASE_URL;
 
 const MEETING_TYPES = {
   Growth:           { icon: '📈', color: '#22c55e', desc: 'Week 1 – Growth targets' },
@@ -465,3 +467,4 @@ const MeetingsPage = () => {
 };
 
 export default MeetingsPage;
+

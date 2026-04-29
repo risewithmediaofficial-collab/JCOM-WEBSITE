@@ -4,7 +4,9 @@ import axios from 'axios';
 import { SearchOutlined, ArrowRightOutlined, TeamOutlined, TrophyOutlined, LinkOutlined, RiseOutlined, EnvironmentOutlined, StarOutlined } from '@ant-design/icons';
 import Navbar from '../components/Navbar';
 
-const API = 'http://localhost:5000/api';
+import { API_BASE_URL } from '../config/api';
+
+const API = API_BASE_URL;
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -376,3 +378,4 @@ const HomePage = () => {
 };
 
 export default HomePage;
+

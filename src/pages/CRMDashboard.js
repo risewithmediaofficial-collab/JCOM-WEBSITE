@@ -4,7 +4,9 @@ import axios from 'axios';
 import SidebarLayout from '../components/SidebarLayout';
 import { EditOutlined, PlusOutlined, DeleteOutlined, UserAddOutlined } from '@ant-design/icons';
 
-const API = 'http://localhost:5000/api';
+import { API_BASE_URL } from '../config/api';
+
+const API = API_BASE_URL;
 
 const STATUS_CONFIG = {
   Lead: { label: 'Lead', color: 'badge-info' },
@@ -801,3 +803,4 @@ const CRMDashboard = () => {
 };
 
 export default CRMDashboard;
+

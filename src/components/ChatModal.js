@@ -4,7 +4,9 @@ import { SendOutlined, CheckCircleOutlined, DollarOutlined, CloseOutlined } from
 import { AuthContext } from '../context/AuthContext';
 import axios from 'axios';
 
-const API = 'http://localhost:5000/api';
+import { API_BASE_URL } from '../config/api';
+
+const API = API_BASE_URL;
 
 const ChatModal = ({ open, onClose, connection, otherUser }) => {
   const { user } = useContext(AuthContext);
@@ -194,3 +196,4 @@ const ChatModal = ({ open, onClose, connection, otherUser }) => {
 };
 
 export default ChatModal;
+

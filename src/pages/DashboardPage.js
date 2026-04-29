@@ -5,7 +5,9 @@ import SidebarLayout from '../components/SidebarLayout';
 import StatCard from '../components/StatCard';
 import { Link } from 'react-router-dom';
 
-const API = 'http://localhost:5000/api';
+import { API_BASE_URL } from '../config/api';
+
+const API = API_BASE_URL;
 
 const DashboardPage = () => {
   const { user } = useContext(AuthContext);
@@ -231,3 +233,4 @@ const DashboardPage = () => {
 };
 
 export default DashboardPage;
+

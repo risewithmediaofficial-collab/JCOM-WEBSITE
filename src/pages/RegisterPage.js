@@ -4,7 +4,9 @@ import axios from 'axios';
 import { UploadOutlined, PlusOutlined, MinusCircleOutlined, ArrowLeftOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import Navbar from '../components/Navbar';
 
-const API = 'http://localhost:5000/api';
+import { API_BASE_URL } from '../config/api';
+
+const API = API_BASE_URL;
 
 const BUSINESS_CATEGORIES = [
   'Accounting & Finance', 'Architecture & Design', 'Automobile', 'Banking & Insurance',
@@ -347,3 +349,4 @@ const RegisterPage = () => {
 };
 
 export default RegisterPage;
+

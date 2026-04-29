@@ -5,7 +5,9 @@ import { EyeOutlined, EyeInvisibleOutlined, LockOutlined, UserOutlined, ArrowLef
 import axios from 'axios';
 import Navbar from '../components/Navbar';
 
-const API = 'http://localhost:5000/api';
+import { API_BASE_URL } from '../config/api';
+
+const API = API_BASE_URL;
 
 const LoginPage = () => {
   const { login } = useContext(AuthContext);
@@ -172,3 +174,4 @@ const LoginPage = () => {
 };
 
 export default LoginPage;
+

@@ -1,6 +1,7 @@
 import React, { useContext } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
+import { API_ORIGIN } from '../config/api';
 
 const Sidebar = ({ collapsed = false, onCollapse, onClose, isMobileDrawer = false }) => {
   const { user } = useContext(AuthContext);
@@ -87,7 +88,7 @@ const Sidebar = ({ collapsed = false, onCollapse, onClose, isMobileDrawer = fals
             border: '2px solid var(--border-accent)'
           }}>
             {user.profilePic
-              ? <img src={`http://localhost:5000${user.profilePic}`} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              ? <img src={`${API_ORIGIN}${user.profilePic}`} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               : `${user.firstName?.[0]}${user.lastName?.[0]}`
             }
           </div>
@@ -110,7 +111,7 @@ const Sidebar = ({ collapsed = false, onCollapse, onClose, isMobileDrawer = fals
         <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0', borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
           <div style={{ width: 36, height: 36, borderRadius: 8, background: 'var(--grad-gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '0.8rem', color: '#fff', overflow: 'hidden', border: '2px solid var(--border-accent)' }}>
             {user.profilePic
-              ? <img src={`http://localhost:5000${user.profilePic}`} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              ? <img src={`${API_ORIGIN}${user.profilePic}`} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               : `${user.firstName?.[0]}${user.lastName?.[0]}`
             }
           </div>

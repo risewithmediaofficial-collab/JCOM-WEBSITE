@@ -13,7 +13,9 @@ import {
   SendOutlined
 } from '@ant-design/icons';
 
-const API = 'http://localhost:5000/api';
+import { API_BASE_URL, API_ORIGIN } from '../config/api';
+
+const API = API_BASE_URL;
 const REQUEST_TYPES = ['NA', 'Self', 'JCOM member', 'Non member'];
 
 const formatDate = (value) => {
@@ -45,7 +47,7 @@ const MemberInfoDialog = ({ member, onClose }) => {
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
             <div className="avatar avatar-lg">
               {member.profilePic ? (
-                <img src={`http://localhost:5000${member.profilePic}`} alt={`${member.firstName} ${member.lastName}`} />
+                <img src={`${API_ORIGIN}${member.profilePic}`} alt={`${member.firstName} ${member.lastName}`} />
               ) : (
                 getInitials(member)
               )}
@@ -230,7 +232,7 @@ const ConnectionInfoDialog = ({ connection, user, onClose }) => {
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
             <div className="avatar avatar-lg">
               {other?.profilePic ? (
-                <img src={`http://localhost:5000${other.profilePic}`} alt={`${other.firstName} ${other.lastName}`} />
+                <img src={`${API_ORIGIN}${other.profilePic}`} alt={`${other.firstName} ${other.lastName}`} />
               ) : (
                 getInitials(other)
               )}
@@ -583,7 +585,7 @@ const ConnectionsPage = () => {
                       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, flexWrap: 'wrap' }}>
                         <div className="avatar" style={{ width: 58, height: 58, fontSize: '1.1rem' }}>
                           {other?.profilePic ? (
-                            <img src={`http://localhost:5000${other.profilePic}`} alt={`${other.firstName} ${other.lastName}`} />
+                            <img src={`${API_ORIGIN}${other.profilePic}`} alt={`${other.firstName} ${other.lastName}`} />
                           ) : (
                             getInitials(other)
                           )}
@@ -729,3 +731,5 @@ const ConnectionsPage = () => {
 };
 
 export default ConnectionsPage;
+
+
