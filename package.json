@@ -10,13 +10,23 @@
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "react-scripts": "5.0.1",
-    "web-vitals": "^2.1.4"
+    "react-router-dom": "^6.20.0",
+    "axios": "^1.6.2",
+    "web-vitals": "^2.1.4",
+    "antd": "^5.11.2",
+    "@ant-design/icons": "^5.2.6",
+    "socket.io-client": "^4.5.4",
+    "crypto-js": "^4.2.0",
+    "concurrently": "^8.2.2"
   },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "server": "cd server && npm run dev",
+    "server:install": "cd server && npm install",
+    "dev": "concurrently \"npm start\" \"npm run server\""
   },
   "eslintConfig": {
     "extends": [
