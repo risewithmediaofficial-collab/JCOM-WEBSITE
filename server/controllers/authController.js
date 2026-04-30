@@ -59,22 +59,94 @@ exports.registerUser = async (req, res) => {
       return res.status(400).json({ message: 'Required fields missing' });
     }
 
-    const emailExists = await User.findOne({ email });
-    if (emailExists) return res.status(400).json({ message: 'Email already registered' });
+    const normalizedEmail = String(email).trim().toLowerCase();
+    const normalizedPhone = String(phone).trim();
 
-    const table = tableId ? await Table.findById(tableId) : null;
-    if (tableId && !table) return res.status(400).json({ message: 'Invalid table selected' });
-    if (table && table.currentCount >= table.capacity) {
-      return res.status(400).json({ message: 'Selected table is full (60 members)' });
+    const existingApplicant = await User.findOne({
+      $or: [
+        { email: normalizedEmail },
+        { phone: normalizedPhone }
+      ]
+    });
+
+    if (existingApplicant) {
+      if (existingApplicant.status === 'Rejected') {
+        existingApplicant.firstName = firstName;
+        existingApplicant.lastName = lastName;
+        existingApplicant.email = normalizedEmail;
+        existingApplicant.phone = normalizedPhone;
+        existingApplicant.profilePic = getProfilePicValue(req.file) || existingApplicant.profilePic;
+        existingApplicant.locationId = locationId;
+        existingApplicant.aadharNumber = aadharNumber || existingApplicant.aadharNumber;
+        existingApplicant.panNumber = panNumber || existingApplicant.panNumber;
+        existingApplicant.businessName = businessName;
+        existingApplicant.businessCategory = businessCategory;
+        existingApplicant.businessDescription = businessDescription || '';
+        existingApplicant.businessService = businessService || '';
+        existingApplicant.businessWebsite = businessWebsite || null;
+        existingApplicant.keywords = Array.isArray(keywords) ? keywords : (keywords ? keywords.split(',').map(k => k.trim()) : []);
+        existingApplicant.status = 'Pending';
+        existingApplicant.rejectionReason = undefined;
+        existingApplicant.approvedBy = null;
+        existingApplicant.approvedAt = null;
+        existingApplicant.membershipId = null;
+        existingApplicant.password = undefined;
+        
+        const location = await Location.findById(locationId);
+        if (!location) return res.status(400).json({ message: 'Invalid location' });
+
+        existingApplicant.locationName = location.name;
+
+        let reassignedTable = null;
+        if (tableId) {
+          reassignedTable = await Table.findById(tableId);
+          if (reassignedTable && String(reassignedTable.locationId) === String(locationId) && reassignedTable.currentCount < reassignedTable.capacity) {
+            existingApplicant.tableId = reassignedTable._id;
+            existingApplicant.tableName = reassignedTable.name;
+          } else {
+            existingApplicant.tableId = null;
+            existingApplicant.tableName = null;
+          }
+        } else {
+          existingApplicant.tableId = null;
+          existingApplicant.tableName = null;
+        }
+
+        await existingApplicant.save();
+
+        return res.status(201).json({
+          message: 'Registration resubmitted successfully. Awaiting chairman approval.',
+          userId: existingApplicant._id,
+          locationName: location.name
+        });
+      }
+
+      return res.status(400).json({
+        message: existingApplicant.status === 'Pending'
+          ? 'An application with this email or phone is already pending approval'
+          : 'Email or phone already registered'
+      });
     }
+
+    let table = tableId ? await Table.findById(tableId) : null;
+    if (tableId && !table) return res.status(400).json({ message: 'Invalid table selected' });
 
     const location = await Location.findById(locationId);
     if (!location) return res.status(400).json({ message: 'Invalid location' });
 
+    // Registration must remain open even if a table just filled up.
+    // The chairman can assign or reassign a table during approval.
+    if (
+      table &&
+      (String(table.locationId) !== String(locationId) || table.currentCount >= table.capacity)
+    ) {
+      table = null;
+    }
+
     const profilePic = getProfilePicValue(req.file);
 
     const user = new User({
-      firstName, lastName, email, phone,
+      firstName, lastName, email: normalizedEmail, phone: normalizedPhone,
       profilePic,
       locationId, locationName: location.name,
       tableId: table ? table._id : null,

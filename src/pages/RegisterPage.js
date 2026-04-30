@@ -176,8 +176,8 @@ const RegisterPage = () => {
         <div className="form-group">
           <label className="form-label">Table (Optional – Chairman may reassign)</label>
           <select className="form-select" value={form.tableId} onChange={e => set('tableId', e.target.value)}>
-            <option value="">-- View Available Tables --</option>
-            {tables.map(t => <option key={t._id} value={t._id}>{t.name} ({t.currentCount}/{t.capacity} members)</option>)}
+            <option value="">-- Skip table selection for now --</option>
+            {tables.map(t => <option key={t._id} value={t._id} disabled={t.currentCount >= t.capacity}>{t.name} ({t.currentCount}/{t.capacity} members){t.currentCount >= t.capacity ? ' - Full' : ''}</option>)}
           </select>
           {tables.length > 0 && (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
@@ -188,6 +188,9 @@ const RegisterPage = () => {
               ))}
             </div>
           )}
+          <div style={{ marginTop: 8, fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+            Applications can still be submitted even if a table becomes full. The chairman can assign your final table during approval.
+          </div>
         </div>
       )}
     </div>,
