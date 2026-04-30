@@ -96,6 +96,9 @@ const HomePage = () => {
     { week: 'Week 4', type: 'C2C Networking', icon: '🌐', desc: 'Cross-location business connecting' },
   ];
 
+  const featuredLocation = leaderboard[0];
+  const runnerUpLocations = leaderboard.slice(1, 3);
+
   return (
     <div style={{ minHeight: '100vh', background: '#f8f9fc' }}>
       <Navbar />
@@ -148,7 +151,7 @@ const HomePage = () => {
       </section>
 
       {/* ── LIVE STATS ── */}
-      {leaderboard.length > 0 && (
+      {featuredLocation && (
         <section style={{ padding: '32px 16px 80px', background: 'linear-gradient(180deg, #f0f5ff 0%, #f8f9fc 100%)' }}>
           <div className="section-shell">
             <div style={{ textAlign: 'center', marginBottom: 36 }}>
@@ -159,37 +162,47 @@ const HomePage = () => {
               </p>
             </div>
 
-            <div className="responsive-split" style={{ alignItems: 'stretch', marginBottom: 18 }}>
-              <div className="glass-card-gold" style={{ position: 'relative', padding: '28px clamp(20px, 3vw, 34px)' }}>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: runnerUpLocations.length > 0 ? 'minmax(0, 620px) minmax(280px, 340px)' : 'minmax(0, 720px)',
+                justifyContent: 'center',
+                alignItems: 'stretch',
+                gap: 18,
+                marginBottom: 18
+              }}
+            >
+              <div className="glass-card-gold" style={{ position: 'relative', padding: '24px clamp(18px, 3vw, 30px)', maxWidth: 720, width: '100%', margin: '0 auto' }}>
                 <div style={{ position: 'absolute', top: 18, right: 18, fontSize: '1.4rem', fontWeight: 800, color: 'var(--primary)' }}>1</div>
                 <div className="badge badge-gold" style={{ marginBottom: 14 }}>Top Performing Chapter</div>
-                <h2 style={{ color: 'var(--primary)', marginBottom: 6 }}>{leaderboard[0].name}</h2>
+                <h2 style={{ color: 'var(--primary)', marginBottom: 6, fontSize: 'clamp(2rem, 4vw, 2.8rem)' }}>{featuredLocation.name}</h2>
                 <div style={{ fontSize: '0.92rem', color: 'var(--text-secondary)', marginBottom: 22 }}>
-                  Chairman: {leaderboard[0].chairman}
+                  Chairman: {featuredLocation.chairman}
                 </div>
 
                 <div className="grid-2" style={{ gap: 14 }}>
-                  <div className="glass-card" style={{ padding: 18, textAlign: 'center', background: 'rgba(255,255,255,0.82)' }}>
-                    <div style={{ fontWeight: 800, fontSize: '1.7rem', color: 'var(--text-primary)' }}>{leaderboard[0].totalConnections}</div>
+                  <div className="glass-card" style={{ padding: 16, textAlign: 'center', background: 'rgba(255,255,255,0.82)' }}>
+                    <div style={{ fontWeight: 800, fontSize: '1.55rem', color: 'var(--text-primary)' }}>{featuredLocation.totalConnections}</div>
                     <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Connects</div>
                   </div>
-                  <div className="glass-card" style={{ padding: 18, textAlign: 'center', background: 'rgba(255,255,255,0.82)' }}>
-                    <div style={{ fontWeight: 800, fontSize: '1.7rem', color: 'var(--primary)' }}>{formatRevenue(leaderboard[0].totalRevenue)}</div>
+                  <div className="glass-card" style={{ padding: 16, textAlign: 'center', background: 'rgba(255,255,255,0.82)' }}>
+                    <div style={{ fontWeight: 800, fontSize: '1.55rem', color: 'var(--primary)' }}>{formatRevenue(featuredLocation.totalRevenue)}</div>
                     <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Revenue</div>
                   </div>
-                  <div className="glass-card" style={{ padding: 18, textAlign: 'center', background: 'rgba(255,255,255,0.82)' }}>
-                    <div style={{ fontWeight: 800, fontSize: '1.7rem', color: 'var(--accent)' }}>{leaderboard[0].totalMembers}</div>
+                  <div className="glass-card" style={{ padding: 16, textAlign: 'center', background: 'rgba(255,255,255,0.82)' }}>
+                    <div style={{ fontWeight: 800, fontSize: '1.55rem', color: 'var(--accent)' }}>{featuredLocation.totalMembers}</div>
                     <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Members</div>
                   </div>
-                  <div className="glass-card" style={{ padding: 18, textAlign: 'center', background: 'rgba(255,255,255,0.82)' }}>
-                    <div style={{ fontWeight: 800, fontSize: '1.7rem', color: '#7c3aed' }}>{leaderboard[0].attendanceRate}%</div>
+                  <div className="glass-card" style={{ padding: 16, textAlign: 'center', background: 'rgba(255,255,255,0.82)' }}>
+                    <div style={{ fontWeight: 800, fontSize: '1.55rem', color: '#7c3aed' }}>{featuredLocation.attendanceRate}%</div>
                     <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Attendance</div>
                   </div>
                 </div>
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                {leaderboard.slice(1, 3).map((loc, index) => (
+              {runnerUpLocations.length > 0 && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 340 }}>
+                {runnerUpLocations.map((loc, index) => (
                   <div key={loc.name} className="glass-card" style={{ position: 'relative', padding: 24 }}>
                     <div style={{ position: 'absolute', top: 16, right: 16, fontSize: '1.2rem', fontWeight: 800, color: 'var(--primary)' }}>
                       {index + 2}
@@ -218,7 +231,8 @@ const HomePage = () => {
                     </div>
                   </div>
                 ))}
-              </div>
+                </div>
+              )}
             </div>
           </div>
         </section>
