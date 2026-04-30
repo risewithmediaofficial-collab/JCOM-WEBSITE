@@ -125,7 +125,7 @@ exports.getLeaderboard = async (req, res) => {
 exports.getMemberStats = async (req, res) => {
   try {
     const userId = req.user._id;
-    const { period, scope } = req.query; // scope: 'table'|'location'|'all'
+    const { period } = req.query;
 
     const now = new Date();
     let startDate;
@@ -134,9 +134,34 @@ exports.getMemberStats = async (req, res) => {
     else if (period === 'yearly') startDate = new Date(now.getFullYear(), 0, 1);
     else startDate = new Date(0);
 
-    const user = await User.findById(userId);
+    const user = await User.findById(userId).select('locationId');
 
-    const [given, received, completedDeals, crmConversions, myMeetings, publicEnquiries, recentPublicEnquiries] = await Promise.all([
+    const baseUserQuery = { $or: [{ fromUser: userId }, { toUser: userId }] };
+    const periodMeetingQuery = {
+      locationId: user.locationId,
+      time: { $gte: startDate }
+    };
+    const allTimeMeetingQuery = {
+      locationId: user.locationId
+    };
+
+    const [
+      given,
+      received,
+      completedDeals,
+      crmConversions,
+      publicEnquiries,
+      recentPublicEnquiries,
+      totalMeetings,
+      meetingsAttended,
+      overallGivenRequests,
+      overallReceivedRequests,
+      overallConnections,
+      overallCompletedDeals,
+      overallCrmConversions,
+      overallTotalMeetings,
+      overallMeetingsAttended
+    ] = await Promise.all([
       Connection.countDocuments({ fromUser: userId, createdAt: { $gte: startDate } }),
       Connection.countDocuments({ toUser: userId, createdAt: { $gte: startDate } }),
       Deal.find({
@@ -165,15 +190,30 @@ exports.getMemberStats = async (req, res) => {
         .select('manualContact status createdAt')
         .sort('-createdAt')
         .limit(5),
-      Meeting.find({
-        locationId: user.locationId,
-        time: { $gte: startDate }
-      })
+      Meeting.countDocuments(periodMeetingQuery),
+      Meeting.countDocuments({ ...periodMeetingQuery, attendees: userId }),
+      Connection.countDocuments({ fromUser: userId }),
+      Connection.countDocuments({ toUser: userId }),
+      Connection.countDocuments({ ...baseUserQuery, status: 'Connected' }),
+      Deal.find({
+        ...baseUserQuery,
+        status: 'Completed'
+      }).select('amount'),
+      CRMEntry.find({
+        ownerId: userId,
+        status: 'Completed',
+        workCompleted: true,
+        confirmedValue: { $gt: 0 },
+        dealId: null
+      }).select('confirmedValue'),
+      Meeting.countDocuments(allTimeMeetingQuery),
+      Meeting.countDocuments({ ...allTimeMeetingQuery, attendees: userId })
     ]);
 
     const revenue = completedDeals.reduce((s, d) => s + d.amount, 0) +
       crmConversions.reduce((s, entry) => s + (entry.confirmedValue || 0), 0);
-    const meetingsAttended = myMeetings.filter(m => m.attendees.map(id => id.toString()).includes(userId.toString())).length;
+    const overallRevenue = overallCompletedDeals.reduce((sum, deal) => sum + (deal.amount || 0), 0) +
+      overallCrmConversions.reduce((sum, entry) => sum + (entry.confirmedValue || 0), 0);
 
     res.json({
       period,
@@ -187,11 +227,12 @@ exports.getMemberStats = async (req, res) => {
       publicEnquiries,
       recentPublicEnquiries,
       overallTotals: {
-        givenRequests: user.givenRequests,
-        receivedRequests: user.receivedRequests,
-        totalConnections: user.totalConnections,
-        totalRevenue: user.totalRevenue,
-        meetingsAttended: user.meetingsAttended
+        givenRequests: overallGivenRequests,
+        receivedRequests: overallReceivedRequests,
+        totalConnections: overallConnections,
+        totalRevenue: overallRevenue,
+        meetingsAttended: overallMeetingsAttended,
+        totalMeetings: overallTotalMeetings
       }
     });
   } catch (err) {
