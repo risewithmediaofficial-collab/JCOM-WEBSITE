@@ -11,37 +11,24 @@ const app = express();
 const server = http.createServer(app);
 const defaultFrontendUrl = 'https://jcom-website-1.onrender.com';
 const normalizeOrigin = (value) => (value || '').trim().replace(/\/+$/, '');
-const productionOrigins = (process.env.FRONTEND_URL || defaultFrontendUrl)
-  .split(',')
-  .map(normalizeOrigin)
-  .filter(Boolean);
-const developmentOrigins = ['http://localhost:3000', 'http://localhost:3001'];
-const allowedOrigins = process.env.NODE_ENV === 'production' ? productionOrigins : developmentOrigins;
+const allowedOrigins = [
+  defaultFrontendUrl,
+  'http://localhost:5173',
+  'http://localhost:3000'
+].map(normalizeOrigin);
+
 const isAllowedOrigin = (origin) => {
   if (!origin) return true;
-
-  const normalizedOrigin = normalizeOrigin(origin);
-  if (allowedOrigins.includes(normalizedOrigin)) return true;
-
-  if (process.env.NODE_ENV !== 'production') return false;
-
-  try {
-    const { protocol, hostname } = new URL(normalizedOrigin);
-    if ((protocol === 'https:' || protocol === 'http:') && hostname.endsWith('.onrender.com')) return true;
-    if (protocol === 'https:' || protocol === 'http:') return true;
-  } catch (error) {
-    return false;
-  }
-
-  return false;
+  return allowedOrigins.includes(normalizeOrigin(origin));
 };
+
 const corsOptions = {
   origin: (origin, callback) => {
     if (isAllowedOrigin(origin)) return callback(null, true);
     return callback(new Error(`CORS blocked for origin: ${origin}`));
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization']
 };
 
