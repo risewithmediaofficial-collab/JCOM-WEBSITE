@@ -88,7 +88,7 @@ const DashboardPage = () => {
 
   return (
     <SidebarLayout>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16, marginBottom: 32 }}>
+      <div className="stack-mobile" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16, marginBottom: 32 }}>
         <div>
           <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 4 }}>Welcome back</div>
           <h2 style={{ color: 'var(--text-primary)', marginBottom: 4 }}>{user?.firstName} {user?.lastName}</h2>
@@ -99,7 +99,7 @@ const DashboardPage = () => {
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: 6, background: 'var(--bg-card)', padding: 4, borderRadius: 30, border: '1px solid var(--border)' }}>
+        <div className="filter-pills-group" style={{ display: 'flex', gap: 6, background: 'var(--bg-card)', padding: 4, borderRadius: 30, border: '1px solid var(--border)' }}>
           {['weekly', 'monthly', 'yearly'].map((item) => (
             <button key={item} onClick={() => setPeriod(item)} className={`btn btn-sm ${period === item ? 'btn-primary' : 'btn-ghost'}`} style={{ borderRadius: 24 }}>
               {item.charAt(0).toUpperCase() + item.slice(1)}
@@ -116,7 +116,7 @@ const DashboardPage = () => {
         <h4 style={{ color: 'var(--text-primary)', marginBottom: 16 }}>
           Requests Summary - <span style={{ color: 'var(--primary)' }}>{period.charAt(0).toUpperCase() + period.slice(1)}</span>
         </h4>
-        <div style={{ overflowX: 'auto' }}>
+        <div className="jcom-table-wrap">
           <table className="jcom-table">
             <thead>
               <tr>
@@ -150,7 +150,7 @@ const DashboardPage = () => {
         <h4 style={{ color: 'var(--text-primary)', marginBottom: 16 }}>
           Revenue Summary - <span style={{ color: 'var(--primary)' }}>{period.charAt(0).toUpperCase() + period.slice(1)}</span>
         </h4>
-        <div style={{ overflowX: 'auto' }}>
+        <div className="jcom-table-wrap">
           <table className="jcom-table">
             <thead>
               <tr>
@@ -224,7 +224,7 @@ const DashboardPage = () => {
 
       <div className="grid-1" style={{ gap: 24 }}>
         <div className="glass-card">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+          <div className="stack-mobile" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, gap: 10 }}>
             <h4 style={{ color: 'var(--text-primary)' }}>Top Locations</h4>
             <Link to="/leaderboard" style={{ fontSize: '0.8rem', color: 'var(--primary)' }}>See All</Link>
           </div>

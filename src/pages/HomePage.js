@@ -104,7 +104,7 @@ const HomePage = () => {
       <section style={{
         minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
         background: 'radial-gradient(ellipse at 20% 50%, rgba(0,73,194,0.07) 0%, transparent 55%), radial-gradient(ellipse at 80% 50%, rgba(0,184,148,0.06) 0%, transparent 55%), linear-gradient(135deg, #f0f5ff 0%, #eef2ff 60%, #f0fdf9 100%)',
-        padding: '80px 24px 40px', position: 'relative', overflow: 'hidden'
+        padding: '80px 16px 40px', position: 'relative', overflow: 'hidden'
       }}>
         {/* Floating orbs */}
         <div style={{ position: 'absolute', width: 400, height: 400, borderRadius: '50%', background: 'radial-gradient(circle, rgba(245,166,35,0.06), transparent)', top: '10%', left: '-5%', animation: 'float 8s ease-in-out infinite' }} />
@@ -124,12 +124,8 @@ const HomePage = () => {
           </p>
 
           {/* Search Bar */}
-          <form onSubmit={handleSearch} className="animate-fadeInUp delay-3" style={{
-            display: 'flex', maxWidth: 620, margin: '0 auto 32px',
-            background: 'var(--bg-card)', borderRadius: 50, border: '1px solid var(--border-accent)',
-            overflow: 'hidden', boxShadow: 'var(--shadow-gold)'
-          }}>
-            <SearchOutlined style={{ padding: '0 16px', color: 'var(--primary)', fontSize: '1.1rem' }} />
+          <form onSubmit={handleSearch} className="animate-fadeInUp delay-3 hero-search">
+            <SearchOutlined className="hero-search-icon" style={{ padding: '0 16px', color: 'var(--primary)', fontSize: '1.1rem' }} />
             <input
               type="text" placeholder="Search by business, category, keyword, location..."
               value={searchQ} onChange={e => setSearchQ(e.target.value)}
@@ -152,8 +148,8 @@ const HomePage = () => {
       </section>
 
       {/* ── LIVE STATS ── */}
-      <section style={{ padding: '80px 24px', background: 'var(--bg-surface)' }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+      <section style={{ padding: '80px 16px', background: 'var(--bg-surface)' }}>
+        <div className="section-shell">
           <div style={{ textAlign: 'center', marginBottom: 48 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 12 }}>
               <span style={{ width: 8, height: 8, borderRadius: '50%', background: statsError ? '#dc2626' : '#16a34a', display: 'inline-block', boxShadow: statsError ? 'none' : '0 0 6px #16a34a', animation: statsError ? 'none' : 'pulse-glow 2s infinite' }} />
@@ -164,7 +160,7 @@ const HomePage = () => {
             <div className="badge badge-teal mb-md" style={{ margin: '0 auto 12px' }}>📊 Platform Statistics</div>
             <h2>Platform Performance</h2>
             {/* Period Toggle */}
-            <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginTop: 16 }}>
+            <div className="responsive-actions" style={{ justifyContent: 'center', marginTop: 16 }}>
               {['weekly', 'monthly'].map(p => (
                 <button key={p} onClick={() => setPeriod(p)}
                   className={`btn btn-sm ${period === p ? 'btn-primary' : 'btn-ghost'}`}>
@@ -243,9 +239,9 @@ const HomePage = () => {
       </section>
 
       {/* ── WHAT IS JCOM ── */}
-      <section style={{ padding: '80px 24px' }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 64, alignItems: 'center' }}>
+      <section style={{ padding: '80px 16px' }}>
+        <div className="section-shell">
+          <div className="responsive-two-col" style={{ gap: 'clamp(24px, 5vw, 64px)', alignItems: 'center' }}>
             <div>
               <div className="badge badge-gold mb-md">About JCOM</div>
               <h2 style={{ marginBottom: 20 }}>What is <span className="highlight-gold">JCOM?</span></h2>
@@ -261,7 +257,7 @@ const HomePage = () => {
                 ))}
               </div>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            <div className="responsive-two-col" style={{ gap: 16 }}>
               {features.slice(0, 4).map((f, i) => (
                 <div key={i} className="glass-card" style={{ padding: 20 }}>
                   <div style={{ fontSize: '2rem', marginBottom: 10 }}>{f.icon}</div>
@@ -275,8 +271,8 @@ const HomePage = () => {
       </section>
 
       {/* ── FEATURES ── */}
-      <section style={{ padding: '80px 24px', background: 'var(--bg-surface)' }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+      <section style={{ padding: '80px 16px', background: 'var(--bg-surface)' }}>
+        <div className="section-shell">
           <div style={{ textAlign: 'center', marginBottom: 48 }}>
             <div className="badge badge-purple mb-md" style={{ margin: '0 auto 12px' }}>🚀 Features</div>
             <h2>Everything You Need to <span className="highlight-teal">Grow</span></h2>
@@ -294,8 +290,8 @@ const HomePage = () => {
       </section>
 
       {/* ── MEETING TYPES ── */}
-      <section style={{ padding: '80px 24px' }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+      <section style={{ padding: '80px 16px' }}>
+        <div className="section-shell">
           <div style={{ textAlign: 'center', marginBottom: 48 }}>
             <div className="badge badge-teal mb-md" style={{ margin: '0 auto 12px' }}>📅 4 Meetings / Month</div>
             <h2>Structured for <span className="highlight-gold">Maximum Growth</span></h2>
@@ -315,8 +311,8 @@ const HomePage = () => {
 
       {/* ── LEADERBOARD ── */}
       {leaderboard.length > 0 && (
-        <section style={{ padding: '80px 24px', background: '#f1f4f9' }}>
-          <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+        <section style={{ padding: '80px 16px', background: '#f1f4f9' }}>
+          <div className="section-shell">
             <div style={{ textAlign: 'center', marginBottom: 48 }}>
               <div className="badge badge-gold mb-md" style={{ margin: '0 auto 12px' }}>🏆 Top Locations</div>
               <h2>Highest Business <span className="highlight-gold">Generators</span></h2>
@@ -344,7 +340,7 @@ const HomePage = () => {
 
       {/* ── CTA ── */}
       <section style={{
-        padding: '100px 24px', textAlign: 'center',
+        padding: '100px 16px', textAlign: 'center',
         background: 'radial-gradient(ellipse at center, rgba(230,146,10,0.08) 0%, transparent 70%)'
       }}>
         <div style={{ maxWidth: 600, margin: '0 auto' }}>
@@ -358,8 +354,8 @@ const HomePage = () => {
       </section>
 
       {/* ── FOOTER ── */}
-      <footer style={{ background: '#f1f4f9', borderTop: '1px solid rgba(0,0,0,0.08)', padding: '40px 24px' }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
+      <footer style={{ background: '#f1f4f9', borderTop: '1px solid rgba(0,0,0,0.08)', padding: '40px 16px' }}>
+        <div className="section-shell" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
           <div>
             <div style={{ fontFamily: "'Outfit',sans-serif", fontWeight: 800, fontSize: '1.3rem', background: 'var(--grad-gold)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>JCOM</div>
             <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: 4 }}>Connecting Businesses | Generating Opportunities | Tracking Growth</div>

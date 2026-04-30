@@ -61,7 +61,7 @@ const Navbar = ({ sidebarWidth, onMobileMenuToggle, mobileMenuOpen }) => {
         <Link to="/" style={styles.logo}>
           <div style={styles.logoIcon}><span style={{ fontSize: '1.2rem' }}>⚡</span></div>
           <span style={styles.logoText}>JCOM</span>
-          <span style={styles.logoTagline}>Connecting Businesses</span>
+          <span className="hide-mobile" style={styles.logoTagline}>Connecting Businesses</span>
         </Link>
 
         {/* Desktop Nav Links */}

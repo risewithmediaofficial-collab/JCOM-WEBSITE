@@ -329,8 +329,8 @@ const CRMDashboard = () => {
 
   return (
     <SidebarLayout>
-      <div style={{ padding: 'clamp(16px, 3vw, 32px) clamp(12px, 3vw, 28px) 40px', maxWidth: 1400, margin: '0 auto' }}>
-        <div style={{ marginBottom: 28, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
+      <div className="page-shell" style={{ paddingTop: 'clamp(16px, 3vw, 32px)', maxWidth: 1400 }}>
+        <div className="stack-mobile" style={{ marginBottom: 28, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
           <div>
             <h2 style={pageTitleStyle}>CRM Dashboard</h2>
             <p style={pageIntroStyle}>
@@ -348,7 +348,7 @@ const CRMDashboard = () => {
 
         {isSuperAdmin && (
           <div className="glass-card" style={{ marginBottom: 20, padding: 20 }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(260px, 1.15fr) minmax(280px, 1fr)', gap: 18, alignItems: 'center' }}>
+            <div className="responsive-split" style={{ gap: 18 }}>
               <div className="form-group" style={{ marginBottom: 0 }}>
                 <label className="form-label" style={{ marginBottom: 10 }}>Select Location</label>
                 <select className="form-select" style={{ minHeight: 58, fontSize: '0.98rem', fontWeight: 600 }} value={selectedLocation} onChange={(e) => setSelectedLocation(e.target.value)}>
@@ -367,7 +367,7 @@ const CRMDashboard = () => {
 
         {isSuperAdmin && (
           <div className="glass-card" style={{ marginBottom: 20, padding: 20 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 16 }}>
+            <div className="stack-mobile" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 16 }}>
               <div>
                 <h4 style={sectionTitleStyle}>Overall CRM Overview</h4>
                 <div style={sectionNoteStyle}>

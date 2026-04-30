@@ -109,7 +109,7 @@ const SearchBusinessDetailPage = () => {
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg-base)' }}>
       <Navbar />
-      <div style={{ padding: '80px 24px 40px', maxWidth: 1240, margin: '0 auto' }}>
+      <div className="page-shell">
         <Breadcrumbs items={breadcrumbs} />
 
         {loading && (
@@ -137,7 +137,7 @@ const SearchBusinessDetailPage = () => {
         {!loading && member && (
           <>
             <div className="glass-card" style={{ padding: '28px clamp(20px, 3vw, 34px)', marginBottom: 20 }}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.4fr) minmax(280px, 0.9fr)', gap: 24, alignItems: 'center' }}>
+              <div className="responsive-split">
                 <div>
                   <div className="badge badge-gold" style={{ marginBottom: 12 }}>Business Listing</div>
                   <h1 style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', lineHeight: 1.02, marginBottom: 10 }}>
@@ -156,7 +156,7 @@ const SearchBusinessDetailPage = () => {
                     <span className="badge badge-info">{member.tableName || 'JCOM Member'}</span>
                   </div>
 
-                  <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                  <div className="responsive-actions" style={{ gap: 10 }}>
                     <button type="button" onClick={() => setShowEnquiry(true)} className="btn btn-primary">Enquiry</button>
                     <Link to="/login" className="btn btn-outline">Connect</Link>
                     {member.businessWebsite && (
@@ -209,7 +209,7 @@ const SearchBusinessDetailPage = () => {
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.25fr) minmax(320px, 0.95fr)', gap: 20 }}>
+            <div className="responsive-main-aside">
               <div className="glass-card" style={{ padding: 24 }}>
                 <h3 style={{ marginBottom: 16 }}>Business Details</h3>
                 <div className="connection-info-grid" style={{ marginBottom: 18 }}>
@@ -331,7 +331,7 @@ const SearchBusinessDetailPage = () => {
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: 12, marginTop: 22 }}>
+            <div className="responsive-actions" style={{ marginTop: 22 }}>
               <button onClick={() => setShowEnquiry(false)} className="btn btn-ghost" style={{ flex: 1 }}>Cancel</button>
               <button onClick={submitEnquiry} disabled={enquirySaving} className="btn btn-primary" style={{ flex: 1 }}>
                 {enquirySaving ? 'Sending...' : 'Send Enquiry'}

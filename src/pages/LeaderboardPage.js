@@ -40,7 +40,7 @@ const LeaderboardPage = () => {
 
   return (
     <SidebarLayout>
-      <div style={{ padding: 'clamp(16px, 3vw, 32px) clamp(12px, 3vw, 28px) 40px', maxWidth: 1200, margin: '0 auto' }}>
+      <div className="page-shell" style={{ paddingTop: 'clamp(16px, 3vw, 32px)' }}>
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
           <div className="badge badge-gold mb-md" style={{ margin: '0 auto 12px' }}>🏆 Rankings</div>
           <h2 style={{ color: 'var(--text-primary)', marginBottom: 8 }}>Location Leaderboard</h2>
@@ -48,8 +48,8 @@ const LeaderboardPage = () => {
         </div>
 
         {/* Filters */}
-        <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 32 }}>
-          <div style={{ display: 'flex', gap: 6, background: 'var(--bg-card)', padding: 4, borderRadius: 30, border: '1px solid var(--border)' }}>
+        <div className="responsive-actions filter-pills" style={{ justifyContent: 'center', marginBottom: 32 }}>
+          <div className="filter-pills-group" style={{ display: 'flex', gap: 6, background: 'var(--bg-card)', padding: 4, borderRadius: 30, border: '1px solid var(--border)' }}>
             {[
               { key: 'revenue', label: '💰 Revenue' },
               { key: 'connections', label: '🔗 Connections' },
@@ -61,7 +61,7 @@ const LeaderboardPage = () => {
               </button>
             ))}
           </div>
-          <div style={{ display: 'flex', gap: 6, background: 'var(--bg-card)', padding: 4, borderRadius: 30, border: '1px solid var(--border)' }}>
+          <div className="filter-pills-group" style={{ display: 'flex', gap: 6, background: 'var(--bg-card)', padding: 4, borderRadius: 30, border: '1px solid var(--border)' }}>
             {['weekly', 'monthly'].map(p => (
               <button key={p} onClick={() => setPeriod(p)} className={`btn btn-sm ${period === p ? 'btn-teal' : 'btn-ghost'}`} style={{ borderRadius: 24 }}>
                 {p.charAt(0).toUpperCase() + p.slice(1)}
@@ -72,9 +72,9 @@ const LeaderboardPage = () => {
 
         {/* Top 3 Podium */}
         {!loading && leaderboard.length >= 3 && (
-          <div style={{ display: 'flex', gap: 16, justifyContent: 'center', alignItems: 'flex-end', marginBottom: 40, flexWrap: 'wrap' }}>
+          <div className="podium-grid" style={{ marginBottom: 40 }}>
             {/* 2nd */}
-            <div className="glass-card" style={{ width: 240, textAlign: 'center', padding: 24, borderColor: 'rgba(148,163,184,0.4)' }}>
+            <div className="glass-card podium-card" style={{ padding: 24, borderColor: 'rgba(148,163,184,0.4)' }}>
               <div style={{ fontSize: '2.5rem', marginBottom: 8 }}>🥈</div>
               <h3 style={{ color: 'var(--text-primary)', marginBottom: 4 }}>{leaderboard[1].name}</h3>
               <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: 12 }}>Chairman: {leaderboard[1].chairman}</div>
@@ -82,7 +82,7 @@ const LeaderboardPage = () => {
               <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginTop: 4 }}>Revenue</div>
             </div>
             {/* 1st */}
-            <div className="glass-card-gold" style={{ width: 280, textAlign: 'center', padding: 28, transform: 'scale(1.05)' }}>
+            <div className="glass-card-gold podium-card podium-card-featured" style={{ padding: 28 }}>
               <div style={{ fontSize: '3rem', marginBottom: 8 }}>🥇</div>
               <div className="badge badge-gold mb-md" style={{ margin: '0 auto 8px' }}>TOP LOCATION</div>
               <h3 style={{ color: 'var(--primary)', marginBottom: 4 }}>{leaderboard[0].name}</h3>
@@ -95,7 +95,7 @@ const LeaderboardPage = () => {
               </div>
             </div>
             {/* 3rd */}
-            <div className="glass-card" style={{ width: 240, textAlign: 'center', padding: 24, borderColor: 'rgba(180,83,9,0.4)' }}>
+            <div className="glass-card podium-card" style={{ padding: 24, borderColor: 'rgba(180,83,9,0.4)' }}>
               <div style={{ fontSize: '2.5rem', marginBottom: 8 }}>🥉</div>
               <h3 style={{ color: 'var(--text-primary)', marginBottom: 4 }}>{leaderboard[2].name}</h3>
               <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: 12 }}>Chairman: {leaderboard[2].chairman}</div>
@@ -110,7 +110,7 @@ const LeaderboardPage = () => {
           <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border)' }}>
             <h4 style={{ color: 'var(--text-primary)', margin: 0 }}>Full Rankings — {period === 'weekly' ? 'This Week' : 'This Month'}</h4>
           </div>
-          <div style={{ overflowX: 'auto' }}>
+          <div className="jcom-table-wrap">
             <table className="jcom-table">
               <thead>
                 <tr>

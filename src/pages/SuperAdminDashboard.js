@@ -216,7 +216,7 @@ const SuperAdminDashboard = () => {
 
   return (
     <SidebarLayout noPadding>
-      <div style={{ padding: '80px 24px 40px', maxWidth: 1400, margin: '0 auto' }}>
+      <div className="page-shell" style={{ maxWidth: 1400 }}>
 
         {/* Header */}
         <div style={{ marginBottom: 28 }}>
@@ -250,7 +250,7 @@ const SuperAdminDashboard = () => {
         </div>
 
         {/* Tabs */}
-        <div style={{ display: 'flex', gap: 8, marginBottom: 24, flexWrap: 'wrap' }}>
+        <div className="responsive-actions" style={{ marginBottom: 24 }}>
           {[
             { key: 'approvals', label: `⏳ Pending Approvals${pendingCount > 0 ? ` (${pendingCount})` : ''}` },
             { key: 'overview', label: '📊 Overview' },
@@ -394,7 +394,7 @@ const SuperAdminDashboard = () => {
 
         {/* ══════════════════ OVERVIEW TAB ══════════════════ */}
         {tab === 'overview' && (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+          <div className="responsive-two-col" style={{ gap: 24 }}>
             <div className="glass-card">
               <h4 style={{ color: 'var(--text-primary)', marginBottom: 20 }}>⚡ Quick Actions</h4>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>

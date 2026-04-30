@@ -77,7 +77,7 @@ const SearchResultsPage = () => {
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg-base)' }}>
       <Navbar />
-      <div style={{ padding: '80px 24px 40px', maxWidth: 1200, margin: '0 auto' }}>
+      <div className="page-shell">
         <Breadcrumbs items={breadcrumbs} />
 
         <div style={{ marginBottom: 36, textAlign: 'center' }}>
@@ -85,20 +85,8 @@ const SearchResultsPage = () => {
             Find Business <span className="highlight-gold">Professionals</span>
           </h2>
           <p style={{ marginBottom: 24 }}>Search by keyword, business category, service, or name</p>
-          <form
-            onSubmit={handleSearch}
-            style={{
-              display: 'flex',
-              maxWidth: 680,
-              margin: '0 auto',
-              background: 'var(--bg-card)',
-              borderRadius: 50,
-              border: '1px solid var(--border-accent)',
-              overflow: 'hidden',
-              boxShadow: 'var(--shadow-gold)'
-            }}
-          >
-            <SearchOutlined style={{ padding: '0 16px', color: 'var(--primary)', fontSize: '1.2rem' }} />
+          <form onSubmit={handleSearch} className="hero-search" style={{ maxWidth: 680 }}>
+            <SearchOutlined className="hero-search-icon" style={{ padding: '0 16px', color: 'var(--primary)', fontSize: '1.2rem' }} />
             <input
               type="text"
               placeholder="tax consultant, web design, catering, CA, IT..."
@@ -113,7 +101,7 @@ const SearchResultsPage = () => {
         </div>
 
         {allLocations.length > 0 && (
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 20, justifyContent: 'center' }}>
+          <div className="responsive-actions" style={{ marginBottom: 20, justifyContent: 'center' }}>
             <button onClick={() => handleLocationFilter('')} className={`btn btn-sm ${!locationFilter ? 'btn-primary' : 'btn-ghost'}`}>
               All Locations ({totalResults})
             </button>

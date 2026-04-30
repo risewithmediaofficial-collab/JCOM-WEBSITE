@@ -86,7 +86,7 @@ const ChairmanDashboard = () => {
 
   return (
     <SidebarLayout noPadding>
-      <div style={{ padding: '80px 24px 40px', maxWidth: 1300, margin: '0 auto' }}>
+      <div className="page-shell" style={{ maxWidth: 1300 }}>
         <div style={{ marginBottom: 28 }}>
           <div className="badge badge-gold mb-md" style={{ marginBottom: 8 }}>👑 Chairman Dashboard</div>
           <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 4 }}>Welcome back 👋</div>
@@ -101,7 +101,7 @@ const ChairmanDashboard = () => {
         {msg && <div style={{ marginBottom: 20, padding: '14px 18px', background: msg.startsWith('✅') ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)', borderRadius: 10, border: `1px solid ${msg.startsWith('✅') ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'}`, color: msg.startsWith('✅') ? 'var(--success)' : 'var(--error)', fontWeight: 600 }}>{msg}</div>}
 
         {/* Tabs */}
-        <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+        <div className="responsive-actions" style={{ marginBottom: 20 }}>
           {[
             { key: 'approvals', label: `⏳ Pending Approvals ${pending.length > 0 ? `(${pending.length})` : ''}` },
             { key: 'members', label: '👥 Members List' },
