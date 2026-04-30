@@ -9,11 +9,42 @@ import { API_BASE_URL } from '../config/api';
 
 const API = API_BASE_URL;
 
+const EMPTY_STATS = {
+  given: 0,
+  received: 0,
+  total: 0,
+  revenue: 0,
+  completedDeals: 0,
+  meetingsAttended: 0,
+  totalMeetings: 0,
+  publicEnquiries: 0,
+  recentPublicEnquiries: [],
+  overallTotals: {
+    givenRequests: 0,
+    receivedRequests: 0,
+    totalConnections: 0,
+    totalRevenue: 0,
+    meetingsAttended: 0
+  }
+};
+
+const EMPTY_CONNECTION_STATS = {
+  given: 0,
+  received: 0,
+  total: 0,
+  connected: 0
+};
+
+const EMPTY_DEAL_STATS = {
+  completedDeals: 0,
+  totalRevenue: 0
+};
+
 const DashboardPage = () => {
   const { user } = useContext(AuthContext);
-  const [stats, setStats] = useState(null);
-  const [dealStats, setDealStats] = useState(null);
-  const [connStats, setConnStats] = useState(null);
+  const [stats, setStats] = useState(EMPTY_STATS);
+  const [dealStats, setDealStats] = useState(EMPTY_DEAL_STATS);
+  const [connStats, setConnStats] = useState(EMPTY_CONNECTION_STATS);
   const [leaderboard, setLeaderboard] = useState([]);
   const [period, setPeriod] = useState('monthly');
 
@@ -25,37 +56,26 @@ const DashboardPage = () => {
     const token = localStorage.getItem('token');
     const headers = { Authorization: `Bearer ${token}` };
     try {
-      const [memberStatsRes, dealStatsRes, connStatsRes, lbRes] = await Promise.all([
+      const [memberStatsRes, dealStatsRes, connStatsRes, lbRes] = await Promise.allSettled([
         axios.get(`${API}/stats/member?period=${period}`, { headers }),
         axios.get(`${API}/deals/stats?period=${period}`, { headers }),
         axios.get(`${API}/connections/stats?period=${period}`, { headers }),
-        axios.get(`${API}/stats/leaderboard?period=${period}&by=revenue`).catch(() => ({ data: { leaderboard: [] } }))
+        axios.get(`${API}/stats/leaderboard?period=${period}&by=revenue`)
       ]);
-      setStats(memberStatsRes.data);
-      setDealStats(dealStatsRes.data);
-      setConnStats(connStatsRes.data);
-      setLeaderboard(lbRes.data.leaderboard?.slice(0, 5) || []);
+
+      setStats(memberStatsRes.status === 'fulfilled' ? memberStatsRes.value.data : EMPTY_STATS);
+      setDealStats(dealStatsRes.status === 'fulfilled' ? dealStatsRes.value.data : EMPTY_DEAL_STATS);
+      setConnStats(connStatsRes.status === 'fulfilled' ? connStatsRes.value.data : EMPTY_CONNECTION_STATS);
+      setLeaderboard(
+        lbRes.status === 'fulfilled'
+          ? (lbRes.value.data.leaderboard?.slice(0, 5) || [])
+          : []
+      );
     } catch (err) {
-      setStats({
-        given: 12,
-        received: 8,
-        total: 20,
-        revenue: 150000,
-        completedDeals: 3,
-        meetingsAttended: 3,
-        totalMeetings: 4,
-        publicEnquiries: 0,
-        recentPublicEnquiries: [],
-        overallTotals: {
-          givenRequests: 45,
-          receivedRequests: 32,
-          totalConnections: 28,
-          totalRevenue: 540000,
-          meetingsAttended: 18
-        }
-      });
-      setConnStats({ given: 12, received: 8, total: 20, connected: 15 });
-      setDealStats({ completedDeals: 3, totalRevenue: 150000 });
+      console.error('Dashboard stats fetch failed:', err);
+      setStats(EMPTY_STATS);
+      setConnStats(EMPTY_CONNECTION_STATS);
+      setDealStats(EMPTY_DEAL_STATS);
       setLeaderboard([]);
     }
   };
@@ -156,10 +176,10 @@ const DashboardPage = () => {
       </div>
 
       <div className="grid-4" style={{ marginBottom: 32 }}>
-        <StatCard label="Connections Given" value={stats?.given || 0} icon="Given" color="teal" />
-        <StatCard label="Connections Received" value={stats?.received || 0} icon="Received" color="gold" />
-        <StatCard label="Revenue" value={formatCurrency(stats?.revenue || 0)} icon="Revenue" color="purple" />
-        <StatCard label="Meeting Attendance" value={`${stats?.meetingsAttended || 0}/${stats?.totalMeetings || 4}`} icon="Attendance" color="gold" />
+        <StatCard label="Connections Given" value={stats?.given || 0} icon="↑" color="teal" />
+        <StatCard label="Connections Received" value={stats?.received || 0} icon="↓" color="gold" />
+        <StatCard label="Revenue" value={formatCurrency(stats?.revenue || 0)} icon="₹" color="purple" />
+        <StatCard label="Meeting Attendance" value={`${stats?.meetingsAttended || 0}/${stats?.totalMeetings || 0}`} icon="✓" color="gold" />
       </div>
 
       {stats?.publicEnquiries > 0 && (
