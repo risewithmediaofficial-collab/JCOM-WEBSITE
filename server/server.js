@@ -118,6 +118,7 @@ app.use('/api/chat',        require('./routes/chat'));
 app.use('/api/notifications',require('./routes/notifications'));
 app.use('/api/stats',       require('./routes/stats'));
 app.use('/api/crm',         require('./routes/crm'));
+app.use('/api/events',      require('./routes/events'));
 
 app.get('/', (req, res) => {
   if (process.env.NODE_ENV === 'production' && process.env.FRONTEND_URL) {

@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import {
   HomeOutlined, DashboardOutlined, TeamOutlined, AppstoreOutlined,
-  CalendarOutlined, TrophyOutlined, MessageOutlined, UserOutlined,
+  CalendarOutlined, TrophyOutlined, InfoCircleOutlined,
   LogoutOutlined, MenuOutlined, CloseOutlined, BellOutlined,
   CrownOutlined, SearchOutlined, SettingOutlined
 } from '@ant-design/icons';
@@ -36,21 +36,29 @@ const Navbar = ({ sidebarWidth, onMobileMenuToggle, mobileMenuOpen }) => {
   };
 
   const getNavItems = () => {
-    if (!isAuthenticated) return [];
-    const base = [
+    const publicItems = [
+      { to: '/', icon: <HomeOutlined />, label: 'Home' },
+      { to: '/about', icon: <InfoCircleOutlined />, label: 'About' },
+      { to: '/events', icon: <CalendarOutlined />, label: 'Events' }
+    ];
+
+    if (!isAuthenticated) return publicItems;
+
+    const memberItems = [
       { to: '/dashboard', icon: <DashboardOutlined />, label: 'Dashboard' },
       { to: '/connections', icon: <TeamOutlined />, label: 'Connections' },
       { to: '/crm', icon: <AppstoreOutlined />, label: 'CRM' },
       { to: '/meetings', icon: <CalendarOutlined />, label: 'Meetings' },
       { to: '/leaderboard', icon: <TrophyOutlined />, label: 'Leaderboard' },
     ];
+
     if (user?.role === 'Super Admin') {
-      return [{ to: '/super-admin', icon: <SettingOutlined />, label: 'Admin' }, ...base];
+      return [...publicItems, { to: '/super-admin', icon: <SettingOutlined />, label: 'Admin' }, ...memberItems];
     }
     if (user?.role === 'Chairman') {
-      return [{ to: '/chairman', icon: <CrownOutlined />, label: 'Chairman' }, ...base];
+      return [...publicItems, { to: '/chairman', icon: <CrownOutlined />, label: 'Chairman' }, ...memberItems];
     }
-    return base;
+    return [...publicItems, ...memberItems];
   };
 
   const navItems = getNavItems();
@@ -65,23 +73,21 @@ const Navbar = ({ sidebarWidth, onMobileMenuToggle, mobileMenuOpen }) => {
         </Link>
 
         {/* Desktop Nav Links */}
-        {isAuthenticated && (
-          <div style={styles.navLinks} className="hide-mobile">
-            {navItems.map(item => (
-              <Link
-                key={item.to}
-                to={item.to}
-                style={{
-                  ...styles.navLink,
-                  ...(location.pathname === item.to ? styles.navLinkActive : {})
-                }}
-              >
-                {item.icon}
-                <span>{item.label}</span>
-              </Link>
-            ))}
-          </div>
-        )}
+        <div style={styles.navLinks} className="hide-mobile">
+          {navItems.map(item => (
+            <Link
+              key={item.to}
+              to={item.to}
+              style={{
+                ...styles.navLink,
+                ...(location.pathname === item.to ? styles.navLinkActive : {})
+              }}
+            >
+              {item.icon}
+              <span>{item.label}</span>
+            </Link>
+          ))}
+        </div>
 
         {/* Right Side */}
         <div style={styles.navRight}>
@@ -144,22 +150,21 @@ const Navbar = ({ sidebarWidth, onMobileMenuToggle, mobileMenuOpen }) => {
       {/* Mobile Dropdown — only shown when NOT using external sidebar drawer */}
       {!onMobileMenuToggle && menuOpen && (
         <div style={styles.mobileMenu} className="hide-desktop">
-          {!isAuthenticated ? (
+          {navItems.map(item => (
+            <Link
+              key={item.to}
+              to={item.to}
+              style={styles.mobileNavLink}
+              onClick={() => setInternalMenuOpen(false)}
+            >
+              {item.icon} {item.label}
+            </Link>
+          ))}
+          {!isAuthenticated && (
             <>
               <Link to="/login" style={styles.mobileNavLink} onClick={() => setInternalMenuOpen(false)}>Login</Link>
               <Link to="/register" style={styles.mobileNavLink} onClick={() => setInternalMenuOpen(false)}>Register</Link>
             </>
-          ) : (
-            navItems.map(item => (
-              <Link
-                key={item.to}
-                to={item.to}
-                style={styles.mobileNavLink}
-                onClick={() => setInternalMenuOpen(false)}
-              >
-                {item.icon} {item.label}
-              </Link>
-            ))
           )}
           {isAuthenticated && (
             <button onClick={handleLogout} style={{ ...styles.mobileNavLink, background: 'none', border: 'none', color: 'var(--error)', cursor: 'pointer', width: '100%', textAlign: 'left' }}>
