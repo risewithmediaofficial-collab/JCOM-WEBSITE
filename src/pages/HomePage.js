@@ -148,6 +148,82 @@ const HomePage = () => {
       </section>
 
       {/* ── LIVE STATS ── */}
+      {leaderboard.length > 0 && (
+        <section style={{ padding: '32px 16px 80px', background: 'linear-gradient(180deg, #f0f5ff 0%, #f8f9fc 100%)' }}>
+          <div className="section-shell">
+            <div style={{ textAlign: 'center', marginBottom: 36 }}>
+              <div className="badge badge-gold mb-md" style={{ margin: '0 auto 12px' }}>Top Locations</div>
+              <h2 style={{ marginBottom: 10 }}>Highest Business <span className="highlight-gold">Generators</span></h2>
+              <p style={{ maxWidth: 720, margin: '0 auto' }}>
+                Visitors can instantly see which JCOM chapters are creating the strongest business momentum.
+              </p>
+            </div>
+
+            <div className="responsive-split" style={{ alignItems: 'stretch', marginBottom: 18 }}>
+              <div className="glass-card-gold" style={{ position: 'relative', padding: '28px clamp(20px, 3vw, 34px)' }}>
+                <div style={{ position: 'absolute', top: 18, right: 18, fontSize: '1.4rem', fontWeight: 800, color: 'var(--primary)' }}>1</div>
+                <div className="badge badge-gold" style={{ marginBottom: 14 }}>Top Performing Chapter</div>
+                <h2 style={{ color: 'var(--primary)', marginBottom: 6 }}>{leaderboard[0].name}</h2>
+                <div style={{ fontSize: '0.92rem', color: 'var(--text-secondary)', marginBottom: 22 }}>
+                  Chairman: {leaderboard[0].chairman}
+                </div>
+
+                <div className="grid-2" style={{ gap: 14 }}>
+                  <div className="glass-card" style={{ padding: 18, textAlign: 'center', background: 'rgba(255,255,255,0.82)' }}>
+                    <div style={{ fontWeight: 800, fontSize: '1.7rem', color: 'var(--text-primary)' }}>{leaderboard[0].totalConnections}</div>
+                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Connects</div>
+                  </div>
+                  <div className="glass-card" style={{ padding: 18, textAlign: 'center', background: 'rgba(255,255,255,0.82)' }}>
+                    <div style={{ fontWeight: 800, fontSize: '1.7rem', color: 'var(--primary)' }}>{formatRevenue(leaderboard[0].totalRevenue)}</div>
+                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Revenue</div>
+                  </div>
+                  <div className="glass-card" style={{ padding: 18, textAlign: 'center', background: 'rgba(255,255,255,0.82)' }}>
+                    <div style={{ fontWeight: 800, fontSize: '1.7rem', color: 'var(--accent)' }}>{leaderboard[0].totalMembers}</div>
+                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Members</div>
+                  </div>
+                  <div className="glass-card" style={{ padding: 18, textAlign: 'center', background: 'rgba(255,255,255,0.82)' }}>
+                    <div style={{ fontWeight: 800, fontSize: '1.7rem', color: '#7c3aed' }}>{leaderboard[0].attendanceRate}%</div>
+                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Attendance</div>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                {leaderboard.slice(1, 3).map((loc, index) => (
+                  <div key={loc.name} className="glass-card" style={{ position: 'relative', padding: 24 }}>
+                    <div style={{ position: 'absolute', top: 16, right: 16, fontSize: '1.2rem', fontWeight: 800, color: 'var(--primary)' }}>
+                      {index + 2}
+                    </div>
+                    <h3 style={{ color: 'var(--primary)', marginBottom: 6 }}>{loc.name}</h3>
+                    <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: 16 }}>
+                      Chairman: {loc.chairman}
+                    </div>
+                    <div className="grid-2" style={{ gap: 10 }}>
+                      <div>
+                        <div style={{ fontWeight: 800, color: 'var(--text-primary)', fontSize: '1.2rem' }}>{loc.totalConnections}</div>
+                        <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Connects</div>
+                      </div>
+                      <div>
+                        <div style={{ fontWeight: 800, color: 'var(--primary)', fontSize: '1.2rem' }}>{formatRevenue(loc.totalRevenue)}</div>
+                        <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Revenue</div>
+                      </div>
+                      <div>
+                        <div style={{ fontWeight: 800, color: 'var(--accent)', fontSize: '1.2rem' }}>{loc.totalMembers}</div>
+                        <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Members</div>
+                      </div>
+                      <div>
+                        <div style={{ fontWeight: 800, color: '#7c3aed', fontSize: '1.2rem' }}>{loc.attendanceRate}%</div>
+                        <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Attendance</div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
       <section style={{ padding: '80px 16px', background: 'var(--bg-surface)' }}>
         <div className="section-shell">
           <div style={{ textAlign: 'center', marginBottom: 48 }}>
@@ -310,7 +386,7 @@ const HomePage = () => {
       </section>
 
       {/* ── LEADERBOARD ── */}
-      {leaderboard.length > 0 && (
+      {false && leaderboard.length > 0 && (
         <section style={{ padding: '80px 16px', background: '#f1f4f9' }}>
           <div className="section-shell">
             <div style={{ textAlign: 'center', marginBottom: 48 }}>
