@@ -8,19 +8,34 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
+const mimeExtensionMap = {
+  'image/jpeg': '.jpg',
+  'image/jpg': '.jpg',
+  'image/png': '.png',
+  'image/gif': '.gif',
+  'image/webp': '.webp'
+};
+
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadDir),
   filename: (req, file, cb) => {
     const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1E9)}`;
-    cb(null, `profile-${uniqueSuffix}${path.extname(file.originalname)}`);
+    const normalizedExt = mimeExtensionMap[file.mimetype] || path.extname(file.originalname).toLowerCase();
+    cb(null, `profile-${uniqueSuffix}${normalizedExt}`);
   }
 });
 
 const fileFilter = (req, file, cb) => {
-  const allowed = /jpeg|jpg|png|gif|webp/;
+  const allowedExtensions = ['.jpeg', '.jpg', '.png', '.gif', '.webp'];
   const ext = path.extname(file.originalname).toLowerCase();
-  if (allowed.test(ext)) cb(null, true);
-  else cb(new Error('Only image files are allowed'), false);
+  const isAllowedMime = Boolean(mimeExtensionMap[file.mimetype]);
+  const isAllowedExtension = allowedExtensions.includes(ext) || ext === '';
+
+  if (isAllowedMime && isAllowedExtension) {
+    return cb(null, true);
+  }
+
+  return cb(new Error('Only JPG, PNG, GIF, and WEBP image files are allowed'), false);
 };
 
 const upload = multer({

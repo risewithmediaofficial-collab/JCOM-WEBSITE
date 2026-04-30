@@ -1,6 +1,6 @@
 import React from 'react';
 import { GlobalOutlined, InfoCircleOutlined, LinkOutlined, PlusOutlined } from '@ant-design/icons';
-import { API_ORIGIN } from '../config/api';
+import ProfileAvatar from './ProfileAvatar';
 
 const roleBadge = {
   'Vice Chairman': 'badge-teal',
@@ -9,38 +9,20 @@ const roleBadge = {
 };
 
 const MemberCard = ({ member, onConnect, onInfo, isConnected, isPending }) => {
-  const initials = `${member.firstName?.[0] || ''}${member.lastName?.[0] || ''}`;
   const displayName = `${member.firstName} ${member.lastName}`;
 
   return (
     <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
-        <div
-          style={{
-            width: 52,
-            height: 52,
-            borderRadius: '50%',
-            background: 'var(--grad-gold)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontWeight: 800,
-            fontSize: '1.1rem',
-            color: '#000',
-            flexShrink: 0,
-            overflow: 'hidden'
-          }}
-        >
-          {member.profilePic ? (
-            <img
-              src={`${API_ORIGIN}${member.profilePic}`}
-              alt={displayName}
-              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-            />
-          ) : (
-            initials
-          )}
-        </div>
+        <ProfileAvatar
+          src={member.profilePic}
+          firstName={member.firstName}
+          lastName={member.lastName}
+          alt={displayName}
+          size={52}
+          borderRadius="50%"
+          fontSize={18}
+        />
         <div style={{ flex: 1, minWidth: 0 }}>
           <div
             style={{

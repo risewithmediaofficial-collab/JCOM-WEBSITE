@@ -1,7 +1,7 @@
 import React, { useContext } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { API_ORIGIN } from '../config/api';
+import ProfileAvatar from './ProfileAvatar';
 
 const Sidebar = ({ collapsed = false, onCollapse, onClose, isMobileDrawer = false }) => {
   const { user } = useContext(AuthContext);
@@ -80,17 +80,18 @@ const Sidebar = ({ collapsed = false, onCollapse, onClose, isMobileDrawer = fals
           borderBottom: '1px solid rgba(0,0,0,0.06)',
         }}>
           <div style={{
-            width: 40, height: 40, borderRadius: 10,
-            background: 'var(--grad-gold)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontWeight: 800, fontSize: '0.9rem', color: '#fff',
-            marginBottom: 8, overflow: 'hidden',
-            border: '2px solid var(--border-accent)'
+            marginBottom: 8
           }}>
-            {user.profilePic
-              ? <img src={`${API_ORIGIN}${user.profilePic}`} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              : `${user.firstName?.[0]}${user.lastName?.[0]}`
-            }
+            <ProfileAvatar
+              src={user.profilePic}
+              firstName={user.firstName}
+              lastName={user.lastName}
+              alt={`${user.firstName} ${user.lastName}`}
+              size={40}
+              borderRadius={10}
+              border="2px solid var(--border-accent)"
+              textColor="#fff"
+            />
           </div>
           <div style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {user.firstName} {user.lastName}
@@ -109,12 +110,17 @@ const Sidebar = ({ collapsed = false, onCollapse, onClose, isMobileDrawer = fals
       {/* Collapsed avatar */}
       {collapsed && (
         <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0', borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
-          <div style={{ width: 36, height: 36, borderRadius: 8, background: 'var(--grad-gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '0.8rem', color: '#fff', overflow: 'hidden', border: '2px solid var(--border-accent)' }}>
-            {user.profilePic
-              ? <img src={`${API_ORIGIN}${user.profilePic}`} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              : `${user.firstName?.[0]}${user.lastName?.[0]}`
-            }
-          </div>
+          <ProfileAvatar
+            src={user.profilePic}
+            firstName={user.firstName}
+            lastName={user.lastName}
+            alt={`${user.firstName} ${user.lastName}`}
+            size={36}
+            borderRadius={8}
+            border="2px solid var(--border-accent)"
+            fontSize={14}
+            textColor="#fff"
+          />
         </div>
       )}
 
