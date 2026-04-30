@@ -2,6 +2,11 @@ const User = require('../models/User');
 const Location = require('../models/Location');
 const Table = require('../models/Table');
 
+const getProfilePicValue = (file) => {
+  if (!file) return null;
+  return `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
+};
+
 // ─── SEARCH (JustDial style) ──────────────────────────────────────────────────
 exports.searchUsers = async (req, res) => {
   try {
@@ -101,7 +106,7 @@ exports.updateUserProfile = async (req, res) => {
       if (req.body[field] !== undefined) updates[field] = req.body[field];
     });
 
-    if (req.file) updates.profilePic = `/uploads/${req.file.filename}`;
+    if (req.file) updates.profilePic = getProfilePicValue(req.file);
 
     const user = await User.findByIdAndUpdate(userId, updates, { new: true })
       .select('-password -aadharNumber -panNumber');

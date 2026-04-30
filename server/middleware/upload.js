@@ -1,12 +1,4 @@
 const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
-
-// Ensure uploads directory exists
-const uploadDir = path.join(__dirname, '../uploads');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
 
 const mimeExtensionMap = {
   'image/jpeg': '.jpg',
@@ -16,16 +8,10 @@ const mimeExtensionMap = {
   'image/webp': '.webp'
 };
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, uploadDir),
-  filename: (req, file, cb) => {
-    const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1E9)}`;
-    const normalizedExt = mimeExtensionMap[file.mimetype] || path.extname(file.originalname).toLowerCase();
-    cb(null, `profile-${uniqueSuffix}${normalizedExt}`);
-  }
-});
+const storage = multer.memoryStorage();
 
 const fileFilter = (req, file, cb) => {
+  const path = require('path');
   const allowedExtensions = ['.jpeg', '.jpg', '.png', '.gif', '.webp'];
   const ext = path.extname(file.originalname).toLowerCase();
   const isAllowedMime = Boolean(mimeExtensionMap[file.mimetype]);
@@ -41,7 +27,7 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({
   storage,
   fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 } // 5MB
+  limits: { fileSize: 1024 * 1024 } // 1MB
 });
 
 module.exports = upload;

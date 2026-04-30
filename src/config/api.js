@@ -11,6 +11,7 @@ export const API_ORIGIN = API_BASE_URL.replace(/\/api\/?$/, '');
 
 export const buildAssetUrl = (assetPath) => {
   if (!assetPath) return null;
+  if (/^data:/i.test(assetPath)) return assetPath;
   if (/^https?:\/\//i.test(assetPath)) return assetPath;
   const normalizedPath = assetPath.startsWith('/') ? assetPath : `/${assetPath}`;
   return `${API_ORIGIN}${normalizedPath}`;

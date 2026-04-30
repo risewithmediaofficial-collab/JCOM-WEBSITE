@@ -9,6 +9,11 @@ const generateToken = (userId, role) => {
   return jwt.sign({ userId, role }, process.env.JWT_SECRET, { expiresIn: '7d' });
 };
 
+const getProfilePicValue = (file) => {
+  if (!file) return null;
+  return `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
+};
+
 const generateMembershipId = (locationCode, year, sequence) => {
   const seq = String(sequence).padStart(4, '0');
   return `JCOM-${locationCode}-${year}-${seq}`;
@@ -66,7 +71,7 @@ exports.registerUser = async (req, res) => {
     const location = await Location.findById(locationId);
     if (!location) return res.status(400).json({ message: 'Invalid location' });
 
-    const profilePic = req.file ? `/uploads/${req.file.filename}` : null;
+    const profilePic = getProfilePicValue(req.file);
 
     const user = new User({
       firstName, lastName, email, phone,

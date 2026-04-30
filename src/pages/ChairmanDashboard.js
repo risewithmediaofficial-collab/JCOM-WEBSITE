@@ -3,8 +3,9 @@ import { AuthContext } from '../context/AuthContext';
 import axios from 'axios';
 import SidebarLayout from '../components/SidebarLayout';
 import { CheckCircleOutlined, CloseCircleOutlined, SyncOutlined, CrownOutlined } from '@ant-design/icons';
+import ProfileAvatar from '../components/ProfileAvatar';
 
-import { API_BASE_URL, API_ORIGIN } from '../config/api';
+import { API_BASE_URL } from '../config/api';
 
 const API = API_BASE_URL;
 
@@ -124,9 +125,15 @@ const ChairmanDashboard = () => {
                 <div key={member._id} className="glass-card">
                   {/* Member Overview */}
                   <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start', flexWrap: 'wrap', marginBottom: 20 }}>
-                    <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'var(--grad-gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '1.1rem', color: '#000', flexShrink: 0, overflow: 'hidden' }}>
-                      {member.profilePic ? <img src={`${API_ORIGIN}${member.profilePic}`} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : `${member.firstName?.[0]}${member.lastName?.[0]}`}
-                    </div>
+                    <ProfileAvatar
+                      src={member.profilePic}
+                      firstName={member.firstName}
+                      lastName={member.lastName}
+                      alt="Profile"
+                      size={56}
+                      borderRadius="50%"
+                      fontSize={22}
+                    />
                     <div style={{ flex: 1 }}>
                       <h4 style={{ color: 'var(--text-primary)', margin: 0 }}>{member.firstName} {member.lastName}</h4>
                       <div style={{ fontSize: '0.85rem', color: 'var(--primary)', fontWeight: 600 }}>{member.businessCategory}</div>

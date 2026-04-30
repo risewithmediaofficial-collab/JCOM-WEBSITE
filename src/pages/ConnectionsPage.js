@@ -4,6 +4,7 @@ import axios from 'axios';
 import SidebarLayout from '../components/SidebarLayout';
 import MemberCard from '../components/MemberCard';
 import ChatModal from '../components/ChatModal';
+import ProfileAvatar from '../components/ProfileAvatar';
 import {
   SearchOutlined,
   CloseCircleOutlined,
@@ -13,7 +14,7 @@ import {
   SendOutlined
 } from '@ant-design/icons';
 
-import { API_BASE_URL, API_ORIGIN } from '../config/api';
+import { API_BASE_URL } from '../config/api';
 
 const API = API_BASE_URL;
 const REQUEST_TYPES = ['NA', 'Self', 'JCOM member', 'Non member'];
@@ -26,8 +27,6 @@ const formatDate = (value) => {
     year: 'numeric'
   });
 };
-
-const getInitials = (person) => `${person?.firstName?.[0] || ''}${person?.lastName?.[0] || ''}`;
 
 const MemberInfoDialog = ({ member, onClose }) => {
   if (!member) return null;
@@ -45,13 +44,15 @@ const MemberInfoDialog = ({ member, onClose }) => {
 
         <div className="glass-card" style={{ padding: 20, marginBottom: 18, background: '#fbfcff' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
-            <div className="avatar avatar-lg">
-              {member.profilePic ? (
-                <img src={`${API_ORIGIN}${member.profilePic}`} alt={`${member.firstName} ${member.lastName}`} />
-              ) : (
-                getInitials(member)
-              )}
-            </div>
+            <ProfileAvatar
+              src={member.profilePic}
+              firstName={member.firstName}
+              lastName={member.lastName}
+              alt={`${member.firstName} ${member.lastName}`}
+              size={64}
+              borderRadius="50%"
+              fontSize={22}
+            />
             <div style={{ flex: 1 }}>
               <div style={{ fontWeight: 800, fontSize: '1.2rem', color: 'var(--text-primary)' }}>
                 {member.firstName} {member.lastName}
@@ -230,13 +231,15 @@ const ConnectionInfoDialog = ({ connection, user, onClose }) => {
 
         <div className="glass-card" style={{ padding: 20, marginBottom: 18, background: '#fbfcff' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
-            <div className="avatar avatar-lg">
-              {other?.profilePic ? (
-                <img src={`${API_ORIGIN}${other.profilePic}`} alt={`${other.firstName} ${other.lastName}`} />
-              ) : (
-                getInitials(other)
-              )}
-            </div>
+            <ProfileAvatar
+              src={other?.profilePic}
+              firstName={other?.firstName}
+              lastName={other?.lastName}
+              alt={`${other?.firstName || ''} ${other?.lastName || ''}`}
+              size={64}
+              borderRadius="50%"
+              fontSize={22}
+            />
             <div style={{ flex: 1 }}>
               <div style={{ fontWeight: 800, fontSize: '1.15rem', color: 'var(--text-primary)' }}>
                 {other?.firstName} {other?.lastName}
@@ -583,13 +586,15 @@ const ConnectionsPage = () => {
                   return (
                     <div key={conn._id} className="glass-card" style={{ padding: 20, borderLeft: '5px solid #2f68c5' }}>
                       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, flexWrap: 'wrap' }}>
-                        <div className="avatar" style={{ width: 58, height: 58, fontSize: '1.1rem' }}>
-                          {other?.profilePic ? (
-                            <img src={`${API_ORIGIN}${other.profilePic}`} alt={`${other.firstName} ${other.lastName}`} />
-                          ) : (
-                            getInitials(other)
-                          )}
-                        </div>
+                        <ProfileAvatar
+                          src={other?.profilePic}
+                          firstName={other?.firstName}
+                          lastName={other?.lastName}
+                          alt={`${other?.firstName || ''} ${other?.lastName || ''}`}
+                          size={58}
+                          borderRadius="50%"
+                          fontSize={20}
+                        />
 
                         <div style={{ flex: 1, minWidth: 220 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 4 }}>

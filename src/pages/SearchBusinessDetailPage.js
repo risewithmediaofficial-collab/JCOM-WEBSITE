@@ -4,12 +4,11 @@ import axios from 'axios';
 import Navbar from '../components/Navbar';
 import Breadcrumbs from '../components/Breadcrumbs';
 import { EnvironmentOutlined, GlobalOutlined, MailOutlined, PhoneOutlined, SearchOutlined } from '@ant-design/icons';
+import ProfileAvatar from '../components/ProfileAvatar';
 
-import { API_BASE_URL, API_ORIGIN } from '../config/api';
+import { API_BASE_URL } from '../config/api';
 
 const API = API_BASE_URL;
-
-const getInitials = (member) => `${member?.firstName?.[0] || ''}${member?.lastName?.[0] || ''}`;
 
 const infoCardStyle = {
   padding: '16px 18px',
@@ -170,13 +169,15 @@ const SearchBusinessDetailPage = () => {
 
                 <div className="glass-card" style={{ padding: 22, background: '#fbfcff' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 18 }}>
-                    <div className="avatar avatar-xl">
-                      {member.profilePic ? (
-                        <img src={`${API_ORIGIN}${member.profilePic}`} alt={`${member.firstName} ${member.lastName}`} />
-                      ) : (
-                        getInitials(member)
-                      )}
-                    </div>
+                    <ProfileAvatar
+                      src={member.profilePic}
+                      firstName={member.firstName}
+                      lastName={member.lastName}
+                      alt={`${member.firstName} ${member.lastName}`}
+                      size={96}
+                      borderRadius="50%"
+                      fontSize={32}
+                    />
                     <div>
                       <div style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--text-primary)' }}>
                         {member.firstName} {member.lastName}
