@@ -99,23 +99,25 @@ const Navbar = ({ sidebarWidth, onMobileMenuToggle, mobileMenuOpen }) => {
 
               {/* User Profile */}
               <div style={styles.profileSection}>
-                <ProfileAvatar
-                  src={user?.profilePic}
-                  firstName={user?.firstName}
-                  lastName={user?.lastName}
-                  alt="Profile"
-                  size={28}
-                  borderRadius="50%"
-                  fontSize={12}
-                />
-                <div className="hide-mobile" style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                  <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.2 }}>
-                    {user?.firstName} {user?.lastName?.charAt(0)}.
-                  </span>
-                  <span className={`badge ${getRoleBadge(user?.role).cls}`} style={{ fontSize: '0.55rem', padding: '1px 6px' }}>
-                    {getRoleBadge(user?.role).label}
-                  </span>
-                </div>
+                <Link to={user?._id ? `/profile/${user._id}` : '/dashboard'} style={{ ...styles.profileLink, textDecoration: 'none' }}>
+                  <ProfileAvatar
+                    src={user?.profilePic}
+                    firstName={user?.firstName}
+                    lastName={user?.lastName}
+                    alt="Profile"
+                    size={28}
+                    borderRadius="50%"
+                    fontSize={12}
+                  />
+                  <div className="hide-mobile" style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                    <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.2 }}>
+                      {user?.firstName} {user?.lastName?.charAt(0)}.
+                    </span>
+                    <span className={`badge ${getRoleBadge(user?.role).cls}`} style={{ fontSize: '0.55rem', padding: '1px 6px' }}>
+                      {getRoleBadge(user?.role).label}
+                    </span>
+                  </div>
+                </Link>
                 <button onClick={handleLogout} style={styles.logoutBtn} title="Logout">
                   <LogoutOutlined />
                 </button>
@@ -226,6 +228,9 @@ const styles = {
     display: 'flex', alignItems: 'center', gap: 6,
     background: '#f8f9fc', borderRadius: 8,
     border: '1px solid rgba(0,0,0,0.08)', padding: '4px 8px'
+  },
+  profileLink: {
+    display: 'flex', alignItems: 'center', gap: 6
   },
   logoutBtn: {
     background: 'none', border: 'none', cursor: 'pointer',
