@@ -3,6 +3,7 @@ import { AuthContext } from '../context/AuthContext';
 import axios from 'axios';
 import SidebarLayout from '../components/SidebarLayout';
 import { PlusOutlined, CrownOutlined, CheckCircleOutlined, CloseCircleOutlined, CopyOutlined } from '@ant-design/icons';
+import useBodyScrollLock from '../hooks/useBodyScrollLock';
 
 import { API_BASE_URL, buildAssetUrl } from '../config/api';
 
@@ -63,6 +64,7 @@ const SuperAdminDashboard = () => {
   const [loadingChairmanMembers, setLoadingChairmanMembers] = useState(false);
   const [formSaving, setFormSaving] = useState(false);
   const [msg, setMsg] = useState('');
+  useBodyScrollLock(Boolean(approveResult || showCreateLocation || showCreateTable || showAssignChairman));
 
   const token = localStorage.getItem('token');
   const headers = { Authorization: `Bearer ${token}` };
@@ -366,11 +368,11 @@ const SuperAdminDashboard = () => {
                       </div>
 
                       {/* Actions */}
-                      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                      <div className="stack-mobile" style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                         <button
                           onClick={() => handleApprove(member)}
                           disabled={saving === member._id}
-                          className="btn btn-primary"
+                          className="btn btn-primary w-full-sm"
                           style={{ flex: 1, minWidth: 200 }}
                         >
                           <CheckCircleOutlined />
@@ -378,7 +380,7 @@ const SuperAdminDashboard = () => {
                         </button>
                         <button
                           onClick={() => handleReject(member._id)}
-                          className="btn btn-danger btn-sm"
+                          className="btn btn-danger btn-sm w-full-sm"
                           style={{ flexShrink: 0 }}
                         >
                           <CloseCircleOutlined /> Reject
@@ -439,12 +441,13 @@ const SuperAdminDashboard = () => {
         {/* ══════════════════ LOCATIONS TAB ══════════════════ */}
         {tab === 'locations' && (
           <div>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginBottom: 16 }}>
+            <div className="responsive-actions" style={{ justifyContent: 'flex-end', marginBottom: 16 }}>
               <button onClick={() => setShowCreateLocation(true)} className="btn btn-primary btn-sm"><PlusOutlined /> New Location</button>
               <button onClick={() => setShowCreateTable(true)} className="btn btn-teal btn-sm"><PlusOutlined /> New Table</button>
               <button onClick={() => setShowAssignChairman(true)} className="btn btn-outline btn-sm"><CrownOutlined /> Assign Chairman</button>
             </div>
             <div className="glass-card" style={{ padding: 0 }}>
+              <div className="jcom-table-wrap">
               <table className="jcom-table">
                 <thead>
                   <tr><th>Location</th><th>Code</th><th>Chairman</th><th>Year</th><th style={{ textAlign:'right' }}>Members</th><th style={{ textAlign:'right' }}>Tables</th><th style={{ textAlign:'right' }}>Revenue</th><th>History</th></tr>
@@ -465,6 +468,7 @@ const SuperAdminDashboard = () => {
                   {locations.length === 0 && <tr><td colSpan={8} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>No locations yet</td></tr>}
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         )}
@@ -516,10 +520,11 @@ const SuperAdminDashboard = () => {
 
         {tab === 'members' && (
           <div className="glass-card" style={{ padding: 0 }}>
-            <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="stack-mobile" style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
               <h4 style={{ color: 'var(--text-primary)', margin: 0 }}>All Users</h4>
               <span className="badge badge-teal">{allUsers.length} total</span>
             </div>
+            <div className="jcom-table-wrap">
             <table className="jcom-table">
               <thead>
                 <tr><th>Name</th><th>Membership ID</th><th>Role</th><th>Location</th><th>Business</th><th>Status</th><th style={{ textAlign:'right' }}>Revenue</th></tr>
@@ -542,14 +547,15 @@ const SuperAdminDashboard = () => {
                 {allUsers.length === 0 && <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>No users yet</td></tr>}
               </tbody>
             </table>
+            </div>
           </div>
         )}
       </div>
 
       {/* ═══════════ APPROVAL SUCCESS MODAL ═══════════ */}
       {approveResult && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-          <div className="glass-card animate-fadeInUp" style={{ maxWidth: 480, width: '100%', padding: 36, textAlign: 'center' }}>
+        <div className="modal-overlay" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <div className="glass-card animate-fadeInUp modal-sheet" style={{ maxWidth: 480, width: '100%', padding: 36, textAlign: 'center' }}>
             <div style={{ fontSize: '3.5rem', marginBottom: 12 }}>🎉</div>
             <h3 style={{ color: 'var(--text-primary)', marginBottom: 6 }}>Member Approved!</h3>
             <p style={{ marginBottom: 24 }}>
@@ -592,8 +598,8 @@ const SuperAdminDashboard = () => {
 
       {/* ═══════════ CREATE LOCATION MODAL ═══════════ */}
       {showCreateLocation && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-          <div className="glass-card-gold animate-fadeInUp" style={{ maxWidth: 440, width: '100%', padding: 32 }}>
+        <div className="modal-overlay" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <div className="glass-card-gold animate-fadeInUp modal-sheet" style={{ maxWidth: 440, width: '100%', padding: 32 }}>
             <h4 style={{ color: 'var(--text-primary)', marginBottom: 20 }}>📍 Create New Location</h4>
             <form onSubmit={createLocation} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div className="form-group">
@@ -605,8 +611,8 @@ const SuperAdminDashboard = () => {
                 <input className="form-input" placeholder="e.g. KRG" value={locForm.code} onChange={e => setLocForm(f => ({ ...f, code: e.target.value.toUpperCase() }))} maxLength={5} required />
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 4 }}>Used in Membership ID format: JCOM-KRG-2026-0001</div>
               </div>
-              <div style={{ display: 'flex', gap: 12 }}>
-                <button type="button" onClick={() => setShowCreateLocation(false)} className="btn btn-ghost" style={{ flex: 1 }}>Cancel</button>
+              <div className="stack-mobile" style={{ display: 'flex', gap: 12 }}>
+                <button type="button" onClick={() => setShowCreateLocation(false)} className="btn btn-ghost w-full-sm" style={{ flex: 1 }}>Cancel</button>
                 <button type="submit" disabled={formSaving} className="btn btn-primary" style={{ flex: 1 }}>{formSaving ? 'Creating...' : '✅ Create Location'}</button>
               </div>
             </form>
@@ -616,8 +622,8 @@ const SuperAdminDashboard = () => {
 
       {/* ═══════════ CREATE TABLE MODAL ═══════════ */}
       {showCreateTable && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-          <div className="glass-card-gold animate-fadeInUp" style={{ maxWidth: 440, width: '100%', padding: 32 }}>
+        <div className="modal-overlay" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <div className="glass-card-gold animate-fadeInUp modal-sheet" style={{ maxWidth: 440, width: '100%', padding: 32 }}>
             <h4 style={{ color: 'var(--text-primary)', marginBottom: 20 }}>🗂️ Create New Table</h4>
             <form onSubmit={createTable} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div className="form-group">
@@ -635,8 +641,8 @@ const SuperAdminDashboard = () => {
                 <label className="form-label">Capacity (default 60)</label>
                 <input type="number" className="form-input" value={tableForm.capacity} onChange={e => setTableForm(f => ({ ...f, capacity: Number(e.target.value) }))} min={1} max={100} />
               </div>
-              <div style={{ display: 'flex', gap: 12 }}>
-                <button type="button" onClick={() => setShowCreateTable(false)} className="btn btn-ghost" style={{ flex: 1 }}>Cancel</button>
+              <div className="stack-mobile" style={{ display: 'flex', gap: 12 }}>
+                <button type="button" onClick={() => setShowCreateTable(false)} className="btn btn-ghost w-full-sm" style={{ flex: 1 }}>Cancel</button>
                 <button type="submit" disabled={formSaving} className="btn btn-primary" style={{ flex: 1 }}>{formSaving ? 'Creating...' : '✅ Create Table'}</button>
               </div>
             </form>
@@ -646,8 +652,8 @@ const SuperAdminDashboard = () => {
 
       {/* ═══════════ ASSIGN CHAIRMAN MODAL ═══════════ */}
       {showAssignChairman && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-          <div className="glass-card-gold animate-fadeInUp" style={{ maxWidth: 480, width: '100%', padding: 32 }}>
+        <div className="modal-overlay" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <div className="glass-card-gold animate-fadeInUp modal-sheet" style={{ maxWidth: 480, width: '100%', padding: 32 }}>
             <h4 style={{ color: 'var(--text-primary)', marginBottom: 20 }}>👑 Assign Chairman</h4>
             <div style={{ padding: 12, background: 'rgba(0,73,194,0.06)', borderRadius: 8, border: '1px solid var(--border-accent)', fontSize: '0.82rem', color: 'var(--primary)', marginBottom: 16 }}>
               ⚠️ Previous chairman will be archived automatically — their data is preserved.
@@ -701,8 +707,8 @@ const SuperAdminDashboard = () => {
                 <label className="form-label">Year</label>
                 <input type="number" className="form-input" value={chairmanForm.year} onChange={e => setChairmanForm(f => ({ ...f, year: Number(e.target.value) }))} min={2024} max={2030} />
               </div>
-              <div style={{ display: 'flex', gap: 12 }}>
-                <button type="button" onClick={() => { setShowAssignChairman(false); setChairmanLocationMembers([]); setChairmanForm({ userId: '', locationId: '', year: new Date().getFullYear() }); }} className="btn btn-ghost" style={{ flex: 1 }}>Cancel</button>
+              <div className="stack-mobile" style={{ display: 'flex', gap: 12 }}>
+                <button type="button" onClick={() => { setShowAssignChairman(false); setChairmanLocationMembers([]); setChairmanForm({ userId: '', locationId: '', year: new Date().getFullYear() }); }} className="btn btn-ghost w-full-sm" style={{ flex: 1 }}>Cancel</button>
                 <button type="submit" disabled={formSaving || !chairmanForm.userId || !chairmanForm.locationId} className="btn btn-primary" style={{ flex: 1 }}>{formSaving ? 'Assigning...' : '👑 Assign Chairman'}</button>
               </div>
             </form>

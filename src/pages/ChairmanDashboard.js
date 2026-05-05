@@ -4,6 +4,7 @@ import axios from 'axios';
 import SidebarLayout from '../components/SidebarLayout';
 import { CheckCircleOutlined, CloseCircleOutlined, SyncOutlined, CrownOutlined } from '@ant-design/icons';
 import ProfileAvatar from '../components/ProfileAvatar';
+import useBodyScrollLock from '../hooks/useBodyScrollLock';
 
 import { API_BASE_URL } from '../config/api';
 
@@ -21,6 +22,7 @@ const ChairmanDashboard = () => {
   const [msg, setMsg] = useState('');
   const [roleModal, setRoleModal] = useState(null); // member to assign sub-role
   const [selectedSubRole, setSelectedSubRole] = useState('');
+  useBodyScrollLock(Boolean(roleModal));
 
   const token = localStorage.getItem('token');
   const headers = { Authorization: `Bearer ${token}` };
@@ -182,11 +184,11 @@ const ChairmanDashboard = () => {
                   </div>
 
                   {/* Actions */}
-                  <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                    <button onClick={() => handleApprove(member._id)} className="btn btn-primary" style={{ flex: 1 }}>
+                  <div className="stack-mobile" style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                    <button onClick={() => handleApprove(member._id)} className="btn btn-primary w-full-sm" style={{ flex: 1 }}>
                       <CheckCircleOutlined /> Approve & Generate Member ID
                     </button>
-                    <button onClick={() => { const reason = prompt('Reason for rejection (optional):'); handleReject(member._id, reason); }} className="btn btn-danger" style={{ flex: '0 0 auto' }}>
+                    <button onClick={() => { const reason = prompt('Reason for rejection (optional):'); handleReject(member._id, reason); }} className="btn btn-danger w-full-sm" style={{ flex: '0 0 auto' }}>
                       <CloseCircleOutlined /> Reject
                     </button>
                   </div>
@@ -199,11 +201,11 @@ const ChairmanDashboard = () => {
         {/* MEMBERS TAB */}
         {tab === 'members' && (
           <div className="glass-card" style={{ padding: 0 }}>
-            <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="stack-mobile" style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
               <h4 style={{ color: 'var(--text-primary)', margin: 0 }}>Members — {user?.locationName}</h4>
               <span className="badge badge-teal">{members.length} approved</span>
             </div>
-            <div style={{ overflowX: 'auto' }}>
+            <div className="jcom-table-wrap">
               <table className="jcom-table">
                 <thead>
                   <tr>
@@ -263,8 +265,8 @@ const ChairmanDashboard = () => {
 
       {/* SUB-ROLE ASSIGNMENT MODAL */}
       {roleModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-          <div className="glass-card-gold animate-fadeInUp" style={{ maxWidth: 400, width: '100%', padding: 32 }}>
+        <div className="modal-overlay" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <div className="glass-card-gold animate-fadeInUp modal-sheet" style={{ maxWidth: 400, width: '100%', padding: 32 }}>
             <h4 style={{ color: 'var(--text-primary)', marginBottom: 16 }}>
               Assign Sub-Role: {roleModal.firstName} {roleModal.lastName}
             </h4>
@@ -279,8 +281,8 @@ const ChairmanDashboard = () => {
                 </label>
               ))}
             </div>
-            <div style={{ display: 'flex', gap: 12 }}>
-              <button onClick={() => setRoleModal(null)} className="btn btn-ghost" style={{ flex: 1 }}>Cancel</button>
+            <div className="stack-mobile" style={{ display: 'flex', gap: 12 }}>
+              <button onClick={() => setRoleModal(null)} className="btn btn-ghost w-full-sm" style={{ flex: 1 }}>Cancel</button>
               <button onClick={handleSubRoleAssign} className="btn btn-primary" style={{ flex: 1 }}>✅ Assign</button>
             </div>
           </div>
