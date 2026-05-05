@@ -1,7 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { SearchOutlined, ArrowRightOutlined } from '@ant-design/icons';
+import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Navbar from '../components/Navbar';
 import StarRating from '../components/StarRating';
 
@@ -9,15 +11,157 @@ import { API_BASE_URL } from '../config/api';
 
 const API = API_BASE_URL;
 
+const cleanCardStyle = {
+  background: '#ffffff',
+  border: '1px solid rgba(0,0,0,0.06)',
+  borderRadius: 24
+};
+
+const BUSINESS_CATEGORIES = [
+  'Accounting & Finance', 'Architecture & Design', 'Automobile', 'Banking & Insurance',
+  'Construction & Real Estate', 'Digital Marketing', 'Education & Training', 'Engineering',
+  'Fashion & Apparel', 'Food & Beverage', 'Healthcare & Medical', 'Hospitality & Tourism',
+  'HR & Recruitment', 'IT & Software', 'Jewelry & Accessories', 'Legal Services',
+  'Logistics & Transport', 'Manufacturing', 'Media & Entertainment', 'Printing & Publishing',
+  'Retail & E-commerce', 'Security Services', 'Solar & Energy', 'Textiles', 'Travel & Tourism',
+  'Wellness & Fitness', 'Other'
+];
+
+const chartPalette = ['#0f4bcf', '#16a34a', '#7c3aed', '#f59e0b', '#06b6d4'];
+
+const AnalyticsBarChart = ({ data, valueKey, color }) => {
+  const chartData = data.slice(0, 5);
+  const maxValue = Math.max(...chartData.map((item) => Number(item[valueKey]) || 0), 1);
+
+  return (
+    <div style={{ display: 'grid', gap: 18 }}>
+      {chartData.map((item, index) => {
+        const value = Number(item[valueKey]) || 0;
+        const width = `${Math.max((value / maxValue) * 100, 8)}%`;
+        return (
+          <div key={`${item.name}-${valueKey}`} style={{ display: 'grid', gap: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                <span style={{ width: 28, height: 28, borderRadius: 10, background: 'rgba(15,75,207,0.08)', color: color, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem', fontWeight: 800, flexShrink: 0 }}>
+                  {index + 1}
+                </span>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {item.name}
+                  </div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                    Connections
+                  </div>
+                </div>
+              </div>
+              <div style={{ fontSize: '0.95rem', fontWeight: 900, color: 'var(--text-primary)' }}>
+                {value.toLocaleString('en-IN')}
+              </div>
+            </div>
+            <div style={{ height: 14, borderRadius: 999, background: 'linear-gradient(90deg, #edf2ff 0%, #f8fbff 100%)', overflow: 'hidden', border: '1px solid rgba(15,75,207,0.08)' }}>
+              <div style={{ height: '100%', width, borderRadius: 999, background: `linear-gradient(90deg, ${color} 0%, #4f8df7 100%)` }} />
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+const AnalyticsDonutChart = ({ data, valueKey, labelFormatter = (value) => value.toLocaleString('en-IN') }) => {
+  const chartData = data.slice(0, 4);
+  const total = chartData.reduce((sum, item) => sum + (Number(item[valueKey]) || 0), 0);
+  const radius = 54;
+  const circumference = 2 * Math.PI * radius;
+  let offset = 0;
+
+  return (
+    <div className="responsive-main-aside" style={{ alignItems: 'center', gap: 28 }}>
+      <svg width="190" height="190" viewBox="0 0 190 190" role="img" aria-label="Distribution chart">
+        <defs>
+          <filter id="donutGlow" x="-40%" y="-40%" width="180%" height="180%">
+            <feGaussianBlur stdDeviation="4" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+        <g transform="translate(95 95) rotate(-90)">
+          <circle r={radius} fill="none" stroke="#eef2ff" strokeWidth="18" />
+          {chartData.map((item, index) => {
+            const value = Number(item[valueKey]) || 0;
+            const segment = total > 0 ? (value / total) * circumference : 0;
+            const circle = (
+              <circle
+                key={`${item.name}-${valueKey}`}
+                r={radius}
+                fill="none"
+                stroke={chartPalette[index % chartPalette.length]}
+                strokeWidth="18"
+                strokeDasharray={`${segment} ${circumference - segment}`}
+                strokeDashoffset={-offset}
+                strokeLinecap="round"
+                filter="url(#donutGlow)"
+              />
+            );
+            offset += segment;
+            return circle;
+          })}
+        </g>
+        <circle cx="95" cy="95" r="39" fill="#ffffff" />
+        <text x="50%" y="45%" textAnchor="middle" style={{ fontSize: '0.72rem', fill: '#6b7280', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+          Total
+        </text>
+        <text x="50%" y="57%" textAnchor="middle" style={{ fontSize: '1.1rem', fill: '#111827', fontWeight: 900 }}>
+          {labelFormatter(total)}
+        </text>
+      </svg>
+
+      <div style={{ flex: 1, display: 'grid', gap: 12 }}>
+        {chartData.map((item, index) => (
+          <div key={`${item.name}-legend-${valueKey}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '12px 14px', borderRadius: 16, background: '#f8fbff', border: '1px solid rgba(15,75,207,0.08)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+              <span style={{ width: 12, height: 12, borderRadius: '50%', background: chartPalette[index % chartPalette.length], flexShrink: 0 }} />
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: '0.86rem', color: 'var(--text-primary)', fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {item.name}
+                </div>
+                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                  Contribution
+                </div>
+              </div>
+            </div>
+            <span style={{ fontSize: '0.9rem', color: 'var(--text-primary)', fontWeight: 900 }}>
+              {labelFormatter(Number(item[valueKey]) || 0)}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 const HomePage = () => {
   const navigate = useNavigate();
+  const pageRef = useRef(null);
+  const heroSectionRef = useRef(null);
+  const heroImageRef = useRef(null);
+  const heroContentRef = useRef(null);
   const [stats, setStats] = useState({ globalStats: { totalMembers: 0, totalConnections: 0, totalRevenue: 0 }, locations: [] });
   const [leaderboard, setLeaderboard] = useState([]);
   const [period, setPeriod] = useState('monthly');
   const [searchQ, setSearchQ] = useState('');
+  const [searchLocation, setSearchLocation] = useState('');
+  const [searchTable, setSearchTable] = useState('');
+  const [searchCategory, setSearchCategory] = useState('');
+  const [searchLocations, setSearchLocations] = useState([]);
+  const [searchTables, setSearchTables] = useState([]);
+  const [searchCategories, setSearchCategories] = useState([]);
   const [statsError, setStatsError] = useState(false);
   const [loading, setLoading] = useState(true);
   const [counters, setCounters] = useState({ members: 0, connections: 0, revenue: 0 });
+  const topRatedCount = (stats.topRatedBusinesses || []).length;
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -43,6 +187,135 @@ const HomePage = () => {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  useEffect(() => {
+    const fetchSearchLocations = async () => {
+      try {
+        const res = await axios.get(`${API}/admin/locations`);
+        setSearchLocations(res.data.locations || []);
+      } catch (err) {
+        setSearchLocations([]);
+      }
+    };
+    fetchSearchLocations();
+  }, []);
+
+  useEffect(() => {
+    const fetchSearchFilters = async () => {
+      try {
+        const params = new URLSearchParams();
+        if (searchLocation) params.set('location', searchLocation);
+        if (searchTable) params.set('table', searchTable);
+        const queryString = params.toString();
+        const res = await axios.get(`${API}/users/search-filters${queryString ? `?${queryString}` : ''}`);
+        setSearchCategories(res.data.categories || []);
+        if (!searchLocation) {
+          setSearchTables(res.data.tables || []);
+        }
+      } catch (err) {
+        setSearchCategories([]);
+        if (!searchLocation) setSearchTables([]);
+      }
+    };
+    fetchSearchFilters();
+  }, [searchLocation, searchTable]);
+
+  useEffect(() => {
+    const selectedLocation = searchLocations.find((location) => location.name === searchLocation);
+    if (!selectedLocation) {
+      setSearchTable('');
+      return;
+    }
+
+    const fetchTables = async () => {
+      try {
+        const res = await axios.get(`${API}/admin/tables/${selectedLocation._id}`);
+        const tables = (res.data.tables || []).map((table) => table.name).filter(Boolean).sort((a, b) => a.localeCompare(b));
+        setSearchTables(tables);
+        setSearchTable((current) => (current && tables.includes(current) ? current : ''));
+      } catch (err) {
+        setSearchTables([]);
+        setSearchTable('');
+      }
+    };
+
+    fetchTables();
+  }, [searchLocation, searchLocations]);
+
+  useEffect(() => {
+    gsap.registerPlugin(ScrollTrigger);
+
+    const ctx = gsap.context(() => {
+      if (heroImageRef.current) {
+        gsap.fromTo(
+          heroImageRef.current,
+          { yPercent: -4, scale: 1.08 },
+          {
+            yPercent: 10,
+            scale: 1.14,
+            ease: 'none',
+            scrollTrigger: {
+              trigger: heroSectionRef.current,
+              start: 'top top',
+              end: 'bottom top',
+              scrub: true
+            }
+          }
+        );
+      }
+
+      if (heroContentRef.current) {
+        gsap.fromTo(
+          heroContentRef.current.children,
+          { y: 36, opacity: 0 },
+          {
+            y: 0,
+            opacity: 1,
+            duration: 0.9,
+            ease: 'power3.out',
+            stagger: 0.12
+          }
+        );
+      }
+
+      gsap.utils.toArray('.home-reveal').forEach((section) => {
+        gsap.fromTo(
+          section,
+          { y: 56, opacity: 0 },
+          {
+            y: 0,
+            opacity: 1,
+            duration: 1,
+            ease: 'power3.out',
+            scrollTrigger: {
+              trigger: section,
+              start: 'top 82%'
+            }
+          }
+        );
+      });
+
+      gsap.utils.toArray('.parallax-card').forEach((card, index) => {
+        gsap.fromTo(
+          card,
+          { y: 24, opacity: 0 },
+          {
+            y: 0,
+            opacity: 1,
+            duration: 0.8,
+            delay: index * 0.05,
+            ease: 'power2.out',
+            scrollTrigger: {
+              trigger: card,
+              start: 'top 88%'
+            }
+          }
+        );
+      });
+    }, pageRef);
+
+    return () => ctx.revert();
+  }, [leaderboard.length, stats.locations.length, topRatedCount]);
 
   const animateCounters = (gs) => {
     if (!gs) return;
@@ -71,7 +344,17 @@ const HomePage = () => {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    if (searchQ.trim().length >= 2) navigate(`/search?q=${encodeURIComponent(searchQ.trim())}`);
+    const trimmedQuery = searchQ.trim();
+    const trimmedTable = searchTable.trim();
+    const trimmedCategory = searchCategory.trim();
+    if (trimmedQuery.length >= 2 || searchLocation || trimmedTable || trimmedCategory) {
+      const params = new URLSearchParams();
+      if (trimmedQuery) params.set('q', trimmedQuery);
+      if (searchLocation) params.set('location', searchLocation);
+      if (trimmedTable) params.set('table', trimmedTable);
+      if (trimmedCategory) params.set('category', trimmedCategory);
+      navigate(`/search?${params.toString()}`);
+    }
   };
 
   const formatRevenue = (r) => {
@@ -97,24 +380,48 @@ const HomePage = () => {
   ];
 
   const featuredLocation = leaderboard[0];
-  const runnerUpLocations = leaderboard.slice(1, 3);
+  const topThreeLocations = leaderboard.slice(0, 3);
   const topRatedBusinesses = stats.topRatedBusinesses || [];
+  const locationOptions = (searchLocations.length > 0
+    ? searchLocations.map((loc) => loc.name)
+    : (stats.locations || []).map((loc) => loc.name)
+  ).filter(Boolean).sort((a, b) => a.localeCompare(b));
+  const categoryOptions = (searchCategories.length > 0 ? searchCategories : BUSINESS_CATEGORIES)
+    .filter(Boolean)
+    .sort((a, b) => a.localeCompare(b));
+  const locationPerformanceData = (stats.locations || [])
+    .map((loc) => ({
+      name: loc.name,
+      members: Number(loc.members) || 0,
+      connections: Number(loc.connections) || 0,
+      revenue: Number(loc.revenue) || 0
+    }))
+    .sort((a, b) => b.revenue - a.revenue);
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f8f9fc' }}>
+    <div ref={pageRef} style={{ minHeight: '100vh', background: '#ffffff' }}>
       <Navbar />
 
       {/* ── HERO SECTION ── */}
-      <section style={{
+      <section ref={heroSectionRef} style={{
         minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        background: 'radial-gradient(ellipse at 20% 50%, rgba(0,73,194,0.07) 0%, transparent 55%), radial-gradient(ellipse at 80% 50%, rgba(0,184,148,0.06) 0%, transparent 55%), linear-gradient(135deg, #f0f5ff 0%, #eef2ff 60%, #f0fdf9 100%)',
-        padding: '80px 16px 40px', position: 'relative', overflow: 'hidden'
+        backgroundColor: '#ffffff',
+        padding: '96px 16px 40px', position: 'relative', overflow: 'hidden',
+        marginTop: '-1px'
       }}>
-        {/* Floating orbs */}
-        <div style={{ position: 'absolute', width: 400, height: 400, borderRadius: '50%', background: 'radial-gradient(circle, rgba(245,166,35,0.06), transparent)', top: '10%', left: '-5%', animation: 'float 8s ease-in-out infinite' }} />
-        <div style={{ position: 'absolute', width: 300, height: 300, borderRadius: '50%', background: 'radial-gradient(circle, rgba(0,212,170,0.06), transparent)', bottom: '10%', right: '5%', animation: 'float 6s ease-in-out infinite reverse' }} />
-
-        <div style={{ maxWidth: 900, textAlign: 'center', position: 'relative', zIndex: 1 }}>
+        <div
+          ref={heroImageRef}
+          style={{
+            position: 'absolute',
+            inset: 0,
+            backgroundImage: "linear-gradient(rgba(255,255,255,0.82), rgba(255,255,255,0.82)), url('/employee-working-marketing-setting.jpg')",
+            backgroundPosition: 'center top',
+            backgroundRepeat: 'no-repeat',
+            backgroundSize: 'cover',
+            transformOrigin: 'center center'
+          }}
+        />
+        <div ref={heroContentRef} style={{ maxWidth: 900, textAlign: 'center', position: 'relative', zIndex: 1 }}>
           <div className="badge badge-gold mb-md animate-fadeInUp" style={{ margin: '0 auto 20px' }}>
             ⚡ India's Premier Business Networking Platform
           </div>
@@ -128,19 +435,56 @@ const HomePage = () => {
           </p>
 
           {/* Search Bar */}
-          <form onSubmit={handleSearch} className="animate-fadeInUp delay-3 hero-search">
-            <SearchOutlined className="hero-search-icon" style={{ padding: '0 16px', color: 'var(--primary)', fontSize: '1.1rem' }} />
-            <input
-              type="text" placeholder="Search by business, category, keyword, location..."
-              value={searchQ} onChange={e => setSearchQ(e.target.value)}
-              style={{ flex: 1, background: 'none', border: 'none', outline: 'none', color: 'var(--text-primary)', fontSize: '0.95rem', padding: '14px 0' }}
-            />
-            <button type="submit" className="btn btn-primary" style={{ borderRadius: 50, margin: 6, padding: '10px 24px' }}>
-              Search
-            </button>
-          </form>
+          <div className="animate-fadeInUp delay-3" style={{ maxWidth: 860, margin: '0 auto', display: 'grid', gap: 14 }}>
+            <form onSubmit={handleSearch} className="hero-search">
+              <SearchOutlined className="hero-search-icon" style={{ padding: '0 16px', color: 'var(--primary)', fontSize: '1.1rem' }} />
+              <input
+                type="text" placeholder="Search by business, keyword, or service..."
+                value={searchQ} onChange={e => setSearchQ(e.target.value)}
+                style={{ flex: 1, background: 'none', border: 'none', outline: 'none', color: 'var(--text-primary)', fontSize: '0.95rem', padding: '14px 0' }}
+              />
+              <button type="submit" className="btn btn-primary" style={{ borderRadius: 50, margin: 6, padding: '10px 24px' }}>
+                Search
+              </button>
+            </form>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, width: '100%' }}>
+              <select
+                className="form-select"
+                value={searchLocation}
+                onChange={(e) => setSearchLocation(e.target.value)}
+                style={{ width: '100%', minHeight: 44, background: '#ffffff' }}
+              >
+                <option value="">All Locations</option>
+                {locationOptions.map((location) => (
+                  <option key={location} value={location}>{location}</option>
+                ))}
+              </select>
+              <select
+                className="form-select"
+                value={searchTable}
+                onChange={(e) => setSearchTable(e.target.value)}
+                style={{ width: '100%', minHeight: 44, background: '#ffffff' }}
+              >
+                <option value="">All Tables</option>
+                {searchTables.map((table) => (
+                  <option key={table} value={table}>{table}</option>
+                ))}
+              </select>
+              <select
+                className="form-select"
+                value={searchCategory}
+                onChange={(e) => setSearchCategory(e.target.value)}
+                style={{ width: '100%', minHeight: 44, background: '#ffffff' }}
+              >
+                <option value="">All Categories</option>
+                {categoryOptions.map((category) => (
+                  <option key={category} value={category}>{category}</option>
+                ))}
+              </select>
+            </div>
+          </div>
 
-          <div className="animate-fadeInUp delay-4" style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
+          <div className="animate-fadeInUp delay-4" style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap', maxWidth: 860, margin: '18px auto 0' }}>
             <Link to="/register" className="btn btn-primary btn-lg">
               Register Your Business <ArrowRightOutlined />
             </Link>
@@ -153,7 +497,7 @@ const HomePage = () => {
 
       {/* ── LIVE STATS ── */}
       {featuredLocation && (
-        <section style={{ padding: '32px 16px 80px', background: 'linear-gradient(180deg, #f0f5ff 0%, #f8f9fc 100%)' }}>
+        <section className="home-reveal" style={{ padding: '32px 16px 80px', background: '#ffffff' }}>
           <div className="section-shell">
             <div style={{ textAlign: 'center', marginBottom: 36 }}>
               <div className="badge badge-gold mb-md" style={{ margin: '0 auto 12px' }}>Top Locations</div>
@@ -166,80 +510,145 @@ const HomePage = () => {
             <div
               style={{
                 display: 'grid',
-                gridTemplateColumns: runnerUpLocations.length > 0 ? 'minmax(0, 620px) minmax(280px, 340px)' : 'minmax(0, 720px)',
-                justifyContent: 'center',
-                alignItems: 'stretch',
-                gap: 18,
+                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                gap: 22,
+                alignItems: 'center',
                 marginBottom: 18
               }}
             >
-              <div className="glass-card-gold" style={{ position: 'relative', padding: '24px clamp(18px, 3vw, 30px)', maxWidth: 720, width: '100%', margin: '0 auto' }}>
-                <div style={{ position: 'absolute', top: 18, right: 18, fontSize: '1.4rem', fontWeight: 800, color: 'var(--primary)' }}>1</div>
-                <div className="badge badge-gold" style={{ marginBottom: 14 }}>Top Performing Chapter</div>
-                <h2 style={{ color: 'var(--primary)', marginBottom: 6, fontSize: 'clamp(2rem, 4vw, 2.8rem)' }}>{featuredLocation.name}</h2>
-                <div style={{ fontSize: '0.92rem', color: 'var(--text-secondary)', marginBottom: 22 }}>
-                  Chairman: {featuredLocation.chairman}
-                </div>
+              {topThreeLocations.map((loc, index) => {
+                const isLeader = index === 0;
+                const orderMap = isLeader ? 2 : index === 1 ? 1 : 3;
+                const statItems = [
+                  { label: 'Connects', value: loc.totalConnections, color: 'var(--text-primary)' },
+                  { label: 'Revenue', value: formatRevenue(loc.totalRevenue), color: 'var(--primary)' },
+                  { label: 'Members', value: loc.totalMembers, color: 'var(--accent)' }
+                ];
 
-                <div className="grid-2" style={{ gap: 14 }}>
-                  <div className="glass-card" style={{ padding: 16, textAlign: 'center', background: 'rgba(255,255,255,0.82)' }}>
-                    <div style={{ fontWeight: 800, fontSize: '1.55rem', color: 'var(--text-primary)' }}>{featuredLocation.totalConnections}</div>
-                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Connects</div>
-                  </div>
-                  <div className="glass-card" style={{ padding: 16, textAlign: 'center', background: 'rgba(255,255,255,0.82)' }}>
-                    <div style={{ fontWeight: 800, fontSize: '1.55rem', color: 'var(--primary)' }}>{formatRevenue(featuredLocation.totalRevenue)}</div>
-                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Revenue</div>
-                  </div>
-                  <div className="glass-card" style={{ padding: 16, textAlign: 'center', background: 'rgba(255,255,255,0.82)' }}>
-                    <div style={{ fontWeight: 800, fontSize: '1.55rem', color: 'var(--accent)' }}>{featuredLocation.totalMembers}</div>
-                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Members</div>
-                  </div>
-                  <div className="glass-card" style={{ padding: 16, textAlign: 'center', background: 'rgba(255,255,255,0.82)' }}>
-                    <div style={{ fontWeight: 800, fontSize: '1.55rem', color: '#7c3aed' }}>{featuredLocation.attendanceRate}%</div>
-                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Attendance</div>
-                  </div>
-                </div>
-              </div>
+                return (
+                  <div
+                    key={loc.name}
+                    className="parallax-card"
+                    style={{
+                      ...cleanCardStyle,
+                      position: 'relative',
+                      padding: isLeader ? '32px clamp(22px, 3vw, 38px)' : '26px 24px',
+                      background: isLeader
+                        ? 'linear-gradient(145deg, #ffffff 0%, #f7faff 100%)'
+                        : 'linear-gradient(145deg, #ffffff 0%, #fafcff 100%)',
+                      minHeight: isLeader ? 420 : 360,
+                      order: orderMap,
+                      transform: isLeader ? 'translateY(0)' : 'translateY(36px)'
+                    }}
+                  >
+                    <div style={{
+                      position: 'absolute',
+                      top: isLeader ? 22 : 18,
+                      right: isLeader ? 22 : 18,
+                      width: isLeader ? 56 : 44,
+                      height: isLeader ? 56 : 44,
+                      borderRadius: isLeader ? 18 : 14,
+                      background: 'linear-gradient(135deg, rgba(15,75,207,0.1) 0%, rgba(15,75,207,0.02) 100%)',
+                      border: '1px solid rgba(15,75,207,0.12)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: isLeader ? '1.35rem' : '1rem',
+                      fontWeight: 900,
+                      color: 'var(--primary)'
+                    }}>
+                      #{index + 1}
+                    </div>
 
-              {runnerUpLocations.length > 0 && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 340 }}>
-                {runnerUpLocations.map((loc, index) => (
-                  <div key={loc.name} className="glass-card" style={{ position: 'relative', padding: 24 }}>
-                    <div style={{ position: 'absolute', top: 16, right: 16, fontSize: '1.2rem', fontWeight: 800, color: 'var(--primary)' }}>
-                      {index + 2}
+                    <div className="badge badge-gold" style={{ marginBottom: 18 }}>
+                      {isLeader ? 'Top Performing Chapter' : 'Runner Up Chapter'}
                     </div>
-                    <h3 style={{ color: 'var(--primary)', marginBottom: 6 }}>{loc.name}</h3>
-                    <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: 16 }}>
-                      Chairman: {loc.chairman}
+
+                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 800, marginBottom: 12 }}>
+                      {isLeader ? 'Lead Chapter' : 'High Momentum Chapter'}
                     </div>
-                    <div className="grid-2" style={{ gap: 10 }}>
-                      <div>
-                        <div style={{ fontWeight: 800, color: 'var(--text-primary)', fontSize: '1.2rem' }}>{loc.totalConnections}</div>
-                        <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Connects</div>
+
+                    <h3 style={{
+                      color: 'var(--primary)',
+                      marginBottom: 10,
+                      fontSize: isLeader ? 'clamp(2.4rem, 4vw, 3.6rem)' : 'clamp(2rem, 3vw, 2.5rem)',
+                      lineHeight: 0.96
+                    }}>
+                      {loc.name}
+                    </h3>
+
+                    <div style={{ fontSize: '0.92rem', color: 'var(--text-secondary)', marginBottom: 22 }}>
+                      Chairman: <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{loc.chairman}</span>
+                    </div>
+
+                    <div style={{
+                      padding: isLeader ? '18px 20px' : '16px 18px',
+                      borderRadius: 22,
+                      background: isLeader ? 'linear-gradient(135deg, #0f4bcf 0%, #2d6cf5 100%)' : '#ffffff',
+                      color: isLeader ? '#ffffff' : 'var(--text-primary)',
+                      border: isLeader ? 'none' : '1px solid rgba(0,0,0,0.06)',
+                      marginBottom: 18
+                    }}>
+                      <div style={{
+                        fontSize: '0.72rem',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.1em',
+                        color: isLeader ? 'rgba(255,255,255,0.72)' : 'var(--text-muted)',
+                        marginBottom: 8,
+                        fontWeight: 700
+                      }}>
+                        Chapter Revenue
                       </div>
-                      <div>
-                        <div style={{ fontWeight: 800, color: 'var(--primary)', fontSize: '1.2rem' }}>{formatRevenue(loc.totalRevenue)}</div>
-                        <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Revenue</div>
+                      <div style={{
+                        fontWeight: 900,
+                        fontSize: isLeader ? 'clamp(2rem, 3vw, 2.8rem)' : '1.8rem',
+                        color: isLeader ? '#ffffff' : 'var(--primary)',
+                        lineHeight: 1.02
+                      }}>
+                        {formatRevenue(loc.totalRevenue)}
                       </div>
-                      <div>
-                        <div style={{ fontWeight: 800, color: 'var(--accent)', fontSize: '1.2rem' }}>{loc.totalMembers}</div>
-                        <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Members</div>
+                      <div style={{
+                        marginTop: 10,
+                        fontSize: '0.82rem',
+                        color: isLeader ? 'rgba(255,255,255,0.78)' : 'var(--text-secondary)'
+                      }}>
+                        {isLeader ? 'Strongest business generation in the current period' : 'Consistent chapter performance and contribution'}
                       </div>
-                      <div>
-                        <div style={{ fontWeight: 800, color: '#7c3aed', fontSize: '1.2rem' }}>{loc.attendanceRate}%</div>
-                        <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Attendance</div>
-                      </div>
+                    </div>
+
+                    <div style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                      gap: 12
+                    }}>
+                      {statItems.map((item) => (
+                        <div
+                          key={item.label}
+                          style={{
+                            padding: '16px 14px',
+                            borderRadius: 18,
+                            background: 'rgba(255,255,255,0.96)',
+                            border: '1px solid rgba(0,0,0,0.06)'
+                          }}
+                        >
+                          <div style={{ fontSize: '0.64rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8, fontWeight: 700 }}>
+                            {item.label}
+                          </div>
+                          <div style={{ fontWeight: 900, fontSize: '1.2rem', color: item.color, lineHeight: 1.05 }}>
+                            {item.value}
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
-                ))}
-                </div>
-              )}
+                );
+              })}
             </div>
           </div>
         </section>
       )}
 
-      <section style={{ padding: '80px 16px', background: 'var(--bg-surface)' }}>
+      <section className="home-reveal" style={{ padding: '80px 16px', background: 'var(--bg-surface)' }}>
         <div className="section-shell">
           <div style={{ textAlign: 'center', marginBottom: 48 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 12 }}>
@@ -330,30 +739,107 @@ const HomePage = () => {
       </section>
 
       {/* ── WHAT IS JCOM ── */}
-      <section style={{ padding: '80px 16px' }}>
+      {locationPerformanceData.length > 0 && (
+        <section className="home-reveal" style={{ padding: '24px 16px 80px', background: '#ffffff' }}>
+          <div className="section-shell">
+            <div style={{ textAlign: 'center', marginBottom: 36 }}>
+              <div className="badge badge-gold mb-md" style={{ margin: '0 auto 12px' }}>Visual Insights</div>
+              <h2 style={{ marginBottom: 10 }}>Performance <span className="highlight-gold">Analytics</span></h2>
+              <p style={{ maxWidth: 760, margin: '0 auto' }}>
+                A quick visual view of top-performing chapters, connection activity, and revenue contribution across the network.
+              </p>
+            </div>
+
+            <div className="responsive-main-aside" style={{ alignItems: 'stretch', gap: 20 }}>
+              <div className="parallax-card" style={{ ...cleanCardStyle, padding: 28, flex: 1, background: 'linear-gradient(180deg, #ffffff 0%, #f8fbff 100%)' }}>
+                <div style={{ fontSize: '0.75rem', color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 800, marginBottom: 8 }}>
+                  Top Connections
+                </div>
+                <h3 style={{ marginBottom: 10, color: 'var(--text-primary)' }}>Chapter Connection Graph</h3>
+                <p style={{ fontSize: '0.86rem', color: 'var(--text-secondary)', marginBottom: 20 }}>
+                  Compare the strongest chapters by live connection volume.
+                </p>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 18 }}>
+                  <span style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--text-primary)', lineHeight: 1 }}>
+                    {locationPerformanceData[0]?.connections?.toLocaleString('en-IN') || '0'}
+                  </span>
+                  <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 800 }}>
+                    Highest Volume
+                  </span>
+                </div>
+                <AnalyticsBarChart data={locationPerformanceData} valueKey="connections" color="#0f4bcf" />
+              </div>
+
+              <div className="parallax-card" style={{ ...cleanCardStyle, padding: 28, flex: 1, background: 'linear-gradient(180deg, #ffffff 0%, #fcfbff 100%)' }}>
+                <div style={{ fontSize: '0.75rem', color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 800, marginBottom: 8 }}>
+                  Revenue Mix
+                </div>
+                <h3 style={{ marginBottom: 10, color: 'var(--text-primary)' }}>Revenue Distribution</h3>
+                <p style={{ fontSize: '0.86rem', color: 'var(--text-secondary)', marginBottom: 20 }}>
+                  See how the top chapters contribute to overall business generation.
+                </p>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 18 }}>
+                  <span style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--text-primary)', lineHeight: 1 }}>
+                    {formatRevenue(locationPerformanceData.reduce((sum, item) => sum + item.revenue, 0))}
+                  </span>
+                  <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 800 }}>
+                    Total Revenue
+                  </span>
+                </div>
+                <AnalyticsDonutChart data={locationPerformanceData} valueKey="revenue" labelFormatter={formatRevenue} />
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      <section className="home-reveal" style={{ padding: '80px 16px' }}>
         <div className="section-shell">
-          <div className="responsive-two-col" style={{ gap: 'clamp(24px, 5vw, 64px)', alignItems: 'center' }}>
+          <div className="responsive-two-col" style={{ gap: 'clamp(24px, 5vw, 64px)', alignItems: 'start' }}>
             <div>
               <div className="badge badge-gold mb-md">About JCOM</div>
-              <h2 style={{ marginBottom: 20 }}>What is <span className="highlight-gold">JCOM?</span></h2>
-              <p style={{ fontSize: '1.05rem', marginBottom: 20 }}>
-                JCOM (Joint Chamber of Members) is India's most structured B2B networking platform. We connect verified business professionals across multiple cities through local chapters (tables) managed by elected chairmen.
+              <h2 style={{ marginBottom: 18 }}>What Is <span className="highlight-gold">JCOM?</span></h2>
+              <div style={{ fontSize: '0.82rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--primary)', fontWeight: 800, marginBottom: 12 }}>
+                Jaycees Chamber of Commerce
+              </div>
+              <p style={{ fontSize: '1.03rem', marginBottom: 16 }}>
+                JCOM stands for Junior Chamber Opportunities for Members. It is an initiative of JCI (Junior Chamber International) designed to provide exclusive benefits, discounts, and opportunities to JCI members.
               </p>
-              <p style={{ marginBottom: 24 }}>
-                Each member belongs to a specific location and table with a maximum of 60 members — all from different business categories, ensuring zero competition and maximum collaboration.
+              <p style={{ marginBottom: 16 }}>
+                Through JCOM, members can access special offers, business resources, leadership opportunities, and growth support across multiple partner categories.
               </p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {['✅ Verified members from 60+ business categories', '✅ Structured monthly meetings (4 per month)', '✅ Real-time CRM to track every business connection', '✅ Live revenue tracking from connection to deal'].map((t, i) => (
-                  <div key={i} style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>{t}</div>
+              <p style={{ marginBottom: 16 }}>
+                The aim is to add value to JCI membership by helping members grow personally, professionally, and entrepreneurially while becoming stronger leaders in their communities.
+              </p>
+              <div style={{ display: 'grid', gap: 12 }}>
+                {[
+                  'Education & skill development',
+                  'Travel & hospitality',
+                  'Health & wellness',
+                  'Lifestyle & professional services',
+                  'Business tools and resources'
+                ].map((item) => (
+                  <div key={item} style={{ display: 'flex', alignItems: 'center', gap: 10, color: 'var(--text-secondary)', fontSize: '0.92rem', fontWeight: 600 }}>
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--primary)', flexShrink: 0 }} />
+                    {item}
+                  </div>
                 ))}
+              </div>
+              <div style={{ marginTop: 22 }}>
+                <Link to="/about" className="btn btn-outline">
+                  Explore About JCOM
+                </Link>
               </div>
             </div>
             <div className="responsive-two-col" style={{ gap: 16 }}>
               {features.slice(0, 4).map((f, i) => (
-                <div key={i} className="glass-card" style={{ padding: 20 }}>
+                <div key={i} className="parallax-card" style={{ ...cleanCardStyle, padding: 22 }}>
                   <div style={{ fontSize: '2rem', marginBottom: 10 }}>{f.icon}</div>
+                  <div style={{ fontSize: '0.74rem', color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 800, marginBottom: 8 }}>
+                    JCOM Advantage
+                  </div>
                   <h4 style={{ marginBottom: 8, color: 'var(--text-primary)', fontSize: '0.95rem' }}>{f.title}</h4>
-                  <p style={{ fontSize: '0.8rem', margin: 0 }}>{f.desc}</p>
+                  <p style={{ fontSize: '0.82rem', margin: 0 }}>{f.desc}</p>
                 </div>
               ))}
             </div>
@@ -362,7 +848,7 @@ const HomePage = () => {
       </section>
 
       {topRatedBusinesses.length > 0 && (
-        <section style={{ padding: '24px 16px 80px', background: 'var(--bg-surface)' }}>
+        <section className="home-reveal" style={{ padding: '24px 16px 80px', background: 'var(--bg-surface)' }}>
           <div className="section-shell">
             <div style={{ textAlign: 'center', marginBottom: 32 }}>
               <div className="badge badge-gold mb-md" style={{ margin: '0 auto 12px' }}>Top Rated Businesses</div>
@@ -377,9 +863,12 @@ const HomePage = () => {
                 <Link
                   key={business._id}
                   to={`/search/${business._id}`}
-                  className="glass-card"
-                  style={{ padding: 22, display: 'block', textDecoration: 'none' }}
+                  className="parallax-card"
+                  style={{ ...cleanCardStyle, padding: 22, display: 'block', textDecoration: 'none' }}
                 >
+                  <div style={{ fontSize: '0.72rem', color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 800, marginBottom: 8 }}>
+                    Top Rated Business
+                  </div>
                   <div style={{ fontWeight: 800, color: 'var(--text-primary)', fontSize: '1.05rem', marginBottom: 6 }}>
                     {business.businessName || `${business.firstName} ${business.lastName}`}
                   </div>
@@ -398,7 +887,7 @@ const HomePage = () => {
       )}
 
       {/* ── FEATURES ── */}
-      <section style={{ padding: '80px 16px', background: 'var(--bg-surface)' }}>
+      <section className="home-reveal" style={{ padding: '80px 16px', background: 'var(--bg-surface)' }}>
         <div className="section-shell">
           <div style={{ textAlign: 'center', marginBottom: 48 }}>
             <div className="badge badge-purple mb-md" style={{ margin: '0 auto 12px' }}>🚀 Features</div>
@@ -406,8 +895,11 @@ const HomePage = () => {
           </div>
           <div className="grid-3">
             {features.map((f, i) => (
-              <div key={i} className="glass-card animate-fadeInUp" style={{ animationDelay: `${i * 0.1}s` }}>
+              <div key={i} className="animate-fadeInUp parallax-card" style={{ ...cleanCardStyle, animationDelay: `${i * 0.1}s`, padding: 24 }}>
                 <div style={{ fontSize: '2.4rem', marginBottom: 16 }}>{f.icon}</div>
+                <div style={{ fontSize: '0.72rem', color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 800, marginBottom: 8 }}>
+                  Platform Feature
+                </div>
                 <h4 style={{ color: 'var(--text-primary)', marginBottom: 10 }}>{f.title}</h4>
                 <p style={{ fontSize: '0.88rem', margin: 0 }}>{f.desc}</p>
               </div>
@@ -417,19 +909,24 @@ const HomePage = () => {
       </section>
 
       {/* ── MEETING TYPES ── */}
-      <section style={{ padding: '80px 16px' }}>
+      <section className="home-reveal" style={{ padding: '80px 16px' }}>
         <div className="section-shell">
           <div style={{ textAlign: 'center', marginBottom: 48 }}>
             <div className="badge badge-teal mb-md" style={{ margin: '0 auto 12px' }}>📅 4 Meetings / Month</div>
-            <h2>Structured for <span className="highlight-gold">Maximum Growth</span></h2>
+            <h2>JCOM Monthly <span className="highlight-gold">Meeting Framework</span></h2>
           </div>
           <div className="grid-4">
             {weekTypes.map((w, i) => (
-              <div key={i} className="glass-card-gold animate-fadeInUp" style={{ animationDelay: `${i * 0.1}s`, textAlign: 'center' }}>
-                <div style={{ fontSize: '2.5rem', marginBottom: 12 }}>{w.icon}</div>
-                <div className="badge badge-gold mb-md" style={{ margin: '0 auto 8px' }}>{w.week}</div>
-                <h4 style={{ color: 'var(--text-primary)', marginBottom: 8 }}>{w.type}</h4>
-                <p style={{ fontSize: '0.82rem', margin: 0 }}>{w.desc}</p>
+              <div key={i} className="animate-fadeInUp parallax-card" style={{ ...cleanCardStyle, animationDelay: `${i * 0.1}s`, padding: 26, textAlign: 'left' }}>
+                <div style={{ fontSize: '0.76rem', color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 800, marginBottom: 12 }}>
+                  {w.week}
+                </div>
+                <h4 style={{ color: 'var(--text-primary)', marginBottom: 10, fontSize: '1.05rem' }}>{w.type}</h4>
+                <p style={{ fontSize: '0.86rem', margin: 0 }}>{w.desc}</p>
+                <div style={{ marginTop: 18, paddingTop: 16, borderTop: '1px solid rgba(0,0,0,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                  <span style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Meeting Theme</span>
+                  <span style={{ fontSize: '1.25rem' }}>{w.icon}</span>
+                </div>
               </div>
             ))}
           </div>
@@ -466,7 +963,7 @@ const HomePage = () => {
       )}
 
       {/* ── CTA ── */}
-      <section style={{
+      <section className="home-reveal" style={{
         padding: '100px 16px', textAlign: 'center',
         background: 'radial-gradient(ellipse at center, rgba(230,146,10,0.08) 0%, transparent 70%)'
       }}>

@@ -6,6 +6,7 @@ const upload = require('../middleware/upload');
 
 // Public
 router.get('/search', userController.searchUsers);
+router.get('/search-filters', userController.getSearchFilters);
 router.get('/public/:userId', userController.getPublicMemberProfile);
 
 // Protected

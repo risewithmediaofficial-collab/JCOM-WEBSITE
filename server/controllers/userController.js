@@ -10,18 +10,22 @@ const getProfilePicValue = (file) => {
 // ─── SEARCH (JustDial style) ──────────────────────────────────────────────────
 exports.searchUsers = async (req, res) => {
   try {
-    const { q, location } = req.query;
-    if (!q || q.trim().length < 2) {
-      return res.status(400).json({ message: 'Search query must be at least 2 characters' });
+    const { q, location, table, category } = req.query;
+    const hasFilters = Boolean(location || table || category);
+    const searchTerm = (q || '').trim();
+    if (!hasFilters && searchTerm.length < 2) {
+      return res.status(400).json({ message: 'Search query must be at least 2 characters or include a filter' });
     }
 
-    const searchTerm = q.trim();
-    const searchRegex = new RegExp(searchTerm, 'i');
+    const searchRegex = searchTerm ? new RegExp(searchTerm, 'i') : null;
 
     const query = {
       status: 'Approved',
-      role: { $ne: 'Super Admin' },
-      $or: [
+      role: { $ne: 'Super Admin' }
+    };
+
+    if (searchRegex) {
+      query.$or = [
         { keywords: { $in: [searchRegex] } },
         { businessCategory: searchRegex },
         { businessName: searchRegex },
@@ -29,10 +33,12 @@ exports.searchUsers = async (req, res) => {
         { businessDescription: searchRegex },
         { firstName: searchRegex },
         { lastName: searchRegex }
-      ]
-    };
+      ];
+    }
 
     if (location) query.locationName = new RegExp(location, 'i');
+    if (table) query.tableName = new RegExp(table, 'i');
+    if (category) query.businessCategory = new RegExp(category, 'i');
 
     const members = await User.find(query)
       .select('firstName lastName membershipId businessName businessCategory businessService businessDescription businessWebsite profilePic keywords locationName tableName phone email totalRevenue totalConnections averageRating ratingsCount')
@@ -59,6 +65,31 @@ exports.searchUsers = async (req, res) => {
 };
 
 // ─── GET USER PROFILE ─────────────────────────────────────────────────────────
+exports.getSearchFilters = async (req, res) => {
+  try {
+    const { location, table } = req.query;
+    const query = {
+      status: 'Approved',
+      role: { $ne: 'Super Admin' }
+    };
+
+    if (location) query.locationName = location;
+    if (table) query.tableName = table;
+
+    const [categories, tables] = await Promise.all([
+      User.distinct('businessCategory', query),
+      User.distinct('tableName', query)
+    ]);
+
+    res.json({
+      categories: (categories || []).filter(Boolean).sort((a, b) => a.localeCompare(b)),
+      tables: (tables || []).filter(Boolean).sort((a, b) => a.localeCompare(b))
+    });
+  } catch (err) {
+    res.status(500).json({ message: 'Fetch search filters failed', error: err.message });
+  }
+};
+
 exports.getUserProfile = async (req, res) => {
   try {
     const userId = req.params.userId || req.user._id;

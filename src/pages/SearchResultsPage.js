@@ -16,6 +16,8 @@ const SearchResultsPage = () => {
   const [query, setQuery] = useState(searchParams.get('q') || '');
   const [inputVal, setInputVal] = useState(searchParams.get('q') || '');
   const [locationFilter, setLocationFilter] = useState(searchParams.get('location') || '');
+  const [tableFilter, setTableFilter] = useState(searchParams.get('table') || '');
+  const [categoryFilter, setCategoryFilter] = useState(searchParams.get('category') || '');
   const [results, setResults] = useState([]);
   const [totalResults, setTotalResults] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -26,6 +28,8 @@ const SearchResultsPage = () => {
     try {
       const params = new URLSearchParams({ q: query });
       if (locationFilter) params.append('location', locationFilter);
+      if (tableFilter) params.append('table', tableFilter);
+      if (categoryFilter) params.append('category', categoryFilter);
       const res = await axios.get(`${API}/users/search?${params}`);
       setResults(res.data.results || []);
       setTotalResults(res.data.totalResults || 0);
@@ -35,17 +39,19 @@ const SearchResultsPage = () => {
       setTotalResults(0);
     }
     setLoading(false);
-  }, [locationFilter, query]);
+  }, [categoryFilter, locationFilter, query, tableFilter]);
 
   useEffect(() => {
     setQuery(searchParams.get('q') || '');
     setInputVal(searchParams.get('q') || '');
     setLocationFilter(searchParams.get('location') || '');
+    setTableFilter(searchParams.get('table') || '');
+    setCategoryFilter(searchParams.get('category') || '');
   }, [searchParams]);
 
   useEffect(() => {
-    if (query.trim().length >= 2) doSearch();
-  }, [doSearch, query]);
+    if (query.trim().length >= 2 || locationFilter || tableFilter.trim() || categoryFilter.trim()) doSearch();
+  }, [categoryFilter, doSearch, locationFilter, query, tableFilter]);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -53,6 +59,8 @@ const SearchResultsPage = () => {
     const params = new URLSearchParams();
     if (trimmed) params.set('q', trimmed);
     if (locationFilter) params.set('location', locationFilter);
+    if (tableFilter.trim()) params.set('table', tableFilter.trim());
+    if (categoryFilter.trim()) params.set('category', categoryFilter.trim());
     setSearchParams(params);
   };
 
@@ -60,6 +68,8 @@ const SearchResultsPage = () => {
     const params = new URLSearchParams();
     if (query) params.set('q', query);
     if (location) params.set('location', location);
+    if (tableFilter.trim()) params.set('table', tableFilter.trim());
+    if (categoryFilter.trim()) params.set('category', categoryFilter.trim());
     setSearchParams(params);
   };
 
@@ -99,6 +109,29 @@ const SearchResultsPage = () => {
               Search
             </button>
           </form>
+          <div className="responsive-actions" style={{ justifyContent: 'center', gap: 12, marginTop: 14 }}>
+            <input
+              className="form-input"
+              placeholder="Category"
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              style={{ width: 180, minHeight: 42 }}
+            />
+            <input
+              className="form-input"
+              placeholder="Table"
+              value={tableFilter}
+              onChange={(e) => setTableFilter(e.target.value)}
+              style={{ width: 160, minHeight: 42 }}
+            />
+            <input
+              className="form-input"
+              placeholder="Location"
+              value={locationFilter}
+              onChange={(e) => setLocationFilter(e.target.value)}
+              style={{ width: 180, minHeight: 42 }}
+            />
+          </div>
         </div>
 
         {allLocations.length > 0 && (
@@ -148,7 +181,12 @@ const SearchResultsPage = () => {
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                   {group.members.map((member) => {
-                    const detailLink = `/search/${member._id}?q=${encodeURIComponent(query)}${locationFilter ? `&location=${encodeURIComponent(locationFilter)}` : ''}`;
+                    const detailParams = new URLSearchParams();
+                    if (query) detailParams.set('q', query);
+                    if (locationFilter) detailParams.set('location', locationFilter);
+                    if (tableFilter.trim()) detailParams.set('table', tableFilter.trim());
+                    if (categoryFilter.trim()) detailParams.set('category', categoryFilter.trim());
+                    const detailLink = `/search/${member._id}?${detailParams.toString()}`;
                     return (
                       <Link
                         key={member._id}

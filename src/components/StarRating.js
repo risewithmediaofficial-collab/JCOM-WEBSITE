@@ -32,10 +32,17 @@ const StarRating = ({
               style={{
                 background: 'none',
                 border: 'none',
-                padding: 0,
+                padding: 4,
+                width: size + 12,
+                height: size + 12,
+                borderRadius: 999,
                 cursor: 'pointer',
                 display: 'flex',
-                alignItems: 'center'
+                alignItems: 'center',
+                justifyContent: 'center',
+                appearance: 'none',
+                WebkitAppearance: 'none',
+                WebkitTapHighlightColor: 'transparent'
               }}
               aria-label={`Rate ${star} star${star > 1 ? 's' : ''}`}
             >

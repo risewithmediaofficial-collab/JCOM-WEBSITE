@@ -4,6 +4,74 @@ import { CalendarOutlined, ClockCircleOutlined, DeleteOutlined, EnvironmentOutli
 import Navbar from '../components/Navbar';
 import { AuthContext } from '../context/AuthContext';
 import { API_BASE_URL, buildAssetUrl } from '../config/api';
+import useBodyScrollLock from '../hooks/useBodyScrollLock';
+
+const EventPreviewModal = ({ event, onClose }) => {
+  if (!event) return null;
+
+  return (
+    <div className="modal-overlay" style={{ position: 'fixed', inset: 0, background: 'rgba(9,16,35,0.76)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+      <div className="glass-card modal-sheet animate-fadeInUp" style={{ width: 'min(100%, 980px)', padding: 0, overflow: 'hidden', maxHeight: '92vh' }}>
+        <div className="responsive-two-col" style={{ gap: 0 }}>
+          <div style={{ background: 'linear-gradient(145deg, rgba(0,73,194,0.08), rgba(0,184,148,0.08))', minHeight: 320, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            {event.poster ? (
+              <img
+                src={buildAssetUrl(event.poster)}
+                alt={event.title}
+                style={{ width: '100%', height: '100%', maxHeight: '92vh', objectFit: 'contain', display: 'block', background: '#f8fbff' }}
+              />
+            ) : (
+              <div style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 800, fontSize: '1.7rem', color: 'var(--primary)', padding: 28, textAlign: 'center' }}>
+                {event.title}
+              </div>
+            )}
+          </div>
+
+          <div style={{ padding: '24px clamp(18px, 3vw, 30px)', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, alignItems: 'flex-start', marginBottom: 16 }}>
+              <div>
+                <div className="badge badge-teal" style={{ marginBottom: 10 }}>
+                  {(event.organizerRole || 'JCOM Event').toUpperCase()}
+                </div>
+                <h2 style={{ color: 'var(--text-primary)', marginBottom: 8, fontSize: 'clamp(1.5rem, 3vw, 2.3rem)' }}>
+                  {event.title}
+                </h2>
+                <div style={{ fontSize: '0.88rem', color: 'var(--text-muted)' }}>
+                  Posted by {event.organizerName || 'JCOM'}{event.locationName ? ` • ${event.locationName}` : ''}
+                </div>
+              </div>
+              <button type="button" onClick={onClose} className="btn btn-ghost btn-sm">Close</button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 20 }}>
+              <div style={{ display: 'flex', gap: 12, alignItems: 'center', color: 'var(--text-secondary)', fontWeight: 700 }}>
+                <CalendarOutlined style={{ color: 'var(--primary)' }} />
+                <span>{new Date(event.eventDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+              </div>
+              {event.eventTime && (
+                <div style={{ display: 'flex', gap: 12, alignItems: 'center', color: 'var(--text-secondary)', fontWeight: 700 }}>
+                  <ClockCircleOutlined style={{ color: 'var(--primary)' }} />
+                  <span>{event.eventTime}</span>
+                </div>
+              )}
+              <div style={{ display: 'flex', gap: 12, alignItems: 'center', color: 'var(--text-secondary)', fontWeight: 700 }}>
+                <EnvironmentOutlined style={{ color: 'var(--primary)' }} />
+                <span>{event.venue}</span>
+              </div>
+            </div>
+
+            <div className="glass-card" style={{ padding: 18, background: '#fbfcff' }}>
+              <div style={{ fontSize: '0.76rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', fontWeight: 700, marginBottom: 10 }}>
+                Event Details
+              </div>
+              <p style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{event.description}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const EventsPage = () => {
   const { isAuthenticated, user } = useContext(AuthContext);
@@ -13,6 +81,7 @@ const EventsPage = () => {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [showForm, setShowForm] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState(null);
   const [form, setForm] = useState({
     title: '',
     description: '',
@@ -22,6 +91,7 @@ const EventsPage = () => {
     venue: '',
     poster: null
   });
+  useBodyScrollLock(Boolean(selectedEvent));
 
   const authHeaders = useMemo(() => {
     const token = localStorage.getItem('token');
@@ -233,7 +303,12 @@ const EventsPage = () => {
               const canDelete = canManageEvents && (user?.role === 'Super Admin' || String(user?._id) === String(item.createdBy));
 
               return (
-                <article key={item._id} className="glass-card" style={{ overflow: 'hidden', padding: 0 }}>
+                <article
+                  key={item._id}
+                  className="glass-card"
+                  style={{ overflow: 'hidden', padding: 0, cursor: 'pointer' }}
+                  onClick={() => setSelectedEvent(item)}
+                >
                   <div style={{ height: 210, background: 'linear-gradient(135deg, rgba(0,73,194,0.08), rgba(0,184,148,0.08))', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
                     {item.poster ? (
                       <img src={buildAssetUrl(item.poster)} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -253,7 +328,14 @@ const EventsPage = () => {
                         <h3 style={{ marginBottom: 8 }}>{item.title}</h3>
                       </div>
                       {canDelete && (
-                        <button type="button" onClick={() => handleDeleteEvent(item._id)} style={{ border: '1px solid rgba(220,38,38,0.18)', background: 'rgba(220,38,38,0.06)', color: 'var(--error)', width: 36, height: 36, borderRadius: 10, cursor: 'pointer', flexShrink: 0 }}>
+                        <button
+                          type="button"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            handleDeleteEvent(item._id);
+                          }}
+                          style={{ border: '1px solid rgba(220,38,38,0.18)', background: 'rgba(220,38,38,0.06)', color: 'var(--error)', width: 36, height: 36, borderRadius: 10, cursor: 'pointer', flexShrink: 0 }}
+                        >
                           <DeleteOutlined />
                         </button>
                       )}
@@ -281,6 +363,9 @@ const EventsPage = () => {
                     <div style={{ marginTop: 16, paddingTop: 14, borderTop: '1px solid var(--border)', fontSize: '0.82rem', color: 'var(--text-muted)' }}>
                       Posted by {item.organizerName || 'JCOM'}{item.locationName ? ` · ${item.locationName}` : ''}
                     </div>
+                    <div style={{ marginTop: 12, fontSize: '0.82rem', color: 'var(--primary)', fontWeight: 700 }}>
+                      Click to view full poster and details
+                    </div>
                   </div>
                 </article>
               );
@@ -288,6 +373,8 @@ const EventsPage = () => {
           </div>
         )}
       </div>
+
+      <EventPreviewModal event={selectedEvent} onClose={() => setSelectedEvent(null)} />
     </div>
   );
 };

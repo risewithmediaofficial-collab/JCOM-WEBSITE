@@ -2,7 +2,6 @@ import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import axios from 'axios';
 import SidebarLayout from '../components/SidebarLayout';
-import MemberCard from '../components/MemberCard';
 import ChatModal from '../components/ChatModal';
 import ProfileAvatar from '../components/ProfileAvatar';
 import StarRating from '../components/StarRating';
@@ -36,6 +35,14 @@ const sameId = (a, b) => String(a || '') === String(b || '');
 const getOtherParticipant = (connection, currentUserId) => (
   sameId(connection?.fromUser?._id, currentUserId) ? connection?.toUser : connection?.fromUser
 );
+
+const listRowStyle = {
+  padding: '16px 18px',
+  borderRadius: 18,
+  border: '1px solid var(--border)',
+  background: '#fff',
+  boxShadow: '0 10px 26px rgba(15, 23, 42, 0.05)'
+};
 
 const MemberInfoDialog = ({ member, onClose }) => {
   if (!member) return null;
@@ -589,9 +596,9 @@ const ConnectionsPage = () => {
             </div>
 
             {loading ? (
-              <div className="grid-3">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {[1, 2, 3, 4, 5, 6].map((item) => (
-                  <div key={item} className="skeleton" style={{ height: 220, borderRadius: 16 }} />
+                  <div key={item} className="skeleton" style={{ height: 102, borderRadius: 18 }} />
                 ))}
               </div>
             ) : filteredMembers.length === 0 ? (
@@ -600,20 +607,61 @@ const ConnectionsPage = () => {
                 <p>Your table members will appear here once approved by the chairman.</p>
               </div>
             ) : (
-              <div className="grid-3">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {filteredMembers
                   .filter((member) => member._id !== user?._id)
                   .map((member) => {
                     const { status } = getConnectionStatus(member._id);
+                    const canConnect = !status || status === 'Disconnected';
                     return (
-                      <MemberCard
-                        key={member._id}
-                        member={member}
-                        onInfo={setMemberInfoModal}
-                        onConnect={status || status === 'Disconnected' ? (status === 'Disconnected' ? openConnectModal : null) : openConnectModal}
-                        isConnected={status === 'Connected'}
-                        isPending={status === 'Requested'}
-                      />
+                      <div key={member._id} style={listRowStyle}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+                          <ProfileAvatar
+                            src={member.profilePic}
+                            firstName={member.firstName}
+                            lastName={member.lastName}
+                            alt={`${member.firstName || ''} ${member.lastName || ''}`}
+                            size={54}
+                            borderRadius="50%"
+                            fontSize={18}
+                          />
+
+                          <div style={{ flex: 1, minWidth: 220 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 4 }}>
+                              <div style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text-primary)' }}>
+                                {member.firstName} {member.lastName}
+                              </div>
+                              {status && (
+                                <span className={`badge ${status === 'Connected' ? 'badge-success' : status === 'Requested' ? 'badge-warning' : 'badge-info'}`}>
+                                  {status}
+                                </span>
+                              )}
+                            </div>
+
+                            <div style={{ color: 'var(--primary)', fontWeight: 700, fontSize: '0.92rem', marginBottom: 4 }}>
+                              {member.businessName || 'Business not added'}
+                            </div>
+                            <div style={{ color: 'var(--text-secondary)', fontSize: '0.86rem', marginBottom: 6 }}>
+                              {member.businessCategory || 'No category'} • {member.locationName || 'No location'} • {member.tableName || 'No table'}
+                            </div>
+                            <div style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', marginBottom: 6 }}>
+                              {member.businessService || member.businessDescription || 'No business summary added'}
+                            </div>
+                            <StarRating value={member.averageRating || 0} count={member.ratingsCount || 0} size={14} />
+                          </div>
+
+                          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginLeft: 'auto' }}>
+                            <button onClick={() => setMemberInfoModal(member)} className="btn btn-ghost btn-sm">
+                              <InfoCircleOutlined /> Info
+                            </button>
+                            {canConnect && (
+                              <button onClick={() => openConnectModal(member)} className="btn btn-primary btn-sm">
+                                <SendOutlined /> Connect
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
                     );
                   })}
               </div>
@@ -639,8 +687,8 @@ const ConnectionsPage = () => {
                   const isSender = sameId(conn.fromUser?._id, user?._id);
 
                   return (
-                    <div key={conn._id} className="glass-card" style={{ padding: 20, borderLeft: '5px solid #2f68c5' }}>
-                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, flexWrap: 'wrap' }}>
+                    <div key={conn._id} style={{ ...listRowStyle, borderLeft: '5px solid #2f68c5' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
                         <ProfileAvatar
                           src={other?.profilePic}
                           firstName={other?.firstName}
@@ -674,12 +722,12 @@ const ConnectionsPage = () => {
                             <StarRating value={other?.averageRating || 0} count={other?.ratingsCount || 0} size={14} />
                           </div>
 
-                          <div style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
+                          <div style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
                             {conn.requesterDetails?.serviceNeeded || conn.requestMessage || other?.businessService || 'No request summary added'}
                           </div>
                         </div>
 
-                        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', width: '100%', marginTop: 10 }}>
+                        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginLeft: 'auto' }}>
                           <button onClick={() => setConnectionInfoModal(conn)} className="btn btn-ghost btn-sm">
                             <InfoCircleOutlined /> Info
                           </button>
@@ -824,6 +872,22 @@ const ConnectionsPage = () => {
                 showCount={false}
                 onChange={setRatingValue}
               />
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 14 }}>
+                {[1, 2, 3, 4, 5].map((score) => (
+                  <button
+                    key={score}
+                    type="button"
+                    onClick={() => setRatingValue(score)}
+                    className={`btn btn-sm ${ratingValue === score ? 'btn-primary' : 'btn-ghost'}`}
+                    style={ratingValue === score ? {} : { color: '#c78700', borderColor: 'rgba(245,166,35,0.28)' }}
+                  >
+                    {score} Star{score > 1 ? 's' : ''}
+                  </button>
+                ))}
+              </div>
+              <div style={{ marginTop: 12, fontSize: '0.88rem', fontWeight: 700, color: ratingValue ? '#c78700' : 'var(--text-muted)' }}>
+                {ratingValue ? `Selected rating: ${ratingValue} / 5` : 'Choose a rating from 1 to 5'}
+              </div>
             </div>
 
             <div className="form-group">
@@ -845,7 +909,7 @@ const ConnectionsPage = () => {
 
             <div style={{ display: 'flex', gap: 12, marginTop: 20 }}>
               <button type="button" onClick={() => setRatingModal(null)} className="btn btn-ghost" style={{ flex: 1 }}>Cancel</button>
-              <button type="button" onClick={handleSaveRating} disabled={ratingSaving} className="btn btn-primary" style={{ flex: 1 }}>
+              <button type="button" onClick={handleSaveRating} disabled={ratingSaving || !ratingValue} className="btn btn-primary" style={{ flex: 1 }}>
                 {ratingSaving ? 'Saving...' : 'Save Feedback'}
               </button>
             </div>
