@@ -8,6 +8,11 @@ import {
   CrownOutlined, SearchOutlined, SettingOutlined
 } from '@ant-design/icons';
 import ProfileAvatar from './ProfileAvatar';
+import useBodyScrollLock from '../hooks/useBodyScrollLock';
+
+const scrollPageToTop = () => {
+  window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+};
 
 const Navbar = ({ sidebarWidth, onMobileMenuToggle, mobileMenuOpen }) => {
   const { user, isAuthenticated, logout } = useContext(AuthContext);
@@ -17,6 +22,8 @@ const Navbar = ({ sidebarWidth, onMobileMenuToggle, mobileMenuOpen }) => {
   // Use external toggle when provided (authenticated pages via SidebarLayout)
   const menuOpen = onMobileMenuToggle ? mobileMenuOpen : internalMenuOpen;
   const toggleMenu = onMobileMenuToggle || (() => setInternalMenuOpen(o => !o));
+
+  useBodyScrollLock(!onMobileMenuToggle && menuOpen);
 
   const handleLogout = () => {
     logout();
@@ -69,7 +76,6 @@ const Navbar = ({ sidebarWidth, onMobileMenuToggle, mobileMenuOpen }) => {
         <Link to="/" style={styles.logo}>
           <div style={styles.logoIcon}><span style={{ fontSize: '1.2rem' }}>⚡</span></div>
           <span style={styles.logoText}>JCOM</span>
-          <span className="hide-mobile" style={styles.logoTagline}>Connecting Businesses</span>
         </Link>
 
         {/* Desktop Nav Links */}
@@ -78,6 +84,7 @@ const Navbar = ({ sidebarWidth, onMobileMenuToggle, mobileMenuOpen }) => {
             <Link
               key={item.to}
               to={item.to}
+              onClick={scrollPageToTop}
               style={{
                 ...styles.navLink,
                 ...(location.pathname === item.to ? styles.navLinkActive : {})
@@ -155,15 +162,18 @@ const Navbar = ({ sidebarWidth, onMobileMenuToggle, mobileMenuOpen }) => {
               key={item.to}
               to={item.to}
               style={styles.mobileNavLink}
-              onClick={() => setInternalMenuOpen(false)}
+              onClick={() => {
+                scrollPageToTop();
+                setInternalMenuOpen(false);
+              }}
             >
               {item.icon} {item.label}
             </Link>
           ))}
           {!isAuthenticated && (
             <>
-              <Link to="/login" style={styles.mobileNavLink} onClick={() => setInternalMenuOpen(false)}>Login</Link>
-              <Link to="/register" style={styles.mobileNavLink} onClick={() => setInternalMenuOpen(false)}>Register</Link>
+              <Link to="/login" style={styles.mobileNavLink} onClick={() => { scrollPageToTop(); setInternalMenuOpen(false); }}>Login</Link>
+              <Link to="/register" style={styles.mobileNavLink} onClick={() => { scrollPageToTop(); setInternalMenuOpen(false); }}>Register</Link>
             </>
           )}
           {isAuthenticated && (
@@ -202,9 +212,6 @@ const styles = {
     fontFamily: "'Outfit', sans-serif", fontWeight: 800, fontSize: '1.3rem',
     background: 'var(--grad-gold)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'
   },
-  logoTagline: {
-    fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 500, letterSpacing: '0.5px'
-  },
   navLinks: {
     display: 'flex', alignItems: 'center', gap: 4, flex: 1, justifyContent: 'center'
   },
@@ -230,17 +237,21 @@ const styles = {
     transition: 'all 0.2s'
   },
   profileSection: {
-    display: 'flex', alignItems: 'center', gap: 6,
+    display: 'flex', alignItems: 'center', gap: 8,
     background: '#f8f9fc', borderRadius: 8,
     border: '1px solid rgba(0,0,0,0.08)', padding: '4px 8px'
   },
   profileLink: {
-    display: 'flex', alignItems: 'center', gap: 6
+    display: 'flex', alignItems: 'center', gap: 6,
+    minHeight: 32
   },
   logoutBtn: {
+    width: 32, height: 32,
     background: 'none', border: 'none', cursor: 'pointer',
-    color: 'var(--text-muted)', fontSize: '0.85rem', padding: '2px 4px',
-    borderRadius: 4, display: 'flex', alignItems: 'center',
+    color: 'var(--text-muted)', fontSize: '0.9rem', padding: 0,
+    borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center',
+    borderLeft: '1px solid rgba(0,0,0,0.08)',
+    marginLeft: 2, paddingLeft: 6,
     transition: 'color 0.2s'
   },
   mobileMenuBtn: {

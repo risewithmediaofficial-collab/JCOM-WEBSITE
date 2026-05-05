@@ -1,6 +1,7 @@
 import React from 'react';
 import { GlobalOutlined, InfoCircleOutlined, LinkOutlined, PlusOutlined } from '@ant-design/icons';
 import ProfileAvatar from './ProfileAvatar';
+import StarRating from './StarRating';
 
 const roleBadge = {
   'Vice Chairman': 'badge-teal',
@@ -54,6 +55,8 @@ const MemberCard = ({ member, onConnect, onInfo, isConnected, isPending }) => {
       <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', fontWeight: 500 }}>
         {member.businessName}
       </div>
+
+      <StarRating value={member.averageRating || 0} count={member.ratingsCount || 0} size={15} />
 
       {member.businessDescription && (
         <p

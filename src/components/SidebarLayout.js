@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import Navbar from './Navbar';
 import Sidebar from './Sidebar';
 import { AuthContext } from '../context/AuthContext';
+import useBodyScrollLock from '../hooks/useBodyScrollLock';
 
 /**
  * SidebarLayout — wrap any authenticated page with this.
@@ -23,6 +24,8 @@ const SidebarLayout = ({ children, noPadding = false }) => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  useBodyScrollLock(isMobile && mobileOpen);
 
   // Public pages — no sidebar
   if (!user) {

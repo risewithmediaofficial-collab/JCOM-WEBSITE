@@ -67,6 +67,8 @@ const userSchema = new mongoose.Schema({
   givenRequests:     { type: Number, default: 0 },
   receivedRequests:  { type: Number, default: 0 },
   totalConnections:  { type: Number, default: 0 },
+  averageRating:     { type: Number, default: 0, min: 0, max: 5 },
+  ratingsCount:      { type: Number, default: 0, min: 0 },
 
   // Meeting attendance
   meetingsAttended:  { type: Number, default: 0 },

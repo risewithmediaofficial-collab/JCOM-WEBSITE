@@ -3,6 +3,7 @@ import { AuthContext } from '../context/AuthContext';
 import axios from 'axios';
 import SidebarLayout from '../components/SidebarLayout';
 import { PlusOutlined, CalendarOutlined, EnvironmentOutlined, TeamOutlined, CheckCircleOutlined, QrcodeOutlined, CopyOutlined, DeleteOutlined } from '@ant-design/icons';
+import useBodyScrollLock from '../hooks/useBodyScrollLock';
 
 import { API_BASE_URL } from '../config/api';
 
@@ -39,6 +40,8 @@ const MeetingsPage = () => {
   const [joinMsg, setJoinMsg] = useState('');
 
   const [msg, setMsg] = useState('');
+
+  useBodyScrollLock(Boolean(showCreate || createdMeeting || qrModal || joinModal));
 
   const token = localStorage.getItem('token');
   const headers = { Authorization: `Bearer ${token}` };

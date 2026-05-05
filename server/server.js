@@ -136,6 +136,19 @@ app.get('/api/health', (req, res) => {
 // ─── Error handling ───────────────────────────────────────────────────────────
 app.use((err, req, res, next) => {
   console.error(err.stack);
+
+  if (err instanceof multer.MulterError) {
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({ message: 'Image size must be 5MB or less' });
+    }
+
+    return res.status(400).json({ message: err.message || 'Upload failed' });
+  }
+
+  if (err.message === 'Only JPG, PNG, GIF, and WEBP image files are allowed') {
+    return res.status(400).json({ message: err.message });
+  }
+
   res.status(500).json({ message: 'Something went wrong', error: err.message });
 });
 

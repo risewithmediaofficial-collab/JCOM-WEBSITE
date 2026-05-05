@@ -32,6 +32,15 @@ exports.getHomeStats = async (req, res) => {
       getStandaloneCRMRevenueByLocation()
     ]);
 
+    const topRatedBusinesses = await User.find({
+      status: 'Approved',
+      role: { $ne: 'Super Admin' },
+      ratingsCount: { $gt: 0 }
+    })
+      .select('firstName lastName businessName businessCategory locationName profilePic averageRating ratingsCount')
+      .sort({ averageRating: -1, ratingsCount: -1, totalConnections: -1, firstName: 1 })
+      .limit(6);
+
     res.json({
       period,
       globalStats: {
@@ -39,6 +48,7 @@ exports.getHomeStats = async (req, res) => {
         totalConnections,
         totalRevenue
       },
+      topRatedBusinesses,
       locations: locations.map(l => ({
         name: l.name, code: l.code,
         members: memberCounts.get(String(l._id)) || 0,

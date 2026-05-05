@@ -35,7 +35,7 @@ exports.searchUsers = async (req, res) => {
     if (location) query.locationName = new RegExp(location, 'i');
 
     const members = await User.find(query)
-      .select('firstName lastName membershipId businessName businessCategory businessService businessDescription businessWebsite profilePic keywords locationName tableName phone email totalRevenue totalConnections')
+      .select('firstName lastName membershipId businessName businessCategory businessService businessDescription businessWebsite profilePic keywords locationName tableName phone email totalRevenue totalConnections averageRating ratingsCount')
       .limit(50)
       .sort('locationName firstName');
 
@@ -83,7 +83,7 @@ exports.getPublicMemberProfile = async (req, res) => {
       status: 'Approved',
       role: { $ne: 'Super Admin' }
     })
-      .select('firstName lastName membershipId role subRole businessName businessCategory businessService businessDescription businessWebsite profilePic keywords locationName tableName phone email totalRevenue totalConnections givenRequests receivedRequests meetingsAttended');
+      .select('firstName lastName membershipId role subRole businessName businessCategory businessService businessDescription businessWebsite profilePic keywords locationName tableName phone email totalRevenue totalConnections givenRequests receivedRequests meetingsAttended averageRating ratingsCount');
 
     if (!user) return res.status(404).json({ message: 'Member not found' });
     res.json({ member: user });
@@ -122,7 +122,7 @@ exports.getUsersByLocation = async (req, res) => {
   try {
     const locationId = req.query.locationId || req.user.locationId;
     const members = await User.find({ locationId, status: 'Approved' })
-      .select('firstName lastName membershipId role subRole businessName businessCategory profilePic tableName totalRevenue totalConnections givenRequests receivedRequests')
+      .select('firstName lastName membershipId role subRole businessName businessCategory profilePic tableName totalRevenue totalConnections givenRequests receivedRequests averageRating ratingsCount')
       .sort('firstName');
     res.json({ count: members.length, members });
   } catch (err) {
@@ -135,7 +135,7 @@ exports.getUsersByTable = async (req, res) => {
   try {
     const tableId = req.query.tableId || req.user.tableId;
     const members = await User.find({ tableId, status: 'Approved' })
-      .select('firstName lastName membershipId role subRole businessName businessCategory businessService businessDescription businessWebsite profilePic phone email locationName tableName totalRevenue totalConnections givenRequests receivedRequests')
+      .select('firstName lastName membershipId role subRole businessName businessCategory businessService businessDescription businessWebsite profilePic phone email locationName tableName totalRevenue totalConnections givenRequests receivedRequests averageRating ratingsCount')
       .sort('firstName');
     res.json({ count: members.length, members });
   } catch (err) {

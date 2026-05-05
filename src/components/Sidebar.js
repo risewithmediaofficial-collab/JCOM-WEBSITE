@@ -3,6 +3,10 @@ import { Link, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import ProfileAvatar from './ProfileAvatar';
 
+const scrollPageToTop = () => {
+  window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+};
+
 const Sidebar = ({ collapsed = false, onCollapse, onClose, isMobileDrawer = false }) => {
   const { user } = useContext(AuthContext);
   const location = useLocation();
@@ -137,6 +141,10 @@ const Sidebar = ({ collapsed = false, onCollapse, onClose, isMobileDrawer = fals
             <Link
               key={link.to}
               to={link.to}
+              onClick={() => {
+                scrollPageToTop();
+                if (isMobileDrawer && onClose) onClose();
+              }}
               title={collapsed ? link.label : undefined}
               style={{
                 display: 'flex', alignItems: 'center',

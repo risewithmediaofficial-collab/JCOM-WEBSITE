@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { SearchOutlined, ArrowRightOutlined, TeamOutlined, TrophyOutlined, LinkOutlined, RiseOutlined, EnvironmentOutlined, StarOutlined } from '@ant-design/icons';
+import { SearchOutlined, ArrowRightOutlined } from '@ant-design/icons';
 import Navbar from '../components/Navbar';
+import StarRating from '../components/StarRating';
 
 import { API_BASE_URL } from '../config/api';
 
@@ -14,16 +15,11 @@ const HomePage = () => {
   const [leaderboard, setLeaderboard] = useState([]);
   const [period, setPeriod] = useState('monthly');
   const [searchQ, setSearchQ] = useState('');
-  const [searching, setSearching] = useState(false);
   const [statsError, setStatsError] = useState(false);
   const [loading, setLoading] = useState(true);
   const [counters, setCounters] = useState({ members: 0, connections: 0, revenue: 0 });
 
-  useEffect(() => {
-    fetchData();
-  }, [period]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     setStatsError(false);
     try {
@@ -42,7 +38,11 @@ const HomePage = () => {
       setCounters({ members: 0, connections: 0, revenue: 0 });
     }
     setLoading(false);
-  };
+  }, [period]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const animateCounters = (gs) => {
     if (!gs) return;
@@ -98,6 +98,7 @@ const HomePage = () => {
 
   const featuredLocation = leaderboard[0];
   const runnerUpLocations = leaderboard.slice(1, 3);
+  const topRatedBusinesses = stats.topRatedBusinesses || [];
 
   return (
     <div style={{ minHeight: '100vh', background: '#f8f9fc' }}>
@@ -359,6 +360,42 @@ const HomePage = () => {
           </div>
         </div>
       </section>
+
+      {topRatedBusinesses.length > 0 && (
+        <section style={{ padding: '24px 16px 80px', background: 'var(--bg-surface)' }}>
+          <div className="section-shell">
+            <div style={{ textAlign: 'center', marginBottom: 32 }}>
+              <div className="badge badge-gold mb-md" style={{ margin: '0 auto 12px' }}>Top Rated Businesses</div>
+              <h2 style={{ marginBottom: 10 }}>Trusted by <span className="highlight-gold">Connected Members</span></h2>
+              <p style={{ maxWidth: 720, margin: '0 auto' }}>
+                Real star ratings from members who have already connected and worked together.
+              </p>
+            </div>
+
+            <div className="grid-3">
+              {topRatedBusinesses.map((business) => (
+                <Link
+                  key={business._id}
+                  to={`/search/${business._id}`}
+                  className="glass-card"
+                  style={{ padding: 22, display: 'block', textDecoration: 'none' }}
+                >
+                  <div style={{ fontWeight: 800, color: 'var(--text-primary)', fontSize: '1.05rem', marginBottom: 6 }}>
+                    {business.businessName || `${business.firstName} ${business.lastName}`}
+                  </div>
+                  <div style={{ color: 'var(--primary)', fontWeight: 700, marginBottom: 4 }}>
+                    {business.firstName} {business.lastName}
+                  </div>
+                  <div style={{ color: 'var(--text-muted)', fontSize: '0.84rem', marginBottom: 12 }}>
+                    {business.businessCategory || 'Business Category'} {business.locationName ? `• ${business.locationName}` : ''}
+                  </div>
+                  <StarRating value={business.averageRating || 0} count={business.ratingsCount || 0} size={17} />
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ── FEATURES ── */}
       <section style={{ padding: '80px 16px', background: 'var(--bg-surface)' }}>

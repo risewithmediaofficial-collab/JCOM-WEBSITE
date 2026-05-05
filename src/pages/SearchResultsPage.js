@@ -5,6 +5,7 @@ import Navbar from '../components/Navbar';
 import Breadcrumbs from '../components/Breadcrumbs';
 import { SearchOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import ProfileAvatar from '../components/ProfileAvatar';
+import StarRating from '../components/StarRating';
 
 import { API_BASE_URL } from '../config/api';
 
@@ -172,6 +173,9 @@ const SearchResultsPage = () => {
                               <span className="badge badge-gold">{member.businessCategory}</span>
                             </div>
                             <div style={{ fontWeight: 600, color: 'var(--text-secondary)', marginTop: 2, fontSize: '0.9rem' }}>{member.businessName}</div>
+                            <div style={{ marginTop: 6 }}>
+                              <StarRating value={member.averageRating || 0} count={member.ratingsCount || 0} size={14} />
+                            </div>
                             {member.businessService && (
                               <p style={{ fontSize: '0.82rem', margin: '6px 0 0', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                                 {member.businessService}

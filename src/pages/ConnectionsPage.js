@@ -5,13 +5,16 @@ import SidebarLayout from '../components/SidebarLayout';
 import MemberCard from '../components/MemberCard';
 import ChatModal from '../components/ChatModal';
 import ProfileAvatar from '../components/ProfileAvatar';
+import StarRating from '../components/StarRating';
+import useBodyScrollLock from '../hooks/useBodyScrollLock';
 import {
   SearchOutlined,
   CloseCircleOutlined,
   CheckCircleOutlined,
   SwapOutlined,
   InfoCircleOutlined,
-  SendOutlined
+  SendOutlined,
+  StarFilled
 } from '@ant-design/icons';
 
 import { API_BASE_URL } from '../config/api';
@@ -27,6 +30,12 @@ const formatDate = (value) => {
     year: 'numeric'
   });
 };
+
+const sameId = (a, b) => String(a || '') === String(b || '');
+
+const getOtherParticipant = (connection, currentUserId) => (
+  sameId(connection?.fromUser?._id, currentUserId) ? connection?.toUser : connection?.fromUser
+);
 
 const MemberInfoDialog = ({ member, onClose }) => {
   if (!member) return null;
@@ -62,6 +71,9 @@ const MemberInfoDialog = ({ member, onClose }) => {
               </div>
               <div style={{ color: 'var(--text-secondary)', fontSize: '0.92rem', marginTop: 4 }}>
                 {member.businessCategory || 'Category not added'} • {member.tableName || 'No table'} • {member.locationName || 'No location'}
+              </div>
+              <div style={{ marginTop: 8 }}>
+                <StarRating value={member.averageRating || 0} count={member.ratingsCount || 0} size={15} />
               </div>
             </div>
           </div>
@@ -216,7 +228,7 @@ const ConnectDialog = ({ member, user, form, setForm, error, requesting, onClose
 
 const ConnectionInfoDialog = ({ connection, user, onClose }) => {
   if (!connection) return null;
-  const other = connection.fromUser?._id === user?._id ? connection.toUser : connection.fromUser;
+  const other = getOtherParticipant(connection, user?._id);
 
   return (
     <div className="modal-overlay" style={{ position: 'fixed', inset: 0, background: 'rgba(9,16,35,0.72)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
@@ -249,6 +261,9 @@ const ConnectionInfoDialog = ({ connection, user, onClose }) => {
               </div>
               <div style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: 4 }}>
                 {other?.businessCategory || 'Category not added'} • {other?.tableName || 'No table'} • {other?.locationName || 'No location'}
+              </div>
+              <div style={{ marginTop: 8 }}>
+                <StarRating value={other?.averageRating || 0} count={other?.ratingsCount || 0} size={15} />
               </div>
             </div>
           </div>
@@ -345,6 +360,13 @@ const ConnectionsPage = () => {
   const [convertNotes, setConvertNotes] = useState('');
   const [converting, setConverting] = useState(false);
   const [convertMsg, setConvertMsg] = useState('');
+  const [ratingModal, setRatingModal] = useState(null);
+  const [ratingValue, setRatingValue] = useState(0);
+  const [ratingFeedback, setRatingFeedback] = useState('');
+  const [ratingMessage, setRatingMessage] = useState('');
+  const [ratingSaving, setRatingSaving] = useState(false);
+
+  useBodyScrollLock(Boolean(memberInfoModal || connectionInfoModal || connectModal || convertModal || ratingModal));
 
   const token = localStorage.getItem('token');
   const headers = { Authorization: `Bearer ${token}` };
@@ -377,7 +399,7 @@ const ConnectionsPage = () => {
 
   const getConnectionStatus = (memberId) => {
     const conn = myConnections.find(
-      (connection) => connection.fromUser?._id === memberId || connection.toUser?._id === memberId
+      (connection) => sameId(connection.fromUser?._id, memberId) || sameId(connection.toUser?._id, memberId)
     );
     if (!conn) return { status: null, connection: null };
     return { status: conn.status, connection: conn };
@@ -436,7 +458,7 @@ const ConnectionsPage = () => {
   };
 
   const handleOpenChat = (conn) => {
-    const other = conn.fromUser?._id === user?._id ? conn.toUser : conn.fromUser;
+    const other = getOtherParticipant(conn, user?._id);
     setChatConn(conn);
     setChatUser(other);
     setChatOpen(true);
@@ -488,6 +510,39 @@ const ConnectionsPage = () => {
       setConvertMsg(err.response?.data?.message || 'Failed to convert');
     }
     setConverting(false);
+  };
+
+  const openRatingModal = (connection) => {
+    setRatingModal(connection);
+    setRatingValue(connection.myRating?.rating || 0);
+    setRatingFeedback(connection.myRating?.feedback || '');
+    setRatingMessage('');
+  };
+
+  const handleSaveRating = async () => {
+    if (!ratingModal) return;
+    if (!ratingValue) {
+      setRatingMessage('Please choose a star rating');
+      return;
+    }
+
+    setRatingSaving(true);
+    setRatingMessage('');
+    try {
+      await axios.post(
+        `${API}/connections/rate/${ratingModal._id}`,
+        { rating: ratingValue, feedback: ratingFeedback.trim() },
+        { headers }
+      );
+      setRatingMessage('Feedback saved successfully');
+      setTimeout(() => {
+        setRatingModal(null);
+        fetchData();
+      }, 900);
+    } catch (err) {
+      setRatingMessage(err.response?.data?.message || 'Failed to save feedback');
+    }
+    setRatingSaving(false);
   };
 
   const filteredMembers = members.filter((member) =>
@@ -579,9 +634,9 @@ const ConnectionsPage = () => {
               myConnections
                 .filter((connection) => connection.status !== 'Disconnected')
                 .map((conn) => {
-                  const other = conn.fromUser?._id === user?._id ? conn.toUser : conn.fromUser;
-                  const isReceived = conn.toUser?._id === user?._id;
-                  const isSender = conn.fromUser?._id === user?._id;
+                  const other = getOtherParticipant(conn, user?._id);
+                  const isReceived = sameId(conn.toUser?._id, user?._id);
+                  const isSender = sameId(conn.fromUser?._id, user?._id);
 
                   return (
                     <div key={conn._id} className="glass-card" style={{ padding: 20, borderLeft: '5px solid #2f68c5' }}>
@@ -615,6 +670,10 @@ const ConnectionsPage = () => {
                             {conn.requesterDetails?.category || other?.businessCategory || 'Business Category'}
                           </div>
 
+                          <div style={{ marginBottom: 8 }}>
+                            <StarRating value={other?.averageRating || 0} count={other?.ratingsCount || 0} size={14} />
+                          </div>
+
                           <div style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
                             {conn.requesterDetails?.serviceNeeded || conn.requestMessage || other?.businessService || 'No request summary added'}
                           </div>
@@ -644,6 +703,17 @@ const ConnectionsPage = () => {
                           {conn.status === 'Connected' && (
                             <button onClick={() => handleOpenChat(conn)} className="btn btn-primary btn-sm">
                               Chat
+                            </button>
+                          )}
+
+                          {conn.status === 'Connected' && (
+                            <button
+                              type="button"
+                              onClick={() => openRatingModal(conn)}
+                              className="btn btn-sm"
+                              style={{ background: 'rgba(245,166,35,0.12)', border: '1px solid rgba(245,166,35,0.26)', color: '#c78700' }}
+                            >
+                              <StarFilled /> {conn.myRating ? 'Edit Feedback' : 'Add Feedback'}
                             </button>
                           )}
 
@@ -724,6 +794,59 @@ const ConnectionsPage = () => {
               <button onClick={() => setConvertModal(null)} className="btn btn-ghost" style={{ flex: 1 }}>Cancel</button>
               <button onClick={handleConvertRevenue} disabled={converting || !convertAmount} className="btn btn-primary" style={{ flex: 1, background: 'linear-gradient(135deg,#7c3aed,#a855f7)' }}>
                 {converting ? 'Saving...' : 'Log Revenue'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {ratingModal && (
+        <div className="modal-overlay" style={{ position: 'fixed', inset: 0, background: 'rgba(9,16,35,0.72)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <div className="glass-card modal-sheet animate-fadeInUp" style={{ maxWidth: 520, width: '100%', padding: 28 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, alignItems: 'flex-start', marginBottom: 18 }}>
+              <div>
+                <h3 style={{ color: 'var(--text-primary)', marginBottom: 6 }}>Business Feedback</h3>
+                <p>Rate your experience after connecting with {getOtherParticipant(ratingModal, user?._id)?.firstName}.</p>
+              </div>
+              <button type="button" onClick={() => setRatingModal(null)} className="btn btn-ghost btn-sm">Close</button>
+            </div>
+
+            <div className="glass-card" style={{ padding: 18, marginBottom: 16, background: '#fbfcff' }}>
+              <div style={{ fontWeight: 700, color: 'var(--text-primary)', marginBottom: 8 }}>
+                {getOtherParticipant(ratingModal, user?._id)?.businessName || 'Connected Business'}
+              </div>
+              <StarRating
+                value={ratingValue}
+                count={0}
+                size={26}
+                interactive
+                showValue={false}
+                showCount={false}
+                onChange={setRatingValue}
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Feedback</label>
+              <textarea
+                className="form-textarea"
+                rows={4}
+                value={ratingFeedback}
+                onChange={(e) => setRatingFeedback(e.target.value)}
+                placeholder="Share your experience with this business connection"
+              />
+            </div>
+
+            {ratingMessage && (
+              <div style={{ marginTop: 14, padding: '10px 14px', borderRadius: 10, background: ratingMessage.toLowerCase().includes('success') ? 'rgba(22,163,74,0.08)' : 'rgba(220,38,38,0.08)', border: `1px solid ${ratingMessage.toLowerCase().includes('success') ? 'rgba(22,163,74,0.25)' : 'rgba(220,38,38,0.2)'}`, color: ratingMessage.toLowerCase().includes('success') ? 'var(--success)' : 'var(--error)', fontWeight: 600 }}>
+                {ratingMessage}
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: 12, marginTop: 20 }}>
+              <button type="button" onClick={() => setRatingModal(null)} className="btn btn-ghost" style={{ flex: 1 }}>Cancel</button>
+              <button type="button" onClick={handleSaveRating} disabled={ratingSaving} className="btn btn-primary" style={{ flex: 1 }}>
+                {ratingSaving ? 'Saving...' : 'Save Feedback'}
               </button>
             </div>
           </div>

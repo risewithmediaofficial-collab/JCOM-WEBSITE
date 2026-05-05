@@ -17,7 +17,8 @@ const EventsPage = () => {
     title: '',
     description: '',
     eventDate: '',
-    eventTime: '',
+    startTime: '',
+    endTime: '',
     venue: '',
     poster: null
   });
@@ -49,10 +50,30 @@ const EventsPage = () => {
       title: '',
       description: '',
       eventDate: '',
-      eventTime: '',
+      startTime: '',
+      endTime: '',
       venue: '',
       poster: null
     });
+  };
+
+  const formatTimeRange = (startTime, endTime) => {
+    if (!startTime && !endTime) return '';
+
+    const formatOne = (value) => {
+      if (!value) return '';
+      const [hourString, minute] = value.split(':');
+      const hour = Number(hourString);
+      const suffix = hour >= 12 ? 'PM' : 'AM';
+      const normalizedHour = hour % 12 || 12;
+      return `${normalizedHour}:${minute} ${suffix}`;
+    };
+
+    if (startTime && endTime) {
+      return `${formatOne(startTime)} to ${formatOne(endTime)}`;
+    }
+
+    return formatOne(startTime || endTime);
   };
 
   const handleCreateEvent = async (event) => {
@@ -65,15 +86,12 @@ const EventsPage = () => {
       payload.append('title', form.title);
       payload.append('description', form.description);
       payload.append('eventDate', form.eventDate);
-      payload.append('eventTime', form.eventTime);
+      payload.append('eventTime', formatTimeRange(form.startTime, form.endTime));
       payload.append('venue', form.venue);
       if (form.poster) payload.append('poster', form.poster);
 
       await axios.post(`${API_BASE_URL}/events`, payload, {
-        headers: {
-          ...authHeaders,
-          'Content-Type': 'multipart/form-data'
-        }
+        headers: authHeaders
       });
 
       setMessage('Event posted successfully.');
@@ -131,7 +149,7 @@ const EventsPage = () => {
         </section>
 
         {message && (
-          <div style={{ marginBottom: 20, padding: '12px 14px', borderRadius: 12, background: message.toLowerCase().includes('unable') ? 'rgba(220,38,38,0.08)' : 'rgba(22,163,74,0.08)', color: message.toLowerCase().includes('unable') ? 'var(--error)' : 'var(--success)', border: `1px solid ${message.toLowerCase().includes('unable') ? 'rgba(220,38,38,0.22)' : 'rgba(22,163,74,0.22)'}`, fontWeight: 600 }}>
+          <div style={{ marginBottom: 20, padding: '12px 14px', borderRadius: 12, background: ['unable', 'failed', 'wrong', 'valid', 'required'].some((token) => message.toLowerCase().includes(token)) ? 'rgba(220,38,38,0.08)' : 'rgba(22,163,74,0.08)', color: ['unable', 'failed', 'wrong', 'valid', 'required'].some((token) => message.toLowerCase().includes(token)) ? 'var(--error)' : 'var(--success)', border: `1px solid ${['unable', 'failed', 'wrong', 'valid', 'required'].some((token) => message.toLowerCase().includes(token)) ? 'rgba(220,38,38,0.22)' : 'rgba(22,163,74,0.22)'}`, fontWeight: 600 }}>
             {message}
           </div>
         )}
@@ -158,7 +176,20 @@ const EventsPage = () => {
                 </div>
                 <div className="form-group">
                   <label className="form-label">Event Time</label>
-                  <input className="form-input" type="text" value={form.eventTime} onChange={(e) => setField('eventTime', e.target.value)} placeholder="10:00 AM to 1:00 PM" />
+                  <div className="responsive-two-col" style={{ gap: 10 }}>
+                    <input
+                      className="form-input"
+                      type="time"
+                      value={form.startTime}
+                      onChange={(e) => setField('startTime', e.target.value)}
+                    />
+                    <input
+                      className="form-input"
+                      type="time"
+                      value={form.endTime}
+                      onChange={(e) => setField('endTime', e.target.value)}
+                    />
+                  </div>
                 </div>
               </div>
 

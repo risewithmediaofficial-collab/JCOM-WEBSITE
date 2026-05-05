@@ -3,6 +3,7 @@ import { AuthContext } from '../context/AuthContext';
 import axios from 'axios';
 import SidebarLayout from '../components/SidebarLayout';
 import { EditOutlined, PlusOutlined, DeleteOutlined, UserAddOutlined } from '@ant-design/icons';
+import useBodyScrollLock from '../hooks/useBodyScrollLock';
 
 import { API_BASE_URL } from '../config/api';
 
@@ -118,6 +119,8 @@ const CRMDashboard = () => {
   });
   const [addSaving, setAddSaving] = useState(false);
   const [addError, setAddError] = useState('');
+
+  useBodyScrollLock(Boolean(showAddModal || editEntry));
 
   const token = localStorage.getItem('token');
   const headers = useMemo(() => ({ Authorization: `Bearer ${token}` }), [token]);

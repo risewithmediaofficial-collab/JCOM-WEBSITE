@@ -5,6 +5,8 @@ import Navbar from '../components/Navbar';
 import Breadcrumbs from '../components/Breadcrumbs';
 import { EnvironmentOutlined, GlobalOutlined, MailOutlined, PhoneOutlined, SearchOutlined } from '@ant-design/icons';
 import ProfileAvatar from '../components/ProfileAvatar';
+import StarRating from '../components/StarRating';
+import useBodyScrollLock from '../hooks/useBodyScrollLock';
 
 import { API_BASE_URL } from '../config/api';
 
@@ -35,6 +37,8 @@ const SearchBusinessDetailPage = () => {
     businessCategory: '',
     requirement: ''
   });
+
+  useBodyScrollLock(showEnquiry);
 
   const query = searchParams.get('q') || '';
   const location = searchParams.get('location') || '';
@@ -150,6 +154,10 @@ const SearchBusinessDetailPage = () => {
                     {member.businessDescription || member.businessService || 'Verified JCOM business member profile with service, contact, and location details.'}
                   </p>
 
+                  <div style={{ marginBottom: 18 }}>
+                    <StarRating value={member.averageRating || 0} count={member.ratingsCount || 0} size={18} />
+                  </div>
+
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 18 }}>
                     <span className="badge badge-gold">{member.businessCategory || 'Business Category'}</span>
                     <span className="badge badge-teal">{member.locationName || 'Location not added'}</span>
@@ -203,6 +211,12 @@ const SearchBusinessDetailPage = () => {
                         Location
                       </div>
                       <div style={{ color: 'var(--text-primary)', fontWeight: 600 }}><EnvironmentOutlined /> {member.locationName || 'Not available'}</div>
+                    </div>
+                    <div style={infoCardStyle}>
+                      <div style={{ fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.12em', color: 'var(--text-muted)', fontWeight: 700, marginBottom: 6 }}>
+                        Rating
+                      </div>
+                      <StarRating value={member.averageRating || 0} count={member.ratingsCount || 0} size={16} />
                     </div>
                   </div>
                 </div>

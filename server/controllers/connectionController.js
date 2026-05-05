@@ -3,7 +3,26 @@ const User = require('../models/User');
 const CRMEntry = require('../models/CRMEntry');
 const Deal = require('../models/Deal');
 const Location = require('../models/Location');
+const Rating = require('../models/Rating');
 const { ensureCRMEntry } = require('./crmController');
+
+const recalculateUserRatingStats = async (userId) => {
+  const [summary] = await Rating.aggregate([
+    { $match: { ratedUser: userId } },
+    {
+      $group: {
+        _id: '$ratedUser',
+        averageRating: { $avg: '$rating' },
+        ratingsCount: { $sum: 1 }
+      }
+    }
+  ]);
+
+  await User.findByIdAndUpdate(userId, {
+    averageRating: summary ? Number(summary.averageRating.toFixed(1)) : 0,
+    ratingsCount: summary ? summary.ratingsCount : 0
+  });
+};
 
 // ─── SEND CONNECTION REQUEST ──────────────────────────────────────────────────
 exports.sendRequest = async (req, res) => {
@@ -277,6 +296,58 @@ exports.convertToRevenue = async (req, res) => {
   }
 };
 
+exports.submitRating = async (req, res) => {
+  try {
+    const { connectionId } = req.params;
+    const { rating, feedback } = req.body;
+    const userId = req.user._id;
+    const numericRating = Number(rating);
+
+    if (!Number.isInteger(numericRating) || numericRating < 1 || numericRating > 5) {
+      return res.status(400).json({ message: 'Rating must be a whole number between 1 and 5' });
+    }
+
+    const conn = await Connection.findById(connectionId);
+    if (!conn) return res.status(404).json({ message: 'Connection not found' });
+    if (conn.status !== 'Connected') {
+      return res.status(400).json({ message: 'Only connected businesses can be rated' });
+    }
+
+    const isSender = conn.fromUser.toString() === userId.toString();
+    const isRecipient = conn.toUser.toString() === userId.toString();
+    if (!isSender && !isRecipient) {
+      return res.status(403).json({ message: 'Not authorized to rate this connection' });
+    }
+
+    const ratedUser = isSender ? conn.toUser : conn.fromUser;
+    const trimmedFeedback = (feedback || '').trim();
+
+    const savedRating = await Rating.findOneAndUpdate(
+      { connectionId, raterUser: userId, ratedUser },
+      {
+        connectionId,
+        raterUser: userId,
+        ratedUser,
+        rating: numericRating,
+        feedback: trimmedFeedback
+      },
+      { new: true, upsert: true, setDefaultsOnInsert: true, runValidators: true }
+    );
+
+    await recalculateUserRatingStats(ratedUser);
+
+    const ratedUserDoc = await User.findById(ratedUser).select('averageRating ratingsCount firstName lastName businessName');
+
+    res.json({
+      message: 'Rating saved successfully',
+      rating: savedRating,
+      ratedUser: ratedUserDoc
+    });
+  } catch (err) {
+    res.status(500).json({ message: 'Save rating failed', error: err.message });
+  }
+};
+
 // ─── GET MY CONNECTIONS ───────────────────────────────────────────────────────
 exports.getMyConnections = async (req, res) => {
   try {
@@ -291,12 +362,28 @@ exports.getMyConnections = async (req, res) => {
     if (status) query.status = status;
 
     const connections = await Connection.find(query)
-      .populate('fromUser', 'firstName lastName businessName businessCategory businessService businessDescription businessWebsite profilePic membershipId locationName tableName phone email')
-      .populate('toUser', 'firstName lastName businessName businessCategory businessService businessDescription businessWebsite profilePic membershipId locationName tableName phone email')
+      .populate('fromUser', 'firstName lastName businessName businessCategory businessService businessDescription businessWebsite profilePic membershipId locationName tableName phone email averageRating ratingsCount')
+      .populate('toUser', 'firstName lastName businessName businessCategory businessService businessDescription businessWebsite profilePic membershipId locationName tableName phone email averageRating ratingsCount')
       .populate('dealId', 'amount status completedAt')
       .sort('-createdAt');
 
-    res.json({ count: connections.length, connections });
+    const connectionIds = connections.map((connection) => connection._id);
+    const myRatings = await Rating.find({
+      connectionId: { $in: connectionIds },
+      raterUser: userId
+    }).select('connectionId rating feedback updatedAt createdAt');
+
+    const ratingsMap = new Map(
+      myRatings.map((item) => [item.connectionId.toString(), item])
+    );
+
+    const serializedConnections = connections.map((connection) => {
+      const raw = connection.toObject();
+      raw.myRating = ratingsMap.get(connection._id.toString()) || null;
+      return raw;
+    });
+
+    res.json({ count: serializedConnections.length, connections: serializedConnections });
   } catch (err) {
     res.status(500).json({ message: 'Fetch connections failed', error: err.message });
   }
