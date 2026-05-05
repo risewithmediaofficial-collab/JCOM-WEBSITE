@@ -618,7 +618,7 @@ const HomePage = () => {
 
                     <div style={{
                       display: 'grid',
-                      gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                      gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
                       gap: 12
                     }}>
                       {statItems.map((item) => (
@@ -628,7 +628,8 @@ const HomePage = () => {
                             padding: '16px 14px',
                             borderRadius: 18,
                             background: 'rgba(255,255,255,0.96)',
-                            border: '1px solid rgba(0,0,0,0.06)'
+                            border: '1px solid rgba(0,0,0,0.06)',
+                            minWidth: 0
                           }}
                         >
                           <div style={{ fontSize: '0.64rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8, fontWeight: 700 }}>
