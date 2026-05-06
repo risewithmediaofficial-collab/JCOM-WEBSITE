@@ -150,7 +150,6 @@ const HomePage = () => {
   const navigate = useNavigate();
   const pageRef = useRef(null);
   const heroSectionRef = useRef(null);
-  const heroImageRef = useRef(null);
   const heroContentRef = useRef(null);
   const [overallStats, setOverallStats] = useState(emptyStats);
   const [leaderboard, setLeaderboard] = useState([]);
@@ -278,24 +277,6 @@ const HomePage = () => {
     gsap.registerPlugin(ScrollTrigger);
 
     const ctx = gsap.context(() => {
-      if (heroImageRef.current) {
-        gsap.fromTo(
-          heroImageRef.current,
-          { yPercent: -4, scale: 1.08 },
-          {
-            yPercent: 10,
-            scale: 1.14,
-            ease: 'none',
-            scrollTrigger: {
-              trigger: heroSectionRef.current,
-              start: 'top top',
-              end: 'bottom top',
-              scrub: true
-            }
-          }
-        );
-      }
-
       if (heroContentRef.current) {
         gsap.fromTo(
           heroContentRef.current.children,
@@ -448,15 +429,10 @@ const HomePage = () => {
         marginTop: '-1px'
       }}>
         <div
-          ref={heroImageRef}
           style={{
             position: 'absolute',
             inset: 0,
-            backgroundImage: "linear-gradient(rgba(255,255,255,0.82), rgba(255,255,255,0.82)), url('/employee-working-marketing-setting.jpg')",
-            backgroundPosition: 'center top',
-            backgroundRepeat: 'no-repeat',
-            backgroundSize: 'cover',
-            transformOrigin: 'center center'
+            background: 'linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(244,248,255,0.96) 58%, rgba(255,255,255,1) 100%)'
           }}
         />
         <div ref={heroContentRef} style={{ maxWidth: 900, textAlign: 'center', position: 'relative', zIndex: 1 }}>
