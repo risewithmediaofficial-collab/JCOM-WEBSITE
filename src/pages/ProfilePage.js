@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
+import { CopyOutlined } from '@ant-design/icons';
 import SidebarLayout from '../components/SidebarLayout';
 import ProfileAvatar from '../components/ProfileAvatar';
 import { AuthContext } from '../context/AuthContext';
@@ -15,6 +16,7 @@ const ProfilePage = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
+  const [shareMessage, setShareMessage] = useState('');
   const [previewUrl, setPreviewUrl] = useState('');
   const [form, setForm] = useState({
     firstName: '',
@@ -101,7 +103,8 @@ const ProfilePage = () => {
           businessService: updatedUser.businessService,
           businessDescription: updatedUser.businessDescription,
           businessWebsite: updatedUser.businessWebsite,
-          profilePic: updatedUser.profilePic
+          profilePic: updatedUser.profilePic,
+          slug: updatedUser.slug
         };
         login(token || localStorage.getItem('token'), mergedUser);
       }
@@ -110,6 +113,20 @@ const ProfilePage = () => {
     }
 
     setSaving(false);
+  };
+
+  const copyPublicProfileLink = async () => {
+    if (!profile?.slug) return;
+
+    try {
+      const shareLink = `${window.location.origin}/${profile.slug}`;
+      await navigator.clipboard.writeText(shareLink);
+      setShareMessage('Public profile link copied');
+    } catch (err) {
+      setShareMessage('Unable to copy profile link');
+    }
+
+    window.setTimeout(() => setShareMessage(''), 2000);
   };
 
   if (loading) {
@@ -142,6 +159,21 @@ const ProfilePage = () => {
             }}
           >
             {message}
+          </div>
+        )}
+
+        {shareMessage && (
+          <div
+            style={{
+              marginBottom: 16,
+              padding: '12px 14px',
+              borderRadius: 10,
+              background: 'rgba(0,73,194,0.08)',
+              border: '1px solid rgba(0,73,194,0.18)',
+              color: 'var(--primary)'
+            }}
+          >
+            {shareMessage}
           </div>
         )}
 
@@ -181,6 +213,16 @@ const ProfilePage = () => {
               <div style={{ color: 'var(--text-muted)', marginTop: 6 }}>
                 Click the photo to upload a new profile image.
               </div>
+              {profile?.slug && (
+                <div style={{ marginTop: 12, display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center' }}>
+                  <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+                    Public URL: <strong style={{ color: 'var(--primary)' }}>{window.location.origin}/{profile.slug}</strong>
+                  </span>
+                  <button type="button" className="btn btn-outline btn-sm" onClick={copyPublicProfileLink}>
+                    <CopyOutlined /> Copy Link
+                  </button>
+                </div>
+              )}
               <input id="profilePicInput" type="file" accept="image/*" style={{ display: 'none' }} onChange={handleImageChange} />
             </div>
           </div>

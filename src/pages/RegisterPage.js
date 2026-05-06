@@ -87,6 +87,7 @@ const RegisterPage = () => {
     }
     if (step === 1) {
       if (!form.locationId) { setError('Please select a location'); return false; }
+      if (tables.length > 0 && !form.tableId) { setError('Please select a table for your location'); return false; }
     }
     if (step === 2) {
       if (!form.businessName || !form.businessCategory) { setError('Business name and category are required'); return false; }
@@ -118,7 +119,7 @@ const RegisterPage = () => {
           <div className="glass-card-gold animate-fadeInUp" style={{ maxWidth: 500, textAlign: 'center', padding: 48 }}>
             <div style={{ fontSize: '4rem', marginBottom: 20 }}>🎉</div>
             <h2 style={{ color: 'var(--primary)', marginBottom: 12 }}>Registration Submitted!</h2>
-            <p>Your application has been sent to the chairman of your selected location. You'll receive your <strong>Member ID and password</strong> after approval.</p>
+            <p>Your application has been sent to the chairman of your selected table. You'll receive your <strong>Member ID and password</strong> after approval.</p>
             <div style={{ marginTop: 24, padding: 16, background: 'rgba(0,212,170,0.08)', borderRadius: 10, border: '1px solid var(--border-teal)' }}>
               <div style={{ fontSize: '0.85rem', color: 'var(--accent)' }}>⏱️ Approval usually takes 24-48 hours</div>
             </div>
@@ -163,7 +164,7 @@ const RegisterPage = () => {
     // Step 1: Location & Table
     <div key={1} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       <div style={{ padding: 16, background: 'rgba(0,212,170,0.08)', borderRadius: 10, border: '1px solid var(--border-teal)', fontSize: '0.85rem', color: 'var(--accent)' }}>
-        💡 Each table has 60 members from different business categories. The chairman will assign you the right table based on your business category.
+        💡 Each table has its own chairman. Your application will be sent to the chairman of the table you choose here.
       </div>
       <div className="form-group">
         <label className="form-label">Location *</label>
@@ -174,22 +175,22 @@ const RegisterPage = () => {
       </div>
       {tables.length > 0 && (
         <div className="form-group">
-          <label className="form-label">Table (Optional – Chairman may reassign)</label>
+          <label className="form-label">Table *</label>
           <select className="form-select" value={form.tableId} onChange={e => set('tableId', e.target.value)}>
-            <option value="">-- Skip table selection for now --</option>
+            <option value="">-- Select Your Table --</option>
             {tables.map(t => <option key={t._id} value={t._id} disabled={t.currentCount >= t.capacity}>{t.name} ({t.currentCount}/{t.capacity} members){t.currentCount >= t.capacity ? ' - Full' : ''}</option>)}
           </select>
           {tables.length > 0 && (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
               {tables.map(t => (
                 <div key={t._id} style={{ padding: '6px 12px', borderRadius: 6, background: t.currentCount >= t.capacity ? 'rgba(239,68,68,0.1)' : 'rgba(34,197,94,0.1)', border: `1px solid ${t.currentCount >= t.capacity ? 'rgba(239,68,68,0.3)' : 'rgba(34,197,94,0.3)'}`, fontSize: '0.78rem', color: t.currentCount >= t.capacity ? 'var(--error)' : 'var(--success)' }}>
-                  {t.name}: {t.currentCount}/{t.capacity} {t.currentCount >= t.capacity ? '(FULL)' : ''}
+                  {t.name}: {t.currentCount}/{t.capacity} {t.chairmanId ? `• Chairman: ${t.chairmanId.firstName} ${t.chairmanId.lastName}` : '• No chairman yet'} {t.currentCount >= t.capacity ? '(FULL)' : ''}
                 </div>
               ))}
             </div>
           )}
           <div style={{ marginTop: 8, fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-            Applications can still be submitted even if a table becomes full. The chairman can assign your final table during approval.
+            Pick the table whose chairman should review your application.
           </div>
         </div>
       )}
@@ -278,7 +279,7 @@ const RegisterPage = () => {
         ))}
       </div>
       <div style={{ padding: 12, background: 'rgba(34,197,94,0.08)', borderRadius: 8, border: '1px solid rgba(34,197,94,0.3)', fontSize: '0.82rem', color: 'var(--success)' }}>
-        ✅ By submitting, you agree that this information is accurate. Your application will be reviewed by the location chairman.
+        ✅ By submitting, you agree that this information is accurate. Your application will be reviewed by the chairman of your selected table.
       </div>
     </div>
   ];

@@ -60,7 +60,12 @@ const mongoConnection = async () => {
     console.log('✅ MongoDB connected');
     // Seed Super Admin on first run
     const { seedSuperAdmin } = require('./controllers/authController');
+    const User = require('./models/User');
     await seedSuperAdmin();
+    const updatedSlugCount = await User.ensureSlugsForExistingUsers();
+    if (updatedSlugCount > 0) {
+      console.log(`✅ Backfilled slugs for ${updatedSlugCount} member profiles`);
+    }
   } catch (error) {
     console.error('❌ MongoDB connection failed:', error);
     process.exit(1);
@@ -109,6 +114,7 @@ app.set('io', io);
 
 // ─── Routes ───────────────────────────────────────────────────────────────────
 app.use('/api/auth',        require('./routes/auth'));
+app.use('/api/profile',     require('./routes/profile'));
 app.use('/api/users',       require('./routes/users'));
 app.use('/api/admin',       require('./routes/admin'));
 app.use('/api/connections', require('./routes/connections'));

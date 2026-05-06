@@ -186,7 +186,8 @@ const SearchResultsPage = () => {
                     if (locationFilter) detailParams.set('location', locationFilter);
                     if (tableFilter.trim()) detailParams.set('table', tableFilter.trim());
                     if (categoryFilter.trim()) detailParams.set('category', categoryFilter.trim());
-                    const detailLink = `/search/${member._id}?${detailParams.toString()}`;
+                    const publicPath = member.slug ? `/${member.slug}` : `/search/${member._id}`;
+                    const detailLink = `${publicPath}${detailParams.toString() ? `?${detailParams.toString()}` : ''}`;
                     return (
                       <Link
                         key={member._id}

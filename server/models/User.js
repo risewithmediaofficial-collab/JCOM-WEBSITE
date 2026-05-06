@@ -25,6 +25,7 @@ const userSchema = new mongoose.Schema({
 
   // Business Info
   businessName:        { type: String, required: true, trim: true },
+  slug:                { type: String, unique: true, sparse: true, lowercase: true, trim: true },
   businessCategory:    { type: String, required: true, trim: true },
   businessDescription: { type: String, default: '' },
   businessService:     { type: String, default: '' },
@@ -93,6 +94,72 @@ userSchema.index({ locationId: 1, status: 1 });
 userSchema.index({ tableId: 1, status: 1 });
 userSchema.index({ businessCategory: 1 });
 userSchema.index({ membershipId: 1 });
+userSchema.index({ slug: 1 }, { unique: true, sparse: true });
+
+userSchema.statics.normalizeBusinessSlug = function(businessName = '') {
+  const slug = String(businessName)
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '')
+    .replace(/[^a-z0-9]/g, '');
+
+  return slug || 'business';
+};
+
+userSchema.statics.generateUniqueSlug = async function(businessName, excludeUserId = null) {
+  const baseSlug = this.normalizeBusinessSlug(businessName);
+  const escapedBase = baseSlug.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const slugQuery = {
+    slug: { $regex: `^${escapedBase}\\d*$`, $options: 'i' }
+  };
+
+  if (excludeUserId) {
+    slugQuery._id = { $ne: excludeUserId };
+  }
+
+  const existingUsers = await this.find(slugQuery).select('slug').lean();
+  const existingSlugs = new Set(
+    existingUsers
+      .map((user) => String(user.slug || '').toLowerCase())
+      .filter(Boolean)
+  );
+
+  if (!existingSlugs.has(baseSlug)) {
+    return baseSlug;
+  }
+
+  let suffix = 1;
+  while (existingSlugs.has(`${baseSlug}${suffix}`)) {
+    suffix += 1;
+  }
+
+  return `${baseSlug}${suffix}`;
+};
+
+userSchema.statics.ensureSlugsForExistingUsers = async function() {
+  const users = await this.find({
+    $or: [
+      { slug: { $exists: false } },
+      { slug: null },
+      { slug: '' }
+    ]
+  }).select('_id businessName slug');
+
+  for (const user of users) {
+    user.slug = await this.generateUniqueSlug(user.businessName, user._id);
+    await user.save({ validateBeforeSave: false });
+  }
+
+  return users.length;
+};
+
+userSchema.pre('save', async function(next) {
+  if (this.isNew || this.isModified('businessName') || !this.slug) {
+    this.slug = await this.constructor.generateUniqueSlug(this.businessName, this._id);
+  }
+
+  next();
+});
 
 // Hash password before save
 userSchema.pre('save', async function(next) {

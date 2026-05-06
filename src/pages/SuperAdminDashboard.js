@@ -59,9 +59,7 @@ const SuperAdminDashboard = () => {
   const [showAssignChairman, setShowAssignChairman] = useState(false);
   const [locForm, setLocForm] = useState({ name: '', code: '' });
   const [tableForm, setTableForm] = useState({ locationId: '', name: '', capacity: 60 });
-  const [chairmanForm, setChairmanForm] = useState({ userId: '', locationId: '', year: new Date().getFullYear() });
-  const [chairmanLocationMembers, setChairmanLocationMembers] = useState([]); // members in selected location
-  const [loadingChairmanMembers, setLoadingChairmanMembers] = useState(false);
+  const [chairmanForm, setChairmanForm] = useState({ userId: '', locationId: '', tableId: '', year: new Date().getFullYear() });
   const [formSaving, setFormSaving] = useState(false);
   const [msg, setMsg] = useState('');
   useBodyScrollLock(Boolean(approveResult || showCreateLocation || showCreateTable || showAssignChairman));
@@ -183,21 +181,13 @@ const SuperAdminDashboard = () => {
     e.preventDefault(); setFormSaving(true); setMsg('');
     try {
       await axios.post(`${API}/admin/chairman`, chairmanForm, { headers });
-      setMsg('✅ Chairman assigned!'); setChairmanForm({ userId: '', locationId: '', year: new Date().getFullYear() }); setChairmanLocationMembers([]); setShowAssignChairman(false); fetchAll();
+      setMsg('✅ Chairman assigned!'); setChairmanForm({ userId: '', locationId: '', tableId: '', year: new Date().getFullYear() }); setShowAssignChairman(false); fetchAll();
     } catch (err) { setMsg('❌ ' + (err.response?.data?.message || 'Failed')); }
     setFormSaving(false);
   };
 
-  // Fetch members for selected location in chairman assignment
   const handleChairmanLocationChange = async (locationId) => {
-    setChairmanForm(f => ({ ...f, locationId, userId: '' }));
-    if (!locationId) { setChairmanLocationMembers([]); return; }
-    setLoadingChairmanMembers(true);
-    try {
-      const res = await axios.get(`${API}/admin/members/${locationId}`, { headers });
-      setChairmanLocationMembers(res.data.members || []);
-    } catch { setChairmanLocationMembers([]); }
-    setLoadingChairmanMembers(false);
+    setChairmanForm(f => ({ ...f, locationId, tableId: '', userId: '' }));
   };
 
   const copy = (text) => { navigator.clipboard.writeText(text); };
@@ -213,6 +203,13 @@ const SuperAdminDashboard = () => {
     if (!member.locationId) return [];
     return tables[member.locationId] || [];
   };
+
+  const chairmanTableOptions = chairmanForm.locationId ? (tables[chairmanForm.locationId] || []) : [];
+  const chairmanCandidates = approvedUsers.filter((approvedUser) => {
+    if (approvedUser.role === 'Super Admin') return false;
+    if (!chairmanForm.locationId || !chairmanForm.tableId) return false;
+    return String(approvedUser.locationId) === String(chairmanForm.locationId) && String(approvedUser.tableId) === String(chairmanForm.tableId);
+  });
 
   const pendingCount = pending.length;
 
@@ -404,7 +401,7 @@ const SuperAdminDashboard = () => {
                   { icon: '⏳', label: 'Review Pending Approvals', desc: `${pendingCount} member${pendingCount !== 1 ? 's' : ''} waiting`, action: () => setTab('approvals'), highlight: pendingCount > 0 },
                   { icon: '📍', label: 'Create New Location', desc: 'Add a new city chapter', action: () => setShowCreateLocation(true) },
                   { icon: '🗂️', label: 'Create New Table', desc: 'Add L1, L2... to a location', action: () => setShowCreateTable(true) },
-                  { icon: '👑', label: 'Assign Chairman', desc: 'Assign a chairman to a location', action: () => setShowAssignChairman(true) },
+                  { icon: '👑', label: 'Assign Chairman', desc: 'Assign a chairman to a specific table', action: () => setShowAssignChairman(true) },
                 ].map((a, i) => (
                   <button key={i} onClick={a.action} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', borderRadius: 12, background: a.highlight ? 'rgba(220,38,38,0.05)' : 'var(--bg-elevated)', border: `1px solid ${a.highlight ? 'rgba(220,38,38,0.3)' : 'var(--border)'}`, cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s', width: '100%' }} onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--border-accent)'} onMouseLeave={e => e.currentTarget.style.borderColor = a.highlight ? 'rgba(220,38,38,0.3)' : 'var(--border)'}>
                     <span style={{ fontSize: '1.6rem' }}>{a.icon}</span>
@@ -677,29 +674,44 @@ const SuperAdminDashboard = () => {
                 </select>
               </div>
 
-              {/* Step 2: Select Member from that Location */}
               <div className="form-group">
-                <label className="form-label">
-                  Step 2 — Select Member from Location *
-                  {loadingChairmanMembers && <span style={{ color: 'var(--text-muted)', fontWeight: 400, marginLeft: 8 }}>Loading...</span>}
-                </label>
+                <label className="form-label">Step 2 — Select Table *</label>
+                <select
+                  className="form-select"
+                  value={chairmanForm.tableId}
+                  onChange={e => setChairmanForm(f => ({ ...f, tableId: e.target.value, userId: '' }))}
+                  required
+                  disabled={!chairmanForm.locationId}
+                >
+                  <option value="">{chairmanForm.locationId ? '-- Select Table --' : '-- Pick location first --'}</option>
+                  {chairmanTableOptions.map((table) => (
+                    <option key={table._id} value={table._id}>
+                      {table.name} {table.chairmanId ? `(Current: ${table.chairmanId.firstName} ${table.chairmanId.lastName})` : '(No chairman)'}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Step 3: Select Member from that Table */}
+              <div className="form-group">
+                <label className="form-label">Step 3 — Select Member from Table *</label>
                 <select
                   className="form-select"
                   value={chairmanForm.userId}
                   onChange={e => setChairmanForm(f => ({ ...f, userId: e.target.value }))}
                   required
-                  disabled={!chairmanForm.locationId || loadingChairmanMembers}
+                  disabled={!chairmanForm.tableId}
                 >
-                  <option value="">{chairmanForm.locationId ? (loadingChairmanMembers ? 'Loading members...' : `-- Select from ${locations.find(l => l._id === chairmanForm.locationId)?.name || ''} --`) : '-- Pick location first --'}</option>
-                  {chairmanLocationMembers.filter(u => u.role !== 'Super Admin').map(u => (
+                  <option value="">{chairmanForm.tableId ? `-- Select from ${chairmanTableOptions.find(t => t._id === chairmanForm.tableId)?.name || ''} --` : '-- Pick table first --'}</option>
+                  {chairmanCandidates.map(u => (
                     <option key={u._id} value={u._id}>
                       {u.firstName} {u.lastName} — {u.membershipId || u.businessCategory}
                       {u.role === 'Chairman' ? ' (Current Chairman)' : ''}
                     </option>
                   ))}
                 </select>
-                {chairmanForm.locationId && !loadingChairmanMembers && chairmanLocationMembers.length === 0 && (
-                  <div style={{ fontSize: '0.75rem', color: 'var(--error)', marginTop: 4 }}>⚠️ No approved members in this location yet.</div>
+                {chairmanForm.tableId && chairmanCandidates.length === 0 && (
+                  <div style={{ fontSize: '0.75rem', color: 'var(--error)', marginTop: 4 }}>⚠️ No approved members are assigned to this table yet.</div>
                 )}
               </div>
 
@@ -708,8 +720,8 @@ const SuperAdminDashboard = () => {
                 <input type="number" className="form-input" value={chairmanForm.year} onChange={e => setChairmanForm(f => ({ ...f, year: Number(e.target.value) }))} min={2024} max={2030} />
               </div>
               <div className="stack-mobile" style={{ display: 'flex', gap: 12 }}>
-                <button type="button" onClick={() => { setShowAssignChairman(false); setChairmanLocationMembers([]); setChairmanForm({ userId: '', locationId: '', year: new Date().getFullYear() }); }} className="btn btn-ghost w-full-sm" style={{ flex: 1 }}>Cancel</button>
-                <button type="submit" disabled={formSaving || !chairmanForm.userId || !chairmanForm.locationId} className="btn btn-primary" style={{ flex: 1 }}>{formSaving ? 'Assigning...' : '👑 Assign Chairman'}</button>
+                <button type="button" onClick={() => { setShowAssignChairman(false); setChairmanForm({ userId: '', locationId: '', tableId: '', year: new Date().getFullYear() }); }} className="btn btn-ghost w-full-sm" style={{ flex: 1 }}>Cancel</button>
+                <button type="submit" disabled={formSaving || !chairmanForm.userId || !chairmanForm.locationId || !chairmanForm.tableId} className="btn btn-primary" style={{ flex: 1 }}>{formSaving ? 'Assigning...' : '👑 Assign Chairman'}</button>
               </div>
             </form>
           </div>

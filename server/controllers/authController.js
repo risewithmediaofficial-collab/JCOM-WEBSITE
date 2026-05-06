@@ -97,6 +97,11 @@ exports.registerUser = async (req, res) => {
 
         existingApplicant.locationName = location.name;
 
+        const locationTables = await Table.countDocuments({ locationId, isActive: true });
+        if (locationTables > 0 && !tableId) {
+          return res.status(400).json({ message: 'Please select a table for your chosen location' });
+        }
+
         let reassignedTable = null;
         if (tableId) {
           reassignedTable = await Table.findById(tableId);
@@ -133,6 +138,11 @@ exports.registerUser = async (req, res) => {
 
     const location = await Location.findById(locationId);
     if (!location) return res.status(400).json({ message: 'Invalid location' });
+
+    const locationTables = await Table.countDocuments({ locationId, isActive: true });
+    if (locationTables > 0 && !tableId) {
+      return res.status(400).json({ message: 'Please select a table for your chosen location' });
+    }
 
     // Registration must remain open even if a table just filled up.
     // The chairman can assign or reassign a table during approval.
@@ -215,7 +225,8 @@ exports.login = async (req, res) => {
       locationName: user.locationName,
       tableId: user.tableId,
       tableName: user.tableName,
-      profilePic: user.profilePic
+      profilePic: user.profilePic,
+      slug: user.slug
     };
 
     // Role-based dashboard redirect hint
@@ -253,24 +264,40 @@ exports.approveUser = async (req, res) => {
       return res.status(400).json({ message: 'User is not in pending state' });
     }
 
-    // Chairman can only approve users in their location
-    if (approver.role === 'Chairman' && user.locationId?.toString() !== approver.locationId?.toString()) {
-      return res.status(403).json({ message: 'You can only approve members in your location' });
+    // Chairman can only approve users for their own table. Older location chairmen fall back to location scope.
+    if (approver.role === 'Chairman') {
+      if (approver.tableId) {
+        if (!user.tableId || user.tableId.toString() !== approver.tableId.toString()) {
+          return res.status(403).json({ message: 'You can only approve members assigned to your table' });
+        }
+      } else if (user.locationId?.toString() !== approver.locationId?.toString()) {
+        return res.status(403).json({ message: 'You can only approve members in your location' });
+      }
     }
 
     // Assign table if provided
     let table = null;
-    if (tableId) {
-      table = await Table.findById(tableId);
+    const resolvedTableId = approver.role === 'Chairman' && approver.tableId
+      ? approver.tableId
+      : (tableId || user.tableId || null);
+    if (resolvedTableId) {
+      table = await Table.findById(resolvedTableId);
+      if (approver.role === 'Chairman' && approver.tableId && String(table?._id) !== String(approver.tableId)) {
+        return res.status(403).json({ message: 'You can only assign members to your own table' });
+      }
       if (table && table.currentCount < table.capacity) {
         user.tableId = table._id;
         user.tableName = table.name;
-        table.memberIds.push(user._id);
-        table.currentCount += 1;
+        if (!table.memberIds.some((memberId) => String(memberId) === String(user._id))) {
+          table.memberIds.push(user._id);
+          table.currentCount += 1;
+        }
         if (!table.businessCategories.includes(user.businessCategory)) {
           table.businessCategories.push(user.businessCategory);
         }
         await table.save();
+      } else if (resolvedTableId) {
+        return res.status(400).json({ message: 'Selected table is full or invalid' });
       }
     }
 
@@ -327,8 +354,14 @@ exports.rejectUser = async (req, res) => {
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ message: 'User not found' });
 
-    if (approver.role === 'Chairman' && user.locationId?.toString() !== approver.locationId?.toString()) {
-      return res.status(403).json({ message: 'You can only reject members in your location' });
+    if (approver.role === 'Chairman') {
+      if (approver.tableId) {
+        if (!user.tableId || user.tableId.toString() !== approver.tableId.toString()) {
+          return res.status(403).json({ message: 'You can only reject members assigned to your table' });
+        }
+      } else if (user.locationId?.toString() !== approver.locationId?.toString()) {
+        return res.status(403).json({ message: 'You can only reject members in your location' });
+      }
     }
 
     user.status = 'Rejected';

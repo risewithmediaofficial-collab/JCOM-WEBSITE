@@ -20,6 +20,7 @@ import MeetingsPage from './pages/MeetingsPage';
 import LeaderboardPage from './pages/LeaderboardPage';
 import SearchResultsPage from './pages/SearchResultsPage';
 import SearchBusinessDetailPage from './pages/SearchBusinessDetailPage';
+import BusinessProfile from './pages/BusinessProfile';
 import ProfilePage from './pages/ProfilePage';
 import DealsPage from './pages/DealsPage';
 
@@ -115,6 +116,8 @@ function App() {
               <ProfilePage />
             </ProtectedRoute>
           } />
+
+          <Route path="/:slug" element={<BusinessProfile />} />
 
           {/* Catch all */}
           <Route path="*" element={<Navigate to="/" />} />

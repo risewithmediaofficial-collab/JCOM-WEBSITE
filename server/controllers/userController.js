@@ -41,7 +41,7 @@ exports.searchUsers = async (req, res) => {
     if (category) query.businessCategory = new RegExp(category, 'i');
 
     const members = await User.find(query)
-      .select('firstName lastName membershipId businessName businessCategory businessService businessDescription businessWebsite profilePic keywords locationName tableName phone email totalRevenue totalConnections averageRating ratingsCount')
+      .select('firstName lastName membershipId businessName slug businessCategory businessService businessDescription businessWebsite profilePic keywords locationName tableName phone email totalRevenue totalConnections averageRating ratingsCount')
       .limit(50)
       .sort('locationName firstName');
 
@@ -114,12 +114,32 @@ exports.getPublicMemberProfile = async (req, res) => {
       status: 'Approved',
       role: { $ne: 'Super Admin' }
     })
-      .select('firstName lastName membershipId role subRole businessName businessCategory businessService businessDescription businessWebsite profilePic keywords locationName tableName phone email totalRevenue totalConnections givenRequests receivedRequests meetingsAttended averageRating ratingsCount');
+      .select('firstName lastName membershipId role subRole businessName slug businessCategory businessService businessDescription businessWebsite profilePic keywords locationName tableName phone email totalRevenue totalConnections givenRequests receivedRequests meetingsAttended averageRating ratingsCount');
 
     if (!user) return res.status(404).json({ message: 'Member not found' });
     res.json({ member: user });
   } catch (err) {
     res.status(500).json({ message: 'Fetch public member failed', error: err.message });
+  }
+};
+
+exports.getPublicProfileBySlug = async (req, res) => {
+  try {
+    const { slug } = req.params;
+    const user = await User.findOne({
+      slug: String(slug || '').toLowerCase(),
+      status: 'Approved',
+      role: { $ne: 'Super Admin' }
+    })
+      .select('firstName lastName membershipId role subRole businessName slug businessCategory businessService businessDescription businessWebsite profilePic keywords locationName tableName phone email totalRevenue totalConnections givenRequests receivedRequests meetingsAttended averageRating ratingsCount');
+
+    if (!user) {
+      return res.status(404).json({ message: 'Profile not found' });
+    }
+
+    res.json({ member: user });
+  } catch (err) {
+    res.status(500).json({ message: 'Fetch public profile failed', error: err.message });
   }
 };
 
@@ -139,8 +159,14 @@ exports.updateUserProfile = async (req, res) => {
 
     if (req.file) updates.profilePic = getProfilePicValue(req.file);
 
-    const user = await User.findByIdAndUpdate(userId, updates, { new: true })
-      .select('-password -aadharNumber -panNumber');
+    const user = await User.findById(userId).select('-password -aadharNumber -panNumber');
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    Object.entries(updates).forEach(([key, value]) => {
+      user[key] = value;
+    });
+
+    await user.save();
 
     res.json({ message: 'Profile updated', user });
   } catch (err) {

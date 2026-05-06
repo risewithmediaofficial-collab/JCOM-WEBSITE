@@ -1,13 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
+import { CopyOutlined, EnvironmentOutlined, GlobalOutlined, MailOutlined, PhoneOutlined, SearchOutlined } from '@ant-design/icons';
 import Navbar from '../components/Navbar';
 import Breadcrumbs from '../components/Breadcrumbs';
-import { CopyOutlined, EnvironmentOutlined, GlobalOutlined, MailOutlined, PhoneOutlined, SearchOutlined } from '@ant-design/icons';
 import ProfileAvatar from '../components/ProfileAvatar';
 import StarRating from '../components/StarRating';
 import useBodyScrollLock from '../hooks/useBodyScrollLock';
-
 import { API_BASE_URL } from '../config/api';
 
 const API = API_BASE_URL;
@@ -19,8 +18,8 @@ const infoCardStyle = {
   border: '1px solid var(--border)'
 };
 
-const SearchBusinessDetailPage = () => {
-  const { userId } = useParams();
+const BusinessProfile = () => {
+  const { slug } = useParams();
   const [searchParams] = useSearchParams();
   const [member, setMember] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -49,7 +48,7 @@ const SearchBusinessDetailPage = () => {
       setLoading(true);
       setError('');
       try {
-        const res = await axios.get(`${API}/users/public/${userId}`);
+        const res = await axios.get(`${API}/profile/${slug}`);
         setMember(res.data.member || null);
       } catch (err) {
         setMember(null);
@@ -59,23 +58,22 @@ const SearchBusinessDetailPage = () => {
     };
 
     fetchMember();
-  }, [userId]);
+  }, [slug]);
 
   const breadcrumbs = useMemo(() => {
-    const searchUrl = `/search${query ? `?q=${encodeURIComponent(query)}` : ''}`;
-    const items = [
-      { label: 'Home', to: '/' },
-      { label: 'Search', to: searchUrl }
-    ];
+    const items = [{ label: 'Home', to: '/' }];
 
-    if (location) {
-      items.push({ label: location, to: `/search?q=${encodeURIComponent(query)}&location=${encodeURIComponent(location)}` });
+    if (query || location) {
+      const params = new URLSearchParams();
+      if (query) params.set('q', query);
+      if (location) params.set('location', location);
+      items.push({ label: 'Search', to: `/search${params.toString() ? `?${params.toString()}` : ''}` });
+    } else {
+      items.push({ label: 'Business Profile' });
     }
 
     if (member) {
-      items.push({ label: `${member.firstName} ${member.lastName}` });
-    } else {
-      items.push({ label: 'Business Detail' });
+      items.push({ label: member.businessName || `${member.firstName} ${member.lastName}` });
     }
 
     return items;
@@ -87,10 +85,15 @@ const SearchBusinessDetailPage = () => {
       return;
     }
 
+    if (!member?._id) {
+      setEnquiryMessage('Profile not available for enquiry');
+      return;
+    }
+
     setEnquirySaving(true);
     setEnquiryMessage('');
     try {
-      await axios.post(`${API}/crm/public-enquiry/${userId}`, enquiryForm);
+      await axios.post(`${API}/crm/public-enquiry/${member._id}`, enquiryForm);
       setEnquiryMessage('Enquiry sent successfully');
       setEnquiryForm({
         name: '',
@@ -144,11 +147,11 @@ const SearchBusinessDetailPage = () => {
 
         {!loading && error && (
           <div className="glass-card" style={{ padding: 34, textAlign: 'center' }}>
-            <div style={{ fontSize: '2.8rem', marginBottom: 12 }}>Search</div>
-            <h3 style={{ color: 'var(--text-primary)', marginBottom: 8 }}>Business information not available</h3>
+            <div style={{ fontSize: '2.8rem', marginBottom: 12 }}>404</div>
+            <h3 style={{ color: 'var(--text-primary)', marginBottom: 8 }}>Profile not found</h3>
             <p style={{ marginBottom: 20 }}>{error}</p>
-            <Link to={query ? `/search?q=${encodeURIComponent(query)}` : '/search'} className="btn btn-primary">
-              <SearchOutlined /> Back to Search
+            <Link to={query || location ? '/search' : '/'} className="btn btn-primary">
+              <SearchOutlined /> {query || location ? 'Back to Search' : 'Go Home'}
             </Link>
           </div>
         )}
@@ -383,6 +386,4 @@ const SearchBusinessDetailPage = () => {
   );
 };
 
-export default SearchBusinessDetailPage;
-
-
+export default BusinessProfile;

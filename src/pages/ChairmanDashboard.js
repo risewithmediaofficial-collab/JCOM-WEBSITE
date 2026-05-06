@@ -85,6 +85,7 @@ const ChairmanDashboard = () => {
   };
 
   const formatDate = (d) => d ? new Date(d).toLocaleDateString('en-IN') : '—';
+  const chairmanTables = user?.tableId ? tables.filter((table) => table._id === user.tableId) : tables;
 
   return (
     <SidebarLayout noPadding>
@@ -95,9 +96,9 @@ const ChairmanDashboard = () => {
           <h2 style={{ color: 'var(--text-primary)', marginBottom: 4 }}>{user?.firstName} {user?.lastName}</h2>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 8 }}>
             <span className="badge badge-gold">{user?.membershipId}</span>
-            <span className="badge badge-teal">📍 {user?.locationName} Chapter</span>
+            <span className="badge badge-teal">📍 {user?.locationName} {user?.tableName ? `• ${user.tableName}` : 'Chapter'}</span>
           </div>
-          <p>Manage member applications, assign roles, and schedule meetings</p>
+          <p>Manage member applications and members for your assigned table</p>
         </div>
 
         {msg && <div style={{ marginBottom: 20, padding: '14px 18px', background: msg.startsWith('✅') ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)', borderRadius: 10, border: `1px solid ${msg.startsWith('✅') ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'}`, color: msg.startsWith('✅') ? 'var(--success)' : 'var(--error)', fontWeight: 600 }}>{msg}</div>}
@@ -176,10 +177,10 @@ const ChairmanDashboard = () => {
 
                   {/* Assign Table */}
                   <div style={{ marginBottom: 16 }}>
-                    <label className="form-label" style={{ marginBottom: 6, display: 'block' }}>Assign to Table (Optional)</label>
+                    <label className="form-label" style={{ marginBottom: 6, display: 'block' }}>Assign to Table</label>
                     <select className="form-select" value={approveForm[member._id]?.tableId || ''} onChange={e => setApproveForm(f => ({ ...f, [member._id]: { ...f[member._id], tableId: e.target.value } }))}>
-                      <option value="">-- Let chairman decide later --</option>
-                      {tables.map(t => <option key={t._id} value={t._id} disabled={t.currentCount >= t.capacity}>{t.name} ({t.currentCount}/{t.capacity}) {t.currentCount >= t.capacity ? '(FULL)' : ''}</option>)}
+                      <option value="">-- Select table --</option>
+                      {chairmanTables.map(t => <option key={t._id} value={t._id} disabled={t.currentCount >= t.capacity}>{t.name} ({t.currentCount}/{t.capacity}) {t.currentCount >= t.capacity ? '(FULL)' : ''}</option>)}
                     </select>
                   </div>
 
@@ -202,7 +203,7 @@ const ChairmanDashboard = () => {
         {tab === 'members' && (
           <div className="glass-card" style={{ padding: 0 }}>
             <div className="stack-mobile" style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
-              <h4 style={{ color: 'var(--text-primary)', margin: 0 }}>Members — {user?.locationName}</h4>
+              <h4 style={{ color: 'var(--text-primary)', margin: 0 }}>Members — {user?.tableName || user?.locationName}</h4>
               <span className="badge badge-teal">{members.length} approved</span>
             </div>
             <div className="jcom-table-wrap">

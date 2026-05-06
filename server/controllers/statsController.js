@@ -12,24 +12,52 @@ const {
   getTotalCompletedRevenue
 } = require('../utils/liveStats');
 
+const getPeriodStartDate = (period) => {
+  if (period === 'overall') return null;
+
+  const now = new Date();
+  const startDate = new Date(now);
+  startDate.setHours(0, 0, 0, 0);
+
+  if (period === 'weekly') {
+    startDate.setDate(startDate.getDate() - 7);
+    return startDate;
+  }
+
+  if (period === 'yearly') {
+    startDate.setDate(startDate.getDate() - 365);
+    return startDate;
+  }
+
+  startDate.setDate(startDate.getDate() - 30);
+  return startDate;
+};
+
 // ─── PUBLIC HOME PAGE STATS ───────────────────────────────────────────────────
 exports.getHomeStats = async (req, res) => {
   try {
     const { period } = req.query; // 'weekly' | 'monthly'
-    const now = new Date();
-    let startDate;
-    if (period === 'weekly') startDate = new Date(now - 7 * 24 * 60 * 60 * 1000);
-    else startDate = new Date(now.getFullYear(), now.getMonth(), 1); // default monthly
+    const normalizedPeriod = ['weekly', 'monthly', 'yearly', 'overall'].includes(period) ? period : 'monthly';
+    const startDate = getPeriodStartDate(normalizedPeriod);
 
-    const [totalMembers, totalConnections, totalRevenue, locations, memberCounts, connectionCounts, dealRevenueByLocation, crmRevenueByLocation] = await Promise.all([
+    const [totalMembers, totalConnections, totalRevenue, locations, memberCounts, connectionCounts, periodConnectionCounts, dealRevenueByLocation, crmRevenueByLocation, periodDealRevenueByLocation, periodCrmRevenueByLocation] = await Promise.all([
       User.countDocuments({ status: 'Approved', role: { $ne: 'Super Admin' } }),
-      Connection.countDocuments({ status: 'Connected', createdAt: { $gte: startDate } }),
+      Connection.countDocuments({
+        status: 'Connected',
+        $or: [
+          { connectedAt: { $gte: startDate } },
+          { connectedAt: null, createdAt: { $gte: startDate } }
+        ]
+      }),
       getTotalCompletedRevenue(startDate),
       Location.find({ isActive: true }).select('name code').sort('name'),
       getMemberCountsByLocation(),
       getConnectionCountsByLocation(),
+      getConnectionCountsByLocation(startDate),
       getDealRevenueByLocation(),
-      getStandaloneCRMRevenueByLocation()
+      getStandaloneCRMRevenueByLocation(),
+      getDealRevenueByLocation(startDate),
+      getStandaloneCRMRevenueByLocation(startDate)
     ]);
 
     const topRatedBusinesses = await User.find({
@@ -37,24 +65,43 @@ exports.getHomeStats = async (req, res) => {
       role: { $ne: 'Super Admin' },
       ratingsCount: { $gt: 0 }
     })
-      .select('firstName lastName businessName businessCategory locationName profilePic averageRating ratingsCount')
+      .select('firstName lastName businessName slug businessCategory locationName profilePic averageRating ratingsCount')
       .sort({ averageRating: -1, ratingsCount: -1, totalConnections: -1, firstName: 1 })
       .limit(6);
 
-    res.json({
-      period,
-      globalStats: {
-        totalMembers,
-        totalConnections,
-        totalRevenue
-      },
-      topRatedBusinesses,
-      locations: locations.map(l => ({
-        name: l.name, code: l.code,
+    const rankedLocations = locations
+      .map((l) => ({
+        name: l.name,
+        code: l.code,
         members: memberCounts.get(String(l._id)) || 0,
         connections: connectionCounts.get(String(l._id)) || 0,
-        revenue: (dealRevenueByLocation.get(String(l._id)) || 0) + (crmRevenueByLocation.get(String(l._id)) || 0)
+        revenue: (dealRevenueByLocation.get(String(l._id)) || 0) + (crmRevenueByLocation.get(String(l._id)) || 0),
+        periodConnections: periodConnectionCounts.get(String(l._id)) || 0,
+        periodRevenue: (periodDealRevenueByLocation.get(String(l._id)) || 0) + (periodCrmRevenueByLocation.get(String(l._id)) || 0)
       }))
+      .sort((a, b) => {
+        if (b.periodRevenue !== a.periodRevenue) return b.periodRevenue - a.periodRevenue;
+        if (b.periodConnections !== a.periodConnections) return b.periodConnections - a.periodConnections;
+        if (b.members !== a.members) return b.members - a.members;
+        return a.name.localeCompare(b.name);
+      });
+
+    const computedConnections = normalizedPeriod === 'overall'
+      ? rankedLocations.reduce((sum, location) => sum + (location.connections || 0), 0)
+      : rankedLocations.reduce((sum, location) => sum + (location.periodConnections || 0), 0);
+    const computedRevenue = normalizedPeriod === 'overall'
+      ? rankedLocations.reduce((sum, location) => sum + (location.revenue || 0), 0)
+      : rankedLocations.reduce((sum, location) => sum + (location.periodRevenue || 0), 0);
+
+    res.json({
+      period: normalizedPeriod,
+      globalStats: {
+        totalMembers,
+        totalConnections: computedConnections,
+        totalRevenue: computedRevenue
+      },
+      topRatedBusinesses,
+      locations: rankedLocations
     });
   } catch (err) {
     res.status(500).json({ message: 'Fetch home stats failed', error: err.message });
@@ -71,10 +118,8 @@ exports.getLeaderboard = async (req, res) => {
       .sort('name');
 
     // Get period-based connection counts
-    const now = new Date();
-    const startDate = period === 'weekly'
-      ? new Date(now - 7 * 24 * 60 * 60 * 1000)
-      : new Date(now.getFullYear(), now.getMonth(), 1);
+    const normalizedPeriod = ['weekly', 'monthly', 'yearly', 'overall'].includes(period) ? period : 'monthly';
+    const startDate = getPeriodStartDate(normalizedPeriod);
 
     const [
       memberCounts,
@@ -118,14 +163,17 @@ exports.getLeaderboard = async (req, res) => {
     }));
 
     // Sort by requested metric
-    const sortKey = by === 'connections' ? 'totalConnections'
-      : by === 'members' ? 'totalMembers'
-      : by === 'attendance' ? 'attendanceRate'
-      : 'totalRevenue';
+    const sortKey = by === 'connections'
+      ? (period === 'overall' ? 'totalConnections' : 'periodConnections')
+      : by === 'members'
+        ? 'totalMembers'
+        : by === 'attendance'
+          ? 'attendanceRate'
+      : (normalizedPeriod === 'overall' ? 'totalRevenue' : 'periodRevenue');
 
     locationStats.sort((a, b) => b[sortKey] - a[sortKey]);
 
-    res.json({ period, sortedBy: sortKey, leaderboard: locationStats });
+    res.json({ period: normalizedPeriod, sortedBy: sortKey, leaderboard: locationStats });
   } catch (err) {
     res.status(500).json({ message: 'Fetch leaderboard failed', error: err.message });
   }

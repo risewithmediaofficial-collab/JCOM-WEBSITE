@@ -85,7 +85,8 @@ exports.getTablesByLocation = async (req, res) => {
   try {
     const { locationId } = req.params;
     const tables = await Table.find({ locationId, isActive: true })
-      .select('name capacity currentCount businessCategories locationName')
+      .populate('chairmanId', 'firstName lastName membershipId email')
+      .select('name capacity currentCount businessCategories locationName chairmanId chairmanYear chairmanStartDate chairmanRenewalDate')
       .sort('name');
     res.json({ tables });
   } catch (err) {
@@ -97,64 +98,92 @@ exports.getTablesByLocation = async (req, res) => {
 
 exports.createChairman = async (req, res) => {
   try {
-    const { userId, locationId, year } = req.body;
-    if (!userId || !locationId) {
-      return res.status(400).json({ message: 'userId and locationId are required' });
+    const { userId, locationId, tableId, year } = req.body;
+    if (!userId || !locationId || !tableId) {
+      return res.status(400).json({ message: 'userId, locationId and tableId are required' });
     }
 
-    const [user, location] = await Promise.all([
+    const [user, location, table] = await Promise.all([
       User.findById(userId),
-      Location.findById(locationId)
+      Location.findById(locationId),
+      Table.findById(tableId)
     ]);
     if (!user) return res.status(404).json({ message: 'User not found' });
     if (!location) return res.status(404).json({ message: 'Location not found' });
+    if (!table) return res.status(404).json({ message: 'Table not found' });
+    if (String(table.locationId) !== String(location._id)) {
+      return res.status(400).json({ message: 'Selected table does not belong to the chosen location' });
+    }
+    if (String(user.locationId || '') !== String(location._id) || String(user.tableId || '') !== String(table._id)) {
+      return res.status(400).json({ message: 'Selected member must already belong to the chosen table' });
+    }
 
-    // If location already has a chairman, archive them first
-    if (location.chairmanId) {
-      const prevChairman = await User.findById(location.chairmanId);
+    // If table already has a chairman, archive them first
+    if (table.chairmanId) {
+      const prevChairman = await User.findById(table.chairmanId);
       if (prevChairman) {
         prevChairman.role = 'Member';
         prevChairman.annualRoles.push({
-          year: location.chairmanYear || new Date().getFullYear() - 1,
+          year: table.chairmanYear || new Date().getFullYear() - 1,
           role: 'Chairman',
-          location: location.name,
+          location: `${location.name} - ${table.name}`,
           locationId: location._id,
           archivedAt: new Date()
         });
         await prevChairman.save();
 
-        location.previousChairmen.push({
+        table.previousChairmen.push({
           userId: prevChairman._id,
           name: `${prevChairman.firstName} ${prevChairman.lastName}`,
           membershipId: prevChairman.membershipId,
-          year: location.chairmanYear,
-          startDate: location.chairmanStartDate,
+          year: table.chairmanYear,
+          startDate: table.chairmanStartDate,
           endDate: new Date()
         });
       }
     }
 
-    // Set new chairman
+    // Remove user from any existing table-chairman assignment so one user cannot own multiple tables.
+    const existingTableAssignments = await Table.find({ chairmanId: user._id, _id: { $ne: table._id } });
+    for (const assignedTable of existingTableAssignments) {
+      assignedTable.previousChairmen.push({
+        userId: user._id,
+        name: `${user.firstName} ${user.lastName}`,
+        membershipId: user.membershipId,
+        year: assignedTable.chairmanYear,
+        startDate: assignedTable.chairmanStartDate,
+        endDate: new Date()
+      });
+      assignedTable.chairmanId = null;
+      assignedTable.chairmanYear = null;
+      assignedTable.chairmanStartDate = null;
+      assignedTable.chairmanRenewalDate = null;
+      await assignedTable.save();
+    }
+
     const thisYear = year || new Date().getFullYear();
     user.role = 'Chairman';
     user.locationId = location._id;
     user.locationName = location.name;
+    user.tableId = table._id;
+    user.tableName = table.name;
     if (user.status !== 'Approved') {
       user.status = 'Approved';
       user.membershipId = user.membershipId || `JCOM-${location.code}-CHR-${thisYear}`;
     }
     await user.save();
 
-    location.chairmanId = user._id;
-    location.chairmanYear = thisYear;
-    location.chairmanStartDate = new Date();
-    location.chairmanRenewalDate = new Date(thisYear + 1, 0, 1); // Jan 1 next year
-    await location.save();
+    table.chairmanId = user._id;
+    table.chairmanYear = thisYear;
+    table.chairmanStartDate = new Date();
+    table.chairmanRenewalDate = new Date(thisYear + 1, 0, 1);
+    await table.save();
 
     res.json({
-      message: `${user.firstName} ${user.lastName} assigned as Chairman of ${location.name} for ${thisYear}`,
+      message: `${user.firstName} ${user.lastName} assigned as Chairman of ${location.name} - ${table.name} for ${thisYear}`,
       user: { _id: user._id, name: `${user.firstName} ${user.lastName}`, membershipId: user.membershipId, role: user.role },
-      location: { _id: location._id, name: location.name, chairmanYear: thisYear }
+      location: { _id: location._id, name: location.name },
+      table: { _id: table._id, name: table.name, chairmanYear: thisYear }
     });
   } catch (err) {
     res.status(500).json({ message: 'Create chairman failed', error: err.message });
@@ -214,9 +243,10 @@ exports.getPendingApprovals = async (req, res) => {
     const caller = req.user;
     let query = { status: 'Pending' };
 
-    // Chairman sees only their location's pending members
-    if (caller.role === 'Chairman' && caller.locationId) {
-      query.locationId = caller.locationId;
+    // Chairman sees only their own table's pending members.
+    if (caller.role === 'Chairman') {
+      if (caller.tableId) query.tableId = caller.tableId;
+      else if (caller.locationId) query.locationId = caller.locationId;
     }
     // Super Admin sees ALL pending members regardless of location
 
@@ -235,7 +265,15 @@ exports.getPendingApprovals = async (req, res) => {
 exports.getMembersByLocation = async (req, res) => {
   try {
     const { locationId } = req.params;
-    const members = await User.find({ locationId, status: 'Approved' })
+    const query = { status: 'Approved' };
+
+    if (req.user?.role === 'Chairman' && req.user?.tableId) {
+      query.tableId = req.user.tableId;
+    } else {
+      query.locationId = locationId;
+    }
+
+    const members = await User.find(query)
       .select('firstName lastName membershipId role subRole businessName businessCategory profilePic tableName totalRevenue totalConnections')
       .sort('firstName');
     res.json({ count: members.length, members });

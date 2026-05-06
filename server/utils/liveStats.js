@@ -21,7 +21,12 @@ const getMemberCountsByLocation = async () => {
 
 const getConnectionCountsByLocation = async (startDate = null) => {
   const match = { status: 'Connected' };
-  if (startDate) match.createdAt = { $gte: startDate };
+  if (startDate) {
+    match.$or = [
+      { connectedAt: { $gte: startDate } },
+      { connectedAt: null, createdAt: { $gte: startDate } }
+    ];
+  }
 
   const rows = await Connection.aggregate([
     { $match: match },
@@ -47,7 +52,12 @@ const getConnectionCountsByLocation = async (startDate = null) => {
 
 const getDealRevenueByLocation = async (startDate = null) => {
   const match = { status: 'Completed' };
-  if (startDate) match.completedAt = { $gte: startDate };
+  if (startDate) {
+    match.$or = [
+      { completedAt: { $gte: startDate } },
+      { completedAt: null, updatedAt: { $gte: startDate } }
+    ];
+  }
 
   const rows = await Deal.aggregate([
     { $match: match },
@@ -72,7 +82,12 @@ const getStandaloneCRMRevenueByLocation = async (startDate = null) => {
     confirmedValue: { $gt: 0 },
     dealId: null
   };
-  if (startDate) match.workCompletedAt = { $gte: startDate };
+  if (startDate) {
+    match.$or = [
+      { workCompletedAt: { $gte: startDate } },
+      { workCompletedAt: null, updatedAt: { $gte: startDate } }
+    ];
+  }
 
   const rows = await CRMEntry.aggregate([
     { $match: match },
@@ -92,7 +107,12 @@ const getStandaloneCRMRevenueByLocation = async (startDate = null) => {
 
 const getTotalCompletedRevenue = async (startDate = null) => {
   const dealMatch = { status: 'Completed' };
-  if (startDate) dealMatch.completedAt = { $gte: startDate };
+  if (startDate) {
+    dealMatch.$or = [
+      { completedAt: { $gte: startDate } },
+      { completedAt: null, updatedAt: { $gte: startDate } }
+    ];
+  }
 
   const crmMatch = {
     status: 'Completed',
@@ -100,7 +120,12 @@ const getTotalCompletedRevenue = async (startDate = null) => {
     confirmedValue: { $gt: 0 },
     dealId: null
   };
-  if (startDate) crmMatch.workCompletedAt = { $gte: startDate };
+  if (startDate) {
+    crmMatch.$or = [
+      { workCompletedAt: { $gte: startDate } },
+      { workCompletedAt: null, updatedAt: { $gte: startDate } }
+    ];
+  }
 
   const [dealAgg, crmAgg] = await Promise.all([
     Deal.aggregate([

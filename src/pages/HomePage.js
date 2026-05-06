@@ -10,11 +10,15 @@ import StarRating from '../components/StarRating';
 import { API_BASE_URL } from '../config/api';
 
 const API = API_BASE_URL;
+const emptyStats = { globalStats: { totalMembers: 0, totalConnections: 0, totalRevenue: 0 }, locations: [], topRatedBusinesses: [] };
 
 const cleanCardStyle = {
-  background: '#ffffff',
-  border: '1px solid rgba(0,0,0,0.06)',
-  borderRadius: 24
+  background: 'linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(244,248,255,0.98) 100%)',
+  border: '1px solid rgba(15,75,207,0.12)',
+  borderRadius: 28,
+  boxShadow: '0 18px 40px rgba(15,23,42,0.06)',
+  overflow: 'hidden',
+  transition: 'transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease'
 };
 
 const BUSINESS_CATEGORIES = [
@@ -148,7 +152,7 @@ const HomePage = () => {
   const heroSectionRef = useRef(null);
   const heroImageRef = useRef(null);
   const heroContentRef = useRef(null);
-  const [stats, setStats] = useState({ globalStats: { totalMembers: 0, totalConnections: 0, totalRevenue: 0 }, locations: [] });
+  const [overallStats, setOverallStats] = useState(emptyStats);
   const [leaderboard, setLeaderboard] = useState([]);
   const [period, setPeriod] = useState('monthly');
   const [searchQ, setSearchQ] = useState('');
@@ -158,35 +162,63 @@ const HomePage = () => {
   const [searchLocations, setSearchLocations] = useState([]);
   const [searchTables, setSearchTables] = useState([]);
   const [searchCategories, setSearchCategories] = useState([]);
-  const [statsError, setStatsError] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [platformError, setPlatformError] = useState(false);
+  const [overallError, setOverallError] = useState(false);
+  const [platformLoading, setPlatformLoading] = useState(true);
+  const [overallLoading, setOverallLoading] = useState(true);
   const [counters, setCounters] = useState({ members: 0, connections: 0, revenue: 0 });
-  const topRatedCount = (stats.topRatedBusinesses || []).length;
+  const topRatedCount = (overallStats.topRatedBusinesses || []).length;
 
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    setStatsError(false);
+  const fetchPeriodData = useCallback(async () => {
+    setPlatformLoading(true);
+    setPlatformError(false);
     try {
-      const [statsRes, lbRes] = await Promise.all([
-        axios.get(`${API}/stats/home?period=${period}`),
-        axios.get(`${API}/stats/leaderboard?period=${period}&by=revenue`)
-      ]);
-      setStats(statsRes.data);
-      setLeaderboard(lbRes.data.leaderboard || []);
+      const statsRes = await axios.get(`${API}/stats/home?period=${period}`);
       animateCounters(statsRes.data.globalStats);
     } catch (err) {
       console.error('Stats fetch error:', err);
-      setStatsError(true);
+      setPlatformError(true);
       // Show real zeros — no fake numbers
-      setStats({ globalStats: { totalMembers: 0, totalConnections: 0, totalRevenue: 0 }, locations: [] });
       setCounters({ members: 0, connections: 0, revenue: 0 });
     }
-    setLoading(false);
+    setPlatformLoading(false);
   }, [period]);
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    fetchPeriodData();
+  }, [fetchPeriodData]);
+
+  useEffect(() => {
+    const fetchOverallStats = async () => {
+      setOverallLoading(true);
+      setOverallError(false);
+      try {
+        const statsRes = await axios.get(`${API}/stats/home?period=overall`);
+        setOverallStats(statsRes.data);
+      } catch (err) {
+        console.error('Overall stats fetch error:', err);
+        setOverallError(true);
+        setOverallStats(emptyStats);
+      }
+      setOverallLoading(false);
+    };
+
+    fetchOverallStats();
+  }, []);
+
+  useEffect(() => {
+    const fetchOverallLeaderboard = async () => {
+      try {
+        const lbRes = await axios.get(`${API}/stats/leaderboard?period=overall&by=revenue`);
+        setLeaderboard(lbRes.data.leaderboard || []);
+      } catch (err) {
+        console.error('Overall leaderboard fetch error:', err);
+        setLeaderboard([]);
+      }
+    };
+
+    fetchOverallLeaderboard();
+  }, []);
 
   useEffect(() => {
     const fetchSearchLocations = async () => {
@@ -315,7 +347,7 @@ const HomePage = () => {
     }, pageRef);
 
     return () => ctx.revert();
-  }, [leaderboard.length, stats.locations.length, topRatedCount]);
+  }, [leaderboard.length, overallStats.locations.length, topRatedCount]);
 
   const animateCounters = (gs) => {
     if (!gs) return;
@@ -379,17 +411,23 @@ const HomePage = () => {
     { week: 'Week 4', type: 'C2C Networking', icon: '🌐', desc: 'Cross-location business connecting' },
   ];
 
-  const featuredLocation = leaderboard[0];
-  const topThreeLocations = leaderboard.slice(0, 3);
-  const topRatedBusinesses = stats.topRatedBusinesses || [];
+  const rankedLeaderboard = [...leaderboard].sort((a, b) => {
+    if ((b.totalRevenue || 0) !== (a.totalRevenue || 0)) return (b.totalRevenue || 0) - (a.totalRevenue || 0);
+    if ((b.totalConnections || 0) !== (a.totalConnections || 0)) return (b.totalConnections || 0) - (a.totalConnections || 0);
+    if ((b.totalMembers || 0) !== (a.totalMembers || 0)) return (b.totalMembers || 0) - (a.totalMembers || 0);
+    return (a.name || '').localeCompare(b.name || '');
+  });
+  const featuredLocation = rankedLeaderboard[0];
+  const topThreeLocations = rankedLeaderboard.slice(0, 3);
+  const topRatedBusinesses = overallStats.topRatedBusinesses || [];
   const locationOptions = (searchLocations.length > 0
     ? searchLocations.map((loc) => loc.name)
-    : (stats.locations || []).map((loc) => loc.name)
+    : (overallStats.locations || []).map((loc) => loc.name)
   ).filter(Boolean).sort((a, b) => a.localeCompare(b));
   const categoryOptions = (searchCategories.length > 0 ? searchCategories : BUSINESS_CATEGORIES)
     .filter(Boolean)
     .sort((a, b) => a.localeCompare(b));
-  const locationPerformanceData = (stats.locations || [])
+  const locationPerformanceData = (overallStats.locations || [])
     .map((loc) => ({
       name: loc.name,
       members: Number(loc.members) || 0,
@@ -520,15 +558,15 @@ const HomePage = () => {
                 const isLeader = index === 0;
                 const orderMap = isLeader ? 2 : index === 1 ? 1 : 3;
                 const statItems = [
-                  { label: 'Connects', value: loc.totalConnections, color: 'var(--text-primary)' },
-                  { label: 'Revenue', value: formatRevenue(loc.totalRevenue), color: 'var(--primary)' },
+                  { label: 'Connects', value: loc.totalConnections || 0, color: 'var(--text-primary)' },
+                  { label: 'Revenue', value: formatRevenue(loc.totalRevenue || 0), color: 'var(--primary)' },
                   { label: 'Members', value: loc.totalMembers, color: 'var(--accent)' }
                 ];
 
                 return (
                   <div
                     key={loc.name}
-                    className="parallax-card"
+                    className="parallax-card modern-showcase-card"
                     style={{
                       ...cleanCardStyle,
                       position: 'relative',
@@ -605,7 +643,7 @@ const HomePage = () => {
                         color: isLeader ? '#ffffff' : 'var(--primary)',
                         lineHeight: 1.02
                       }}>
-                        {formatRevenue(loc.totalRevenue)}
+                        {formatRevenue(loc.totalRevenue || 0)}
                       </div>
                       <div style={{
                         marginTop: 10,
@@ -653,16 +691,16 @@ const HomePage = () => {
         <div className="section-shell">
           <div style={{ textAlign: 'center', marginBottom: 48 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 12 }}>
-              <span style={{ width: 8, height: 8, borderRadius: '50%', background: statsError ? '#dc2626' : '#16a34a', display: 'inline-block', boxShadow: statsError ? 'none' : '0 0 6px #16a34a', animation: statsError ? 'none' : 'pulse-glow 2s infinite' }} />
-              <span style={{ fontSize: '0.78rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.8px', color: statsError ? '#dc2626' : '#16a34a' }}>
-                {statsError ? 'Server Unreachable' : 'Live Data'}
+              <span style={{ width: 8, height: 8, borderRadius: '50%', background: platformError ? '#dc2626' : '#16a34a', display: 'inline-block', boxShadow: platformError ? 'none' : '0 0 6px #16a34a', animation: platformError ? 'none' : 'pulse-glow 2s infinite' }} />
+              <span style={{ fontSize: '0.78rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.8px', color: platformError ? '#dc2626' : '#16a34a' }}>
+                {platformError ? 'Server Unreachable' : 'Live Data'}
               </span>
             </div>
             <div className="badge badge-teal mb-md" style={{ margin: '0 auto 12px' }}>📊 Platform Statistics</div>
             <h2>Platform Performance</h2>
             {/* Period Toggle */}
             <div className="responsive-actions" style={{ justifyContent: 'center', marginTop: 16 }}>
-              {['weekly', 'monthly'].map(p => (
+              {['weekly', 'monthly', 'yearly'].map(p => (
                 <button key={p} onClick={() => setPeriod(p)}
                   className={`btn btn-sm ${period === p ? 'btn-primary' : 'btn-ghost'}`}>
                   {p.charAt(0).toUpperCase() + p.slice(1)}
@@ -674,19 +712,47 @@ const HomePage = () => {
           <div className="grid-3" style={{ marginBottom: 48 }}>
             {[
               { icon: '👥', label: 'Total Members', value: counters.members, color: 'var(--primary)' },
-              { icon: '🔗', label: `${period === 'weekly' ? 'Weekly' : 'Monthly'} Connections`, value: counters.connections, color: 'var(--accent)' },
-              { icon: '💰', label: `${period === 'weekly' ? 'Weekly' : 'Monthly'} Revenue`, value: formatRevenue(counters.revenue), color: '#7c3aed', isFormatted: true },
+              { icon: '🔗', label: `${period === 'weekly' ? 'Weekly' : period === 'yearly' ? 'Yearly' : 'Monthly'} Connections`, value: counters.connections, color: 'var(--accent)' },
+              { icon: '💰', label: `${period === 'weekly' ? 'Weekly' : period === 'yearly' ? 'Yearly' : 'Monthly'} Revenue`, value: formatRevenue(counters.revenue), color: '#7c3aed', isFormatted: true },
             ].map((s, i) => (
-              <div key={i} className="stat-card animate-fadeInUp" style={{ animationDelay: `${i * 0.15}s`, textAlign: 'center' }}>
-                <div style={{ fontSize: '2.5rem', marginBottom: 12 }}>{s.icon}</div>
-                {loading ? (
+              <div key={i} className="modern-overview-card animate-fadeInUp" style={{ animationDelay: `${i * 0.15}s` }}>
+                <div className="modern-overview-card__top">
+                  <div className={`modern-overview-card__badge modern-overview-card__badge--${i === 0 ? 'gold' : i === 1 ? 'teal' : 'purple'}`}>
+                    {s.icon}
+                  </div>
+                </div>
+                <div className="modern-overview-card__body">
+                  <div className="modern-overview-card__eyebrow">Platform overview</div>
+                  <div className="modern-overview-card__title">{s.label}</div>
+                  <div className="modern-overview-card__subtitle">
+                    {period === 'weekly'
+                      ? 'Fresh weekly movement from across the network.'
+                      : period === 'yearly'
+                        ? 'A year-to-date snapshot of JCOM activity.'
+                        : 'A clean monthly snapshot of JCOM activity.'}
+                  </div>
+                </div>
+                {platformLoading ? (
                   <div className="skeleton" style={{ height: 48, width: 120, margin: '0 auto 8px', borderRadius: 8 }} />
                 ) : (
-                  <div style={{ fontFamily: "'Outfit',sans-serif", fontSize: '2.2rem', fontWeight: 800, color: s.color }}>
+                  <div className="modern-overview-card__value" style={{ color: s.color }}>
                     {s.isFormatted ? s.value : s.value.toLocaleString('en-IN')}
                   </div>
                 )}
-                <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.8px', marginTop: 4 }}>{s.label}</div>
+                <div className="modern-overview-card__footer">
+                  <div className="modern-overview-card__meta">
+                    <span>Live indicator</span>
+                    <strong>{i === 0 ? 'Members' : i === 1 ? 'Connections' : 'Revenue'}</strong>
+                  </div>
+                  <div className="modern-overview-card__progress" aria-hidden="true">
+                    <span
+                      style={{
+                        width: `${i === 0 ? 74 : i === 1 ? 82 : 68}%`,
+                        background: i === 0 ? 'var(--grad-gold)' : i === 1 ? 'var(--grad-teal)' : 'var(--grad-purple)'
+                      }}
+                    />
+                  </div>
+                </div>
               </div>
             ))}
           </div>
@@ -695,7 +761,7 @@ const HomePage = () => {
           <div className="glass-card">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
               <h3 style={{ color: 'var(--text-primary)', margin: 0 }}>📍 Location-wise Performance</h3>
-              {statsError && (
+              {overallError && (
                 <span style={{ fontSize: '0.8rem', color: 'var(--error)', background: 'rgba(220,38,38,0.08)', padding: '4px 10px', borderRadius: 20, border: '1px solid rgba(220,38,38,0.2)' }}>
                   ⚠️ Could not reach server
                 </span>
@@ -712,23 +778,23 @@ const HomePage = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {loading ? (
+                  {overallLoading ? (
                     [1,2,3].map(i => (
                       <tr key={i}>
                         {[1,2,3,4].map(j => <td key={j}><div className="skeleton" style={{ height: 18, borderRadius: 4 }} /></td>)}
                       </tr>
                     ))
-                  ) : stats.locations.length > 0 ? stats.locations.map((loc, i) => (
+                  ) : overallStats.locations.length > 0 ? overallStats.locations.map((loc, i) => (
                     <tr key={i}>
                       <td><span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{loc.name}</span></td>
                       <td><span className="badge badge-teal">{loc.members}</span></td>
-                      <td>{loc.connections}</td>
-                      <td style={{ color: 'var(--primary)', fontWeight: 700 }}>{formatRevenue(loc.revenue)}</td>
+                      <td>{Number(loc.connections || 0).toLocaleString('en-IN')}</td>
+                      <td style={{ color: 'var(--primary)', fontWeight: 700 }}>{formatRevenue(Number(loc.revenue || 0))}</td>
                     </tr>
                   )) : (
                     <tr>
                       <td colSpan={4} style={{ textAlign: 'center', padding: '32px 0', color: 'var(--text-muted)' }}>
-                        {statsError ? '⚠️ Server not reachable. Please try again later.' : '📍 No locations have been set up yet.'}
+                        {overallError ? '⚠️ Server not reachable. Please try again later.' : '📍 No locations have been set up yet.'}
                       </td>
                     </tr>
                   )}
@@ -752,7 +818,7 @@ const HomePage = () => {
             </div>
 
             <div className="responsive-main-aside" style={{ alignItems: 'stretch', gap: 20 }}>
-              <div className="parallax-card" style={{ ...cleanCardStyle, padding: 28, flex: 1, background: 'linear-gradient(180deg, #ffffff 0%, #f8fbff 100%)' }}>
+              <div className="parallax-card modern-showcase-card" style={{ ...cleanCardStyle, padding: 28, flex: 1, background: 'linear-gradient(180deg, #ffffff 0%, #f8fbff 100%)' }}>
                 <div style={{ fontSize: '0.75rem', color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 800, marginBottom: 8 }}>
                   Top Connections
                 </div>
@@ -771,7 +837,7 @@ const HomePage = () => {
                 <AnalyticsBarChart data={locationPerformanceData} valueKey="connections" color="#0f4bcf" />
               </div>
 
-              <div className="parallax-card" style={{ ...cleanCardStyle, padding: 28, flex: 1, background: 'linear-gradient(180deg, #ffffff 0%, #fcfbff 100%)' }}>
+              <div className="parallax-card modern-showcase-card" style={{ ...cleanCardStyle, padding: 28, flex: 1, background: 'linear-gradient(180deg, #ffffff 0%, #fcfbff 100%)' }}>
                 <div style={{ fontSize: '0.75rem', color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 800, marginBottom: 8 }}>
                   Revenue Mix
                 </div>
@@ -834,7 +900,7 @@ const HomePage = () => {
             </div>
             <div className="responsive-two-col" style={{ gap: 16 }}>
               {features.slice(0, 4).map((f, i) => (
-                <div key={i} className="parallax-card" style={{ ...cleanCardStyle, padding: 22 }}>
+                <div key={i} className="parallax-card modern-showcase-card" style={{ ...cleanCardStyle, padding: 22 }}>
                   <div style={{ fontSize: '2rem', marginBottom: 10 }}>{f.icon}</div>
                   <div style={{ fontSize: '0.74rem', color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 800, marginBottom: 8 }}>
                     JCOM Advantage
@@ -863,8 +929,8 @@ const HomePage = () => {
               {topRatedBusinesses.map((business) => (
                 <Link
                   key={business._id}
-                  to={`/search/${business._id}`}
-                  className="parallax-card"
+                  to={business.slug ? `/${business.slug}` : `/search/${business._id}`}
+                  className="parallax-card modern-showcase-card"
                   style={{ ...cleanCardStyle, padding: 22, display: 'block', textDecoration: 'none' }}
                 >
                   <div style={{ fontSize: '0.72rem', color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 800, marginBottom: 8 }}>
@@ -896,7 +962,7 @@ const HomePage = () => {
           </div>
           <div className="grid-3">
             {features.map((f, i) => (
-              <div key={i} className="animate-fadeInUp parallax-card" style={{ ...cleanCardStyle, animationDelay: `${i * 0.1}s`, padding: 24 }}>
+              <div key={i} className="animate-fadeInUp parallax-card modern-showcase-card" style={{ ...cleanCardStyle, animationDelay: `${i * 0.1}s`, padding: 24 }}>
                 <div style={{ fontSize: '2.4rem', marginBottom: 16 }}>{f.icon}</div>
                 <div style={{ fontSize: '0.72rem', color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 800, marginBottom: 8 }}>
                   Platform Feature
@@ -918,7 +984,7 @@ const HomePage = () => {
           </div>
           <div className="grid-4">
             {weekTypes.map((w, i) => (
-              <div key={i} className="animate-fadeInUp parallax-card" style={{ ...cleanCardStyle, animationDelay: `${i * 0.1}s`, padding: 26, textAlign: 'left' }}>
+              <div key={i} className="animate-fadeInUp parallax-card modern-showcase-card" style={{ ...cleanCardStyle, animationDelay: `${i * 0.1}s`, padding: 26, textAlign: 'left' }}>
                 <div style={{ fontSize: '0.76rem', color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 800, marginBottom: 12 }}>
                   {w.week}
                 </div>

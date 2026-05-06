@@ -13,7 +13,7 @@ const MemberCard = ({ member, onConnect, onInfo, isConnected, isPending }) => {
   const displayName = `${member.firstName} ${member.lastName}`;
 
   return (
-    <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+    <div className="glass-card modern-member-card" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
         <ProfileAvatar
           src={member.profilePic}
