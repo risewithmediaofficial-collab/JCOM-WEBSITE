@@ -4,6 +4,7 @@ import { AuthContext } from '../context/AuthContext';
 import { EyeOutlined, EyeInvisibleOutlined, LockOutlined, UserOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import Navbar from '../components/Navbar';
+import Loader from '../components/Loader';
 
 import { API_BASE_URL } from '../config/api';
 
@@ -114,7 +115,7 @@ const LoginPage = () => {
                 {error && <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, padding: '10px 14px', color: 'var(--error)', fontSize: '0.85rem' }}>{error}</div>}
 
                 <button id="login-submit" type="submit" disabled={loading} className="btn btn-primary w-full" style={{ justifyContent: 'center', padding: 14 }}>
-                  {loading ? 'Signing In...' : 'Sign In'}
+                  {loading ? <Loader size={22} color="#ffffff" inline label="Signing In..." /> : 'Sign In'}
                 </button>
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
@@ -153,7 +154,7 @@ const LoginPage = () => {
                 )}
 
                 <button type="submit" disabled={loading} className="btn btn-primary w-full" style={{ justifyContent: 'center', padding: 14 }}>
-                  {loading ? 'Changing...' : 'Change Password'}
+                  {loading ? <Loader size={22} color="#ffffff" inline label="Changing..." /> : 'Change Password'}
                 </button>
                 <button type="button" onClick={() => setMode('login')} className="btn btn-ghost w-full" style={{ justifyContent: 'center' }}>
                   <ArrowLeftOutlined /> Back to Login

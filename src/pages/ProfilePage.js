@@ -4,6 +4,7 @@ import axios from 'axios';
 import { CopyOutlined } from '@ant-design/icons';
 import SidebarLayout from '../components/SidebarLayout';
 import ProfileAvatar from '../components/ProfileAvatar';
+import Loader from '../components/Loader';
 import { AuthContext } from '../context/AuthContext';
 import { API_BASE_URL } from '../config/api';
 
@@ -133,7 +134,9 @@ const ProfilePage = () => {
     return (
       <SidebarLayout>
         <div style={{ padding: '80px 24px 40px', maxWidth: 900, margin: '0 auto' }}>
-          <div className="glass-card" style={{ padding: 28 }}>Loading profile...</div>
+          <div className="glass-card" style={{ padding: 28 }}>
+            <Loader label="Loading profile" />
+          </div>
         </div>
       </SidebarLayout>
     );

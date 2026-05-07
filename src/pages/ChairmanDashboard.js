@@ -5,6 +5,7 @@ import SidebarLayout from '../components/SidebarLayout';
 import { CheckCircleOutlined, CloseCircleOutlined, SyncOutlined, CrownOutlined } from '@ant-design/icons';
 import ProfileAvatar from '../components/ProfileAvatar';
 import useBodyScrollLock from '../hooks/useBodyScrollLock';
+import Loader from '../components/Loader';
 
 import { API_BASE_URL } from '../config/api';
 
@@ -115,7 +116,7 @@ const ChairmanDashboard = () => {
 
         {/* APPROVALS TAB */}
         {tab === 'approvals' && (
-          loading ? <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: 40 }}>Loading...</div> :
+          loading ? <div className="glass-card" style={{ padding: 40 }}><Loader label="Loading approvals" /></div> :
           pending.length === 0 ? (
             <div className="glass-card" style={{ textAlign: 'center', padding: 60 }}>
               <div style={{ fontSize: '3rem', marginBottom: 12 }}>🎉</div>
@@ -222,7 +223,7 @@ const ChairmanDashboard = () => {
                 </thead>
                 <tbody>
                   {loading ? (
-                    <tr><td colSpan={8} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>Loading...</td></tr>
+                    <tr><td colSpan={8} style={{ textAlign: 'center', padding: 32 }}><Loader label="Loading members" /></td></tr>
                   ) : members.map((m, i) => (
                     <tr key={i}>
                       <td>

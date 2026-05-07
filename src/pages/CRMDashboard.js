@@ -4,6 +4,7 @@ import axios from 'axios';
 import SidebarLayout from '../components/SidebarLayout';
 import { EditOutlined, PlusOutlined, DeleteOutlined, UserAddOutlined } from '@ant-design/icons';
 import useBodyScrollLock from '../hooks/useBodyScrollLock';
+import Loader from '../components/Loader';
 
 import { API_BASE_URL } from '../config/api';
 
@@ -509,7 +510,7 @@ const CRMDashboard = () => {
                 <tbody>
                   {loading ? (
                     <tr>
-                      <td colSpan={12} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>Loading...</td>
+                      <td colSpan={12} style={{ textAlign: 'center', padding: 32 }}><Loader label="Loading CRM member stats" /></td>
                     </tr>
                   ) : filteredMembers.length === 0 ? (
                     <tr>
@@ -567,7 +568,7 @@ const CRMDashboard = () => {
                 <tbody>
                   {loading ? (
                     <tr>
-                      <td colSpan={8} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>Loading...</td>
+                      <td colSpan={8} style={{ textAlign: 'center', padding: 32 }}><Loader label="Loading CRM entries" /></td>
                     </tr>
                   ) : filteredEntries.length === 0 ? (
                     <tr>

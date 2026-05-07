@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { UploadOutlined, PlusOutlined, MinusCircleOutlined, ArrowLeftOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import Navbar from '../components/Navbar';
+import Loader from '../components/Loader';
 
 import { API_BASE_URL } from '../config/api';
 
@@ -337,7 +338,7 @@ const RegisterPage = () => {
                 </button>
               ) : (
                 <button onClick={handleSubmit} disabled={loading} className="btn btn-primary btn-lg" style={{ marginLeft: 'auto' }}>
-                  {loading ? 'Submitting...' : '🚀 Submit Application'}
+                  {loading ? <Loader size={22} color="#ffffff" inline label="Submitting..." /> : '🚀 Submit Application'}
                 </button>
               )}
             </div>
