@@ -457,12 +457,15 @@ const styles = {
   },
   mobileMenu: {
     width: '100%',
-    height: '100vh',
+    height: '100dvh',
+    minHeight: '100vh',
     background: 'linear-gradient(180deg, #ffffff 0%, #f6faff 100%)',
     padding: '16px 16px max(16px, env(safe-area-inset-bottom))',
     display: 'flex',
     flexDirection: 'column',
     gap: 14,
+    overflowY: 'auto',
+    WebkitOverflowScrolling: 'touch',
     animation: 'slideInLeft 0.28s ease forwards'
   },
   mobileMenuHeader: {
@@ -500,10 +503,10 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     gap: 8,
-    flex: 1,
-    overflowY: 'auto',
+    flex: '0 0 auto',
+    overflowY: 'visible',
     paddingRight: 2,
-    paddingBottom: 8
+    paddingBottom: 0
   },
   mobileNavLink: {
     display: 'flex', alignItems: 'center', gap: 8,
@@ -532,12 +535,11 @@ const styles = {
   mobileMenuFooter: {
     display: 'grid',
     gap: 10,
-    marginTop: 'auto',
-    paddingTop: 10,
+    marginTop: 8,
+    paddingTop: 4,
     paddingBottom: 2,
-    position: 'sticky',
-    bottom: 0,
-    background: 'linear-gradient(180deg, rgba(246,250,255,0) 0%, rgba(246,250,255,0.92) 24%, rgba(246,250,255,1) 100%)'
+    position: 'static',
+    background: 'transparent'
   },
   mobileActionBtn: {
     position: 'relative',
