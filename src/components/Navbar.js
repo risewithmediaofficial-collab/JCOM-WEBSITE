@@ -202,87 +202,118 @@ const Navbar = ({ onMobileMenuToggle, mobileMenuOpen }) => {
       </div>
 
       {!onMobileMenuToggle && menuOpen && (
-        <div style={styles.mobileMenu} className="hide-desktop">
-          <Link
-            to="/search"
-            style={styles.mobileNavLink}
-            onClick={() => {
-              scrollPageToTop();
-              setInternalMenuOpen(false);
-            }}
-          >
-            <SearchOutlined /> Search
-          </Link>
-          {navItems.map((item) => (
-            <Link
-              key={item.to}
-              to={item.to}
-              style={styles.mobileNavLink}
-              onClick={() => {
-                scrollPageToTop();
-                setInternalMenuOpen(false);
-              }}
-            >
-              {item.icon} {item.label}
-            </Link>
-          ))}
-          {isAuthenticated && (
-            <button
-              type="button"
-              onClick={handleNotificationClick}
-              style={{
-                ...styles.mobileNotificationCard,
-                ...(notificationPermission === 'granted' ? styles.mobileNotificationCardEnabled : {})
-              }}
-            >
-              <span style={styles.mobileNotificationIconWrap}>
-                <BellOutlined />
-                {unreadNotificationCount > 0 && (
-                  <span style={styles.mobileNotificationBadge}>
-                    {unreadNotificationCount > 99 ? '99+' : unreadNotificationCount}
-                  </span>
-                )}
-              </span>
-              <span style={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'flex-start' }}>
-                <span style={styles.mobileNotificationTitle}>
-                  {notificationPermission === 'granted' ? 'Notifications Enabled' : 'Enable Notifications'}
-                </span>
-                <span style={styles.mobileNotificationSubtitle}>
-                  {notificationPermission === 'granted'
-                    ? 'Get live alerts for requests, messages, and approvals.'
-                    : 'Turn on browser alerts for requests, messages, and approvals.'}
-                </span>
-              </span>
-            </button>
-          )}
-          {!isAuthenticated && (
-            <div style={styles.mobileActionGroup}>
+        <div style={styles.mobileMenuOverlay} className="hide-desktop">
+          <div style={styles.mobileMenu}>
+            <div style={styles.mobileMenuHeader}>
               <Link
-                to="/login"
-                style={{ ...styles.mobileActionBtn, ...styles.mobileActionBtnGhost }}
-                onClick={() => { scrollPageToTop(); setInternalMenuOpen(false); }}
+                to="/"
+                style={styles.mobileMenuBrand}
+                onClick={() => {
+                  scrollPageToTop();
+                  setInternalMenuOpen(false);
+                }}
               >
-                <span style={styles.mobileActionEyebrow}>Member Access</span>
-                <span style={styles.mobileActionLabel}>Login</span>
+                <img src={brandLogoSrc} alt="JCOM" style={styles.mobileMenuBrandImage} />
               </Link>
-              <Link
-                to="/register"
-                style={{ ...styles.mobileActionBtn, ...styles.mobileActionBtnPrimary }}
-                onClick={() => { scrollPageToTop(); setInternalMenuOpen(false); }}
+              <button
+                type="button"
+                onClick={() => setInternalMenuOpen(false)}
+                style={styles.mobileMenuCloseBtn}
+                aria-label="Close menu"
               >
-                <span style={styles.mobileActionEyebrow}>New to JCOM?</span>
-                <span style={styles.mobileActionLabel}>Register</span>
-              </Link>
+                <CloseOutlined />
+              </button>
             </div>
-          )}
-          {isAuthenticated && (
-            <button
-              onClick={handleLogout}
-              style={{ ...styles.mobileNavLink, background: 'none', border: 'none', color: 'var(--error)', cursor: 'pointer', width: '100%', textAlign: 'left' }}
-            >
-              <LogoutOutlined /> Logout
-            </button>
-          )}
+
+            <div style={styles.mobileMenuBody}>
+              <Link
+                to="/search"
+                style={styles.mobileNavLink}
+                onClick={() => {
+                  scrollPageToTop();
+                  setInternalMenuOpen(false);
+                }}
+              >
+                <SearchOutlined /> Search
+              </Link>
+              {navItems.map((item) => (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  style={{
+                    ...styles.mobileNavLink,
+                    ...(location.pathname === item.to ? styles.mobileNavLinkActive : {})
+                  }}
+                  onClick={() => {
+                    scrollPageToTop();
+                    setInternalMenuOpen(false);
+                  }}
+                >
+                  {item.icon} {item.label}
+                </Link>
+              ))}
+              {isAuthenticated && (
+                <button
+                  type="button"
+                  onClick={handleNotificationClick}
+                  style={{
+                    ...styles.mobileNotificationCard,
+                    ...(notificationPermission === 'granted' ? styles.mobileNotificationCardEnabled : {})
+                  }}
+                >
+                  <span style={styles.mobileNotificationIconWrap}>
+                    <BellOutlined />
+                    {unreadNotificationCount > 0 && (
+                      <span style={styles.mobileNotificationBadge}>
+                        {unreadNotificationCount > 99 ? '99+' : unreadNotificationCount}
+                      </span>
+                    )}
+                  </span>
+                  <span style={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'flex-start' }}>
+                    <span style={styles.mobileNotificationTitle}>
+                      {notificationPermission === 'granted' ? 'Notifications Enabled' : 'Enable Notifications'}
+                    </span>
+                    <span style={styles.mobileNotificationSubtitle}>
+                      {notificationPermission === 'granted'
+                        ? 'Get live alerts for requests, messages, and approvals.'
+                        : 'Turn on browser alerts for requests, messages, and approvals.'}
+                    </span>
+                  </span>
+                </button>
+              )}
+            </div>
+
+            <div style={styles.mobileMenuFooter}>
+              {!isAuthenticated && (
+                <div style={styles.mobileActionGroup}>
+                  <Link
+                    to="/login"
+                    style={{ ...styles.mobileActionBtn, ...styles.mobileActionBtnGhost }}
+                    onClick={() => { scrollPageToTop(); setInternalMenuOpen(false); }}
+                  >
+                    <span style={styles.mobileActionEyebrow}>Member Access</span>
+                    <span style={styles.mobileActionLabel}>Login</span>
+                  </Link>
+                  <Link
+                    to="/register"
+                    style={{ ...styles.mobileActionBtn, ...styles.mobileActionBtnPrimary }}
+                    onClick={() => { scrollPageToTop(); setInternalMenuOpen(false); }}
+                  >
+                    <span style={styles.mobileActionEyebrow}>New to JCOM?</span>
+                    <span style={styles.mobileActionLabel}>Register</span>
+                  </Link>
+                </div>
+              )}
+              {isAuthenticated && (
+                <button
+                  onClick={handleLogout}
+                  style={{ ...styles.mobileNavLink, ...styles.mobileLogoutBtn }}
+                >
+                  <LogoutOutlined /> Logout
+                </button>
+              )}
+            </div>
+          </div>
         </div>
       )}
     </nav>
@@ -416,19 +447,91 @@ const styles = {
     justifyContent: 'center',
     flexShrink: 0
   },
+  mobileMenuOverlay: {
+    position: 'fixed',
+    inset: 0,
+    zIndex: 1100,
+    background: 'rgba(12, 18, 32, 0.34)',
+    backdropFilter: 'blur(6px)',
+    overflow: 'hidden'
+  },
   mobileMenu: {
-    background: '#ffffff', borderTop: '1px solid rgba(0,0,0,0.08)',
-    padding: '12px 16px 18px', display: 'flex', flexDirection: 'column', gap: 6
+    width: '100%',
+    height: '100vh',
+    background: 'linear-gradient(180deg, #ffffff 0%, #f6faff 100%)',
+    padding: '18px 18px 24px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 18,
+    animation: 'slideInLeft 0.28s ease forwards'
+  },
+  mobileMenuHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12
+  },
+  mobileMenuBrand: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    minWidth: 0
+  },
+  mobileMenuBrandImage: {
+    height: 34,
+    width: 'auto',
+    display: 'block',
+    objectFit: 'contain'
+  },
+  mobileMenuCloseBtn: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    border: '1px solid rgba(39,162,222,0.14)',
+    background: 'rgba(255,255,255,0.88)',
+    color: 'var(--text-primary)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '1.05rem',
+    cursor: 'pointer',
+    boxShadow: '0 10px 24px rgba(15,23,42,0.06)'
+  },
+  mobileMenuBody: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 8,
+    flex: 1,
+    overflowY: 'auto',
+    paddingRight: 2
   },
   mobileNavLink: {
     display: 'flex', alignItems: 'center', gap: 8,
-    padding: '10px 12px', borderRadius: 8, color: 'var(--text-secondary)',
-    fontSize: '0.95rem', textDecoration: 'none', transition: 'all 0.2s'
+    padding: '14px 16px',
+    borderRadius: 18,
+    color: 'var(--text-secondary)',
+    fontSize: '1rem',
+    fontWeight: 600,
+    textDecoration: 'none',
+    transition: 'all 0.2s',
+    background: 'rgba(255,255,255,0.72)',
+    border: '1px solid rgba(15,23,42,0.06)',
+    boxShadow: '0 8px 22px rgba(15,23,42,0.04)'
+  },
+  mobileNavLinkActive: {
+    color: 'var(--primary)',
+    border: '1px solid rgba(39,162,222,0.24)',
+    background: 'linear-gradient(135deg, rgba(39,162,222,0.1) 0%, rgba(255,255,255,0.98) 100%)',
+    boxShadow: '0 12px 26px rgba(39,162,222,0.1)'
   },
   mobileActionGroup: {
     display: 'grid',
     gap: 12,
-    marginTop: 12
+    marginTop: 4
+  },
+  mobileMenuFooter: {
+    display: 'grid',
+    gap: 12,
+    paddingTop: 6
   },
   mobileActionBtn: {
     position: 'relative',
@@ -467,7 +570,7 @@ const styles = {
     lineHeight: 1.1
   },
   mobileNotificationCard: {
-    marginTop: 10,
+    marginTop: 8,
     width: '100%',
     display: 'flex',
     alignItems: 'flex-start',
@@ -480,6 +583,14 @@ const styles = {
     cursor: 'pointer',
     textAlign: 'left',
     boxShadow: '0 10px 24px rgba(15,23,42,0.05)'
+  },
+  mobileLogoutBtn: {
+    background: 'rgba(239,68,68,0.08)',
+    border: '1px solid rgba(239,68,68,0.18)',
+    color: 'var(--error)',
+    cursor: 'pointer',
+    width: '100%',
+    textAlign: 'left'
   },
   mobileNotificationCardEnabled: {
     border: '1px solid rgba(22,163,74,0.18)',
