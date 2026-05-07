@@ -226,11 +226,54 @@ const Navbar = ({ onMobileMenuToggle, mobileMenuOpen }) => {
               {item.icon} {item.label}
             </Link>
           ))}
+          {isAuthenticated && (
+            <button
+              type="button"
+              onClick={handleNotificationClick}
+              style={{
+                ...styles.mobileNotificationCard,
+                ...(notificationPermission === 'granted' ? styles.mobileNotificationCardEnabled : {})
+              }}
+            >
+              <span style={styles.mobileNotificationIconWrap}>
+                <BellOutlined />
+                {unreadNotificationCount > 0 && (
+                  <span style={styles.mobileNotificationBadge}>
+                    {unreadNotificationCount > 99 ? '99+' : unreadNotificationCount}
+                  </span>
+                )}
+              </span>
+              <span style={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'flex-start' }}>
+                <span style={styles.mobileNotificationTitle}>
+                  {notificationPermission === 'granted' ? 'Notifications Enabled' : 'Enable Notifications'}
+                </span>
+                <span style={styles.mobileNotificationSubtitle}>
+                  {notificationPermission === 'granted'
+                    ? 'Get live alerts for requests, messages, and approvals.'
+                    : 'Turn on browser alerts for requests, messages, and approvals.'}
+                </span>
+              </span>
+            </button>
+          )}
           {!isAuthenticated && (
-            <>
-              <Link to="/login" style={styles.mobileNavLink} onClick={() => { scrollPageToTop(); setInternalMenuOpen(false); }}>Login</Link>
-              <Link to="/register" style={styles.mobileNavLink} onClick={() => { scrollPageToTop(); setInternalMenuOpen(false); }}>Register</Link>
-            </>
+            <div style={styles.mobileActionGroup}>
+              <Link
+                to="/login"
+                style={{ ...styles.mobileActionBtn, ...styles.mobileActionBtnGhost }}
+                onClick={() => { scrollPageToTop(); setInternalMenuOpen(false); }}
+              >
+                <span style={styles.mobileActionEyebrow}>Member Access</span>
+                <span style={styles.mobileActionLabel}>Login</span>
+              </Link>
+              <Link
+                to="/register"
+                style={{ ...styles.mobileActionBtn, ...styles.mobileActionBtnPrimary }}
+                onClick={() => { scrollPageToTop(); setInternalMenuOpen(false); }}
+              >
+                <span style={styles.mobileActionEyebrow}>New to JCOM?</span>
+                <span style={styles.mobileActionLabel}>Register</span>
+              </Link>
+            </div>
           )}
           {isAuthenticated && (
             <button
@@ -375,12 +418,111 @@ const styles = {
   },
   mobileMenu: {
     background: '#ffffff', borderTop: '1px solid rgba(0,0,0,0.08)',
-    padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 4
+    padding: '12px 16px 18px', display: 'flex', flexDirection: 'column', gap: 6
   },
   mobileNavLink: {
     display: 'flex', alignItems: 'center', gap: 8,
     padding: '10px 12px', borderRadius: 8, color: 'var(--text-secondary)',
     fontSize: '0.95rem', textDecoration: 'none', transition: 'all 0.2s'
+  },
+  mobileActionGroup: {
+    display: 'grid',
+    gap: 12,
+    marginTop: 12
+  },
+  mobileActionBtn: {
+    position: 'relative',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 4,
+    padding: '16px 18px',
+    borderRadius: 18,
+    textDecoration: 'none',
+    overflow: 'hidden',
+    transition: 'transform 0.2s ease, box-shadow 0.2s ease'
+  },
+  mobileActionBtnGhost: {
+    background: 'linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(241,244,249,0.98) 100%)',
+    border: '1px solid rgba(39,162,222,0.16)',
+    boxShadow: '0 10px 24px rgba(15,23,42,0.06)',
+    color: 'var(--text-primary)'
+  },
+  mobileActionBtnPrimary: {
+    background: 'linear-gradient(135deg, #27a2de 0%, #1e7fb0 100%)',
+    border: '1px solid rgba(39,162,222,0.28)',
+    boxShadow: '0 14px 30px rgba(39,162,222,0.28)',
+    color: '#ffffff',
+    animation: 'pulse-glow 2.8s ease-in-out infinite'
+  },
+  mobileActionEyebrow: {
+    fontSize: '0.72rem',
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+    fontWeight: 800,
+    opacity: 0.78
+  },
+  mobileActionLabel: {
+    fontSize: '1.08rem',
+    fontWeight: 800,
+    lineHeight: 1.1
+  },
+  mobileNotificationCard: {
+    marginTop: 10,
+    width: '100%',
+    display: 'flex',
+    alignItems: 'flex-start',
+    gap: 12,
+    padding: '14px 16px',
+    borderRadius: 18,
+    border: '1px solid rgba(39,162,222,0.14)',
+    background: 'linear-gradient(135deg, rgba(247,251,255,1) 0%, rgba(255,255,255,1) 100%)',
+    color: 'var(--text-primary)',
+    cursor: 'pointer',
+    textAlign: 'left',
+    boxShadow: '0 10px 24px rgba(15,23,42,0.05)'
+  },
+  mobileNotificationCardEnabled: {
+    border: '1px solid rgba(22,163,74,0.18)',
+    background: 'linear-gradient(135deg, rgba(240,253,244,1) 0%, rgba(255,255,255,1) 100%)'
+  },
+  mobileNotificationIconWrap: {
+    position: 'relative',
+    width: 40,
+    height: 40,
+    borderRadius: 14,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+    background: 'linear-gradient(135deg, rgba(39,162,222,0.18) 0%, rgba(39,162,222,0.06) 100%)',
+    color: 'var(--primary)',
+    fontSize: '1rem'
+  },
+  mobileNotificationBadge: {
+    position: 'absolute',
+    top: -5,
+    right: -5,
+    minWidth: 18,
+    height: 18,
+    padding: '0 4px',
+    borderRadius: 999,
+    background: 'var(--error)',
+    color: '#ffffff',
+    fontSize: '0.62rem',
+    fontWeight: 800,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  mobileNotificationTitle: {
+    fontSize: '0.95rem',
+    fontWeight: 800,
+    lineHeight: 1.2
+  },
+  mobileNotificationSubtitle: {
+    fontSize: '0.78rem',
+    lineHeight: 1.45,
+    color: 'var(--text-secondary)'
   }
 };
 
