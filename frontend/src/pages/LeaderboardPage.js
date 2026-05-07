@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import SidebarLayout from '../components/SidebarLayout';
-import { TrophyOutlined } from '@ant-design/icons';
 
 import { API_BASE_URL } from '../config/api';
 
@@ -14,9 +13,7 @@ const LeaderboardPage = () => {
   const [period, setPeriod] = useState('monthly');
   const [error, setError] = useState(false);
 
-  useEffect(() => { fetchLeaderboard(); }, [sortBy, period]);
-
-  const fetchLeaderboard = async () => {
+  const fetchLeaderboard = useCallback(async () => {
     setLoading(true);
     setError(false);
     try {
@@ -27,7 +24,9 @@ const LeaderboardPage = () => {
       setLeaderboard([]);
     }
     setLoading(false);
-  };
+  }, [sortBy, period]);
+
+  useEffect(() => { fetchLeaderboard(); }, [fetchLeaderboard]);
 
   const formatRevenue = (v) => {
     if (v >= 10000000) return `₹${(v/10000000).toFixed(1)} Cr`;

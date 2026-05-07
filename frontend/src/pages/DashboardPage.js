@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import axios from 'axios';
 import SidebarLayout from '../components/SidebarLayout';
@@ -50,11 +50,7 @@ const DashboardPage = () => {
   const [period, setPeriod] = useState('monthly');
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchStats();
-  }, [period]);
-
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     const token = localStorage.getItem('token');
     const headers = { Authorization: `Bearer ${token}` };
     setLoading(true);
@@ -83,7 +79,11 @@ const DashboardPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [period]);
+
+  useEffect(() => {
+    fetchStats();
+  }, [fetchStats]);
 
   const formatCurrency = (value) => {
     if (value >= 10000000) return `Rs.${(value / 10000000).toFixed(1)} Cr`;

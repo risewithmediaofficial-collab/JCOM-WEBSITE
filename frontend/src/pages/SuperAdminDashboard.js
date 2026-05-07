@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import axios from 'axios';
 import SidebarLayout from '../components/SidebarLayout';
@@ -64,24 +64,9 @@ const SuperAdminDashboard = () => {
   const [msg, setMsg] = useState('');
   useBodyScrollLock(Boolean(approveResult || showCreateLocation || showCreateTable || showAssignChairman));
 
-  const token = localStorage.getItem('token');
-  const headers = { Authorization: `Bearer ${token}` };
-
-  // Fetch everything when tab changes
-  useEffect(() => { fetchAll(); }, [tab]);
-
-  // Always fetch approved users on mount (needed for chairman assignment dropdown)
-  useEffect(() => {
-    const fetchApproved = async () => {
-      try {
-        const res = await axios.get(`${API}/users/all?status=Approved`, { headers });
-        setApprovedUsers(res.data.users || []);
-      } catch { setApprovedUsers([]); }
-    };
-    fetchApproved();
-  }, []);
-
-  const fetchAll = async () => {
+  const fetchAll = useCallback(async () => {
+    const token = localStorage.getItem('token');
+    const headers = { Authorization: `Bearer ${token}` };
     setLoading(true);
 
     // Use allSettled so a failure in one call doesn't wipe out the others
@@ -128,12 +113,30 @@ const SuperAdminDashboard = () => {
     }
 
     setLoading(false);
-  };
+  }, [tab]);
+
+  // Fetch everything when tab changes
+  useEffect(() => { fetchAll(); }, [fetchAll]);
+
+  // Always fetch approved users on mount (needed for chairman assignment dropdown)
+  useEffect(() => {
+    const fetchApproved = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const headers = { Authorization: `Bearer ${token}` };
+        const res = await axios.get(`${API}/users/all?status=Approved`, { headers });
+        setApprovedUsers(res.data.users || []);
+      } catch { setApprovedUsers([]); }
+    };
+    fetchApproved();
+  }, []);
 
   // ── APPROVE ──
   const handleApprove = async (member) => {
     setSaving(member._id);
     try {
+      const token = localStorage.getItem('token');
+      const headers = { Authorization: `Bearer ${token}` };
       const form = approveForm[member._id] || {};
       const res = await axios.patch(`${API}/auth/approve/${member._id}`, { tableId: form.tableId || null }, { headers });
       const { membershipId, tempPassword } = res.data;
@@ -150,6 +153,8 @@ const SuperAdminDashboard = () => {
   const handleReject = async (memberId) => {
     const reason = window.prompt('Reason for rejection (optional):') || 'Application not meeting requirements';
     try {
+      const token = localStorage.getItem('token');
+      const headers = { Authorization: `Bearer ${token}` };
       await axios.patch(`${API}/auth/reject/${memberId}`, { reason }, { headers });
       setMsg('✅ Member rejected');
       setTimeout(() => setMsg(''), 3000);
@@ -164,6 +169,8 @@ const SuperAdminDashboard = () => {
   const createLocation = async (e) => {
     e.preventDefault(); setFormSaving(true); setMsg('');
     try {
+      const token = localStorage.getItem('token');
+      const headers = { Authorization: `Bearer ${token}` };
       await axios.post(`${API}/admin/locations`, locForm, { headers });
       setMsg('✅ Location created!'); setLocForm({ name: '', code: '' }); setShowCreateLocation(false); fetchAll();
     } catch (err) { setMsg('❌ ' + (err.response?.data?.message || 'Failed')); }
@@ -172,6 +179,8 @@ const SuperAdminDashboard = () => {
   const createTable = async (e) => {
     e.preventDefault(); setFormSaving(true); setMsg('');
     try {
+      const token = localStorage.getItem('token');
+      const headers = { Authorization: `Bearer ${token}` };
       await axios.post(`${API}/admin/tables`, tableForm, { headers });
       setMsg('✅ Table created!'); setTableForm({ locationId: '', name: '', capacity: 60 }); setShowCreateTable(false); fetchAll();
     } catch (err) { setMsg('❌ ' + (err.response?.data?.message || 'Failed')); }
@@ -180,6 +189,8 @@ const SuperAdminDashboard = () => {
   const assignChairman = async (e) => {
     e.preventDefault(); setFormSaving(true); setMsg('');
     try {
+      const token = localStorage.getItem('token');
+      const headers = { Authorization: `Bearer ${token}` };
       await axios.post(`${API}/admin/chairman`, chairmanForm, { headers });
       setMsg('✅ Chairman assigned!'); setChairmanForm({ userId: '', locationId: '', tableId: '', year: new Date().getFullYear() }); setShowAssignChairman(false); fetchAll();
     } catch (err) { setMsg('❌ ' + (err.response?.data?.message || 'Failed')); }

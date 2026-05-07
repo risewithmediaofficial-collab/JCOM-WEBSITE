@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import axios from 'axios';
 import SidebarLayout from '../components/SidebarLayout';
-import { CheckCircleOutlined, CloseCircleOutlined, SyncOutlined, CrownOutlined } from '@ant-design/icons';
+import { CheckCircleOutlined, CloseCircleOutlined, CrownOutlined } from '@ant-design/icons';
 import ProfileAvatar from '../components/ProfileAvatar';
 import useBodyScrollLock from '../hooks/useBodyScrollLock';
 import Loader from '../components/Loader';
@@ -17,7 +17,6 @@ const ChairmanDashboard = () => {
   const [pending, setPending] = useState([]);
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [approving, setApproving] = useState(null);
   const [approveForm, setApproveForm] = useState({});
   const [tables, setTables] = useState([]);
   const [msg, setMsg] = useState('');
@@ -25,12 +24,9 @@ const ChairmanDashboard = () => {
   const [selectedSubRole, setSelectedSubRole] = useState('');
   useBodyScrollLock(Boolean(roleModal));
 
-  const token = localStorage.getItem('token');
-  const headers = { Authorization: `Bearer ${token}` };
-
-  useEffect(() => { fetchData(); }, [tab]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
+    const token = localStorage.getItem('token');
+    const headers = { Authorization: `Bearer ${token}` };
     setLoading(true);
     try {
       if (tab === 'approvals') {
@@ -48,12 +44,16 @@ const ChairmanDashboard = () => {
       setPending([]); setMembers([]);
     }
     setLoading(false);
-  };
+  }, [tab, user?.locationId]);
+
+  useEffect(() => { fetchData(); }, [fetchData]);
 
   const handleApprove = async (memberId) => {
     const form = approveForm[memberId] || {};
     setMsg('');
     try {
+      const token = localStorage.getItem('token');
+      const headers = { Authorization: `Bearer ${token}` };
       const res = await axios.patch(`${API}/auth/approve/${memberId}`, { tableId: form.tableId }, { headers });
       const { membershipId, tempPassword } = res.data;
       setMsg(`✅ Approved! Member ID: ${membershipId} | Temp Password: ${tempPassword}`);
@@ -65,6 +65,8 @@ const ChairmanDashboard = () => {
 
   const handleReject = async (memberId, reason) => {
     try {
+      const token = localStorage.getItem('token');
+      const headers = { Authorization: `Bearer ${token}` };
       await axios.patch(`${API}/auth/reject/${memberId}`, { reason: reason || 'Application not meeting requirements' }, { headers });
       setMsg('✅ Member rejected');
       fetchData();
@@ -76,6 +78,8 @@ const ChairmanDashboard = () => {
   const handleSubRoleAssign = async () => {
     if (!roleModal) return;
     try {
+      const token = localStorage.getItem('token');
+      const headers = { Authorization: `Bearer ${token}` };
       await axios.patch(`${API}/users/assign-role`, { userId: roleModal._id, subRole: selectedSubRole || null }, { headers });
       setMsg(`✅ Sub-role ${selectedSubRole || 'cleared'} assigned to ${roleModal.firstName}`);
       setRoleModal(null);

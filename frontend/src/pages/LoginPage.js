@@ -19,7 +19,6 @@ const LoginPage = () => {
   const [error, setError] = useState('');
   const [mode, setMode] = useState('login'); // 'login' | 'forgot' | 'change-password'
   const [forgotForm, setForgotForm] = useState({ identifier: '', oldPassword: '', newPassword: '', confirmPassword: '' });
-  const [forgotStep, setForgotStep] = useState(1);
   const [forgotMsg, setForgotMsg] = useState('');
 
   const handleLogin = async (e) => {

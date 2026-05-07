@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useRef, useContext } from 'react';
-import { Modal, Input } from 'antd';
-import { SendOutlined, CheckCircleOutlined, DollarOutlined, CloseOutlined } from '@ant-design/icons';
-import { AuthContext } from '../context/AuthContext';
+import React, { useState, useEffect, useRef } from 'react';
+import { Modal } from 'antd';
+import { SendOutlined, CheckCircleOutlined, DollarOutlined } from '@ant-design/icons';
 import axios from 'axios';
 
 import { API_BASE_URL } from '../config/api';
@@ -9,7 +8,6 @@ import { API_BASE_URL } from '../config/api';
 const API = API_BASE_URL;
 
 const ChatModal = ({ open, onClose, connection, otherUser }) => {
-  const { user } = useContext(AuthContext);
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState('');
   const [step, setStep] = useState('chat'); // 'chat' | 'service_request' | 'convert' | 'amount'
