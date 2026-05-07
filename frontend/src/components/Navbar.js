@@ -459,10 +459,10 @@ const styles = {
     width: '100%',
     height: '100vh',
     background: 'linear-gradient(180deg, #ffffff 0%, #f6faff 100%)',
-    padding: '18px 18px 24px',
+    padding: '16px 16px max(16px, env(safe-area-inset-bottom))',
     display: 'flex',
     flexDirection: 'column',
-    gap: 18,
+    gap: 14,
     animation: 'slideInLeft 0.28s ease forwards'
   },
   mobileMenuHeader: {
@@ -502,7 +502,8 @@ const styles = {
     gap: 8,
     flex: 1,
     overflowY: 'auto',
-    paddingRight: 2
+    paddingRight: 2,
+    paddingBottom: 8
   },
   mobileNavLink: {
     display: 'flex', alignItems: 'center', gap: 8,
@@ -525,24 +526,30 @@ const styles = {
   },
   mobileActionGroup: {
     display: 'grid',
-    gap: 12,
-    marginTop: 4
+    gap: 10,
+    marginTop: 0
   },
   mobileMenuFooter: {
     display: 'grid',
-    gap: 12,
-    paddingTop: 6
+    gap: 10,
+    marginTop: 'auto',
+    paddingTop: 10,
+    paddingBottom: 2,
+    position: 'sticky',
+    bottom: 0,
+    background: 'linear-gradient(180deg, rgba(246,250,255,0) 0%, rgba(246,250,255,0.92) 24%, rgba(246,250,255,1) 100%)'
   },
   mobileActionBtn: {
     position: 'relative',
     display: 'flex',
     flexDirection: 'column',
     gap: 4,
-    padding: '16px 18px',
+    padding: '14px 16px',
     borderRadius: 18,
     textDecoration: 'none',
     overflow: 'hidden',
-    transition: 'transform 0.2s ease, box-shadow 0.2s ease'
+    transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+    minHeight: 72
   },
   mobileActionBtnGhost: {
     background: 'linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(241,244,249,0.98) 100%)',
@@ -558,14 +565,14 @@ const styles = {
     animation: 'pulse-glow 2.8s ease-in-out infinite'
   },
   mobileActionEyebrow: {
-    fontSize: '0.72rem',
+    fontSize: '0.68rem',
     letterSpacing: '0.08em',
     textTransform: 'uppercase',
     fontWeight: 800,
     opacity: 0.78
   },
   mobileActionLabel: {
-    fontSize: '1.08rem',
+    fontSize: '1rem',
     fontWeight: 800,
     lineHeight: 1.1
   },

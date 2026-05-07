@@ -1,5 +1,5 @@
 {
-  "name": "jcom-server",
+  "name": "jcom-backend",
   "version": "1.0.0",
   "description": "JCOM Backend API Server",
   "main": "server.js",
