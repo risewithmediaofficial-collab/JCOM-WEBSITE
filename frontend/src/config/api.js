@@ -1,13 +1,12 @@
 import axios from 'axios';
 
-const productionApiUrl = 'https://jcom-website.onrender.com/api';
-const developmentApiUrl = 'http://localhost:5000/api';
-const rawApiBaseUrl = process.env.VITE_API_URL
+const API_URL = 'https://jcom-website.onrender.com';
+const rawApiOrigin = process.env.VITE_API_URL
   || process.env.REACT_APP_API_URL
-  || (process.env.NODE_ENV === 'production' ? productionApiUrl : developmentApiUrl);
+  || API_URL;
 
-export const API_BASE_URL = rawApiBaseUrl.replace(/\/+$/, '');
-export const API_ORIGIN = API_BASE_URL.replace(/\/api\/?$/, '');
+export const API_ORIGIN = rawApiOrigin.replace(/\/+$/, '');
+export const API_BASE_URL = `${API_ORIGIN}/api`;
 
 export const buildAssetUrl = (assetPath) => {
   if (!assetPath) return null;
@@ -19,3 +18,5 @@ export const buildAssetUrl = (assetPath) => {
 
 axios.defaults.baseURL = API_BASE_URL;
 axios.defaults.withCredentials = true;
+
+export default API_URL;
