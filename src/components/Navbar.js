@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import {
@@ -10,34 +10,56 @@ import {
 import ProfileAvatar from './ProfileAvatar';
 import useBodyScrollLock from '../hooks/useBodyScrollLock';
 
+const brandLogoSrc = `${process.env.PUBLIC_URL}/Logo%20jcom.png`;
+
 const scrollPageToTop = () => {
   window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
 };
 
-const Navbar = ({ sidebarWidth, onMobileMenuToggle, mobileMenuOpen }) => {
-  const { user, isAuthenticated, logout } = useContext(AuthContext);
+const Navbar = ({ onMobileMenuToggle, mobileMenuOpen }) => {
+  const {
+    user,
+    isAuthenticated,
+    logout,
+    unreadNotificationCount,
+    notificationPermission,
+    enableNotifications
+  } = useContext(AuthContext);
   const navigate = useNavigate();
   const location = useLocation();
   const [internalMenuOpen, setInternalMenuOpen] = useState(false);
-  // Use external toggle when provided (authenticated pages via SidebarLayout)
+  const [isMobileViewport, setIsMobileViewport] = useState(window.innerWidth < 769);
+
   const menuOpen = onMobileMenuToggle ? mobileMenuOpen : internalMenuOpen;
-  const toggleMenu = onMobileMenuToggle || (() => setInternalMenuOpen(o => !o));
+  const toggleMenu = onMobileMenuToggle || (() => setInternalMenuOpen((open) => !open));
 
   useBodyScrollLock(!onMobileMenuToggle && menuOpen);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobileViewport(window.innerWidth < 769);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const handleLogout = () => {
     logout();
     navigate('/');
   };
 
+  const handleNotificationClick = async () => {
+    if (notificationPermission !== 'granted') {
+      await enableNotifications();
+    }
+  };
+
   const getRoleBadge = (role) => {
     const map = {
       'Super Admin': { label: 'Super Admin', cls: 'badge-purple' },
-      'Chairman':    { label: 'Chairman', cls: 'badge-gold' },
-      'Vice Chairman':{ label: 'Vice Chair', cls: 'badge-teal' },
-      'Director':    { label: 'Director', cls: 'badge-info' },
-      'Treasurer':   { label: 'Treasurer', cls: 'badge-success' },
-      'Member':      { label: 'Member', cls: 'badge-ghost' }
+      'Chairman': { label: 'Chairman', cls: 'badge-gold' },
+      'Vice Chairman': { label: 'Vice Chair', cls: 'badge-teal' },
+      'Director': { label: 'Director', cls: 'badge-info' },
+      'Treasurer': { label: 'Treasurer', cls: 'badge-success' },
+      'Member': { label: 'Member', cls: 'badge-ghost' }
     };
     return map[role] || { label: role, cls: 'badge-ghost' };
   };
@@ -56,7 +78,7 @@ const Navbar = ({ sidebarWidth, onMobileMenuToggle, mobileMenuOpen }) => {
       { to: '/connections', icon: <TeamOutlined />, label: 'Connections' },
       { to: '/crm', icon: <AppstoreOutlined />, label: 'CRM' },
       { to: '/meetings', icon: <CalendarOutlined />, label: 'Meetings' },
-      { to: '/leaderboard', icon: <TrophyOutlined />, label: 'Leaderboard' },
+      { to: '/leaderboard', icon: <TrophyOutlined />, label: 'Leaderboard' }
     ];
 
     if (user?.role === 'Super Admin') {
@@ -69,18 +91,24 @@ const Navbar = ({ sidebarWidth, onMobileMenuToggle, mobileMenuOpen }) => {
   };
 
   const navItems = getNavItems();
+  const showCompactMobileHeader = isMobileViewport;
+  const showInlineGuestActions = !isAuthenticated && !showCompactMobileHeader;
+  const showSearchShortcut = !showCompactMobileHeader;
+  const showNotificationShortcut = isAuthenticated && !showCompactMobileHeader;
+
   return (
     <nav style={styles.navbar}>
-      <div style={styles.navInner}>
-        {/* Logo */}
-        <Link to="/" style={styles.logo}>
-          <div style={styles.logoIcon}><span style={{ fontSize: '1.2rem' }}>⚡</span></div>
-          <span style={styles.logoText}>JCOM</span>
+      <div style={{ ...styles.navInner, ...(showCompactMobileHeader ? styles.navInnerMobile : {}) }}>
+        <Link to="/" style={{ ...styles.logo, ...(showCompactMobileHeader ? styles.logoMobile : {}) }}>
+          <img
+            src={brandLogoSrc}
+            alt="JCOM"
+            style={{ ...styles.logoImage, ...(showCompactMobileHeader ? styles.logoImageMobile : {}) }}
+          />
         </Link>
 
-        {/* Desktop Nav Links */}
         <div style={styles.navLinks} className="hide-mobile">
-          {navItems.map(item => (
+          {navItems.map((item) => (
             <Link
               key={item.to}
               to={item.to}
@@ -96,23 +124,36 @@ const Navbar = ({ sidebarWidth, onMobileMenuToggle, mobileMenuOpen }) => {
           ))}
         </div>
 
-        {/* Right Side */}
-        <div style={styles.navRight}>
-          {/* Search */}
-          <Link to="/search" style={styles.iconBtn} title="Search Members">
-            <SearchOutlined />
-          </Link>
+        <div style={{ ...styles.navRight, ...(showCompactMobileHeader ? styles.navRightMobile : {}) }}>
+          {showSearchShortcut && (
+            <Link to="/search" style={styles.iconBtn} title="Search Members">
+              <SearchOutlined />
+            </Link>
+          )}
 
           {isAuthenticated ? (
             <>
-              {/* Notification */}
-              <div style={{ ...styles.iconBtn, position: 'relative' }}>
-                <BellOutlined />
-              </div>
+              {showNotificationShortcut && (
+                <button
+                  type="button"
+                  onClick={handleNotificationClick}
+                  style={{ ...styles.iconBtn, ...styles.notificationBtn, position: 'relative' }}
+                  title={notificationPermission === 'granted' ? 'Notifications enabled' : 'Enable browser notifications'}
+                >
+                  <BellOutlined />
+                  {unreadNotificationCount > 0 && (
+                    <span style={styles.notificationBadge}>
+                      {unreadNotificationCount > 99 ? '99+' : unreadNotificationCount}
+                    </span>
+                  )}
+                </button>
+              )}
 
-              {/* User Profile */}
-              <div style={styles.profileSection}>
-                <Link to={user?._id ? `/profile/${user._id}` : '/dashboard'} style={{ ...styles.profileLink, textDecoration: 'none' }}>
+              <div style={{ ...styles.profileSection, ...(showCompactMobileHeader ? styles.profileSectionMobile : {}) }}>
+                <Link
+                  to={user?._id ? `/profile/${user._id}` : '/dashboard'}
+                  style={{ ...styles.profileLink, textDecoration: 'none' }}
+                >
                   <ProfileAvatar
                     src={user?.profilePic}
                     firstName={user?.firstName}
@@ -131,33 +172,48 @@ const Navbar = ({ sidebarWidth, onMobileMenuToggle, mobileMenuOpen }) => {
                     </span>
                   </div>
                 </Link>
-                <button onClick={handleLogout} style={styles.logoutBtn} title="Logout">
+                <button
+                  onClick={handleLogout}
+                  style={{ ...styles.logoutBtn, ...(showCompactMobileHeader ? styles.logoutBtnMobile : {}) }}
+                  title="Logout"
+                >
                   <LogoutOutlined />
                 </button>
               </div>
             </>
           ) : (
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <Link to="/login" className="btn btn-ghost btn-sm">Login</Link>
-              <Link to="/register" className="btn btn-primary btn-sm">Register</Link>
-            </div>
+            showInlineGuestActions && (
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <Link to="/login" className="btn btn-ghost btn-sm">Login</Link>
+                <Link to="/register" className="btn btn-primary btn-sm">Register</Link>
+              </div>
+            )
           )}
 
-          {/* Mobile Menu toggle */}
           <button
-            style={styles.mobileMenuBtn}
+            style={{ ...styles.mobileMenuBtn, ...(showCompactMobileHeader ? styles.mobileMenuBtnMobile : {}) }}
             className="hide-desktop"
             onClick={toggleMenu}
+            aria-label={menuOpen ? 'Close menu' : 'Open menu'}
           >
             {menuOpen ? <CloseOutlined /> : <MenuOutlined />}
           </button>
         </div>
       </div>
 
-      {/* Mobile Dropdown — only shown when NOT using external sidebar drawer */}
       {!onMobileMenuToggle && menuOpen && (
         <div style={styles.mobileMenu} className="hide-desktop">
-          {navItems.map(item => (
+          <Link
+            to="/search"
+            style={styles.mobileNavLink}
+            onClick={() => {
+              scrollPageToTop();
+              setInternalMenuOpen(false);
+            }}
+          >
+            <SearchOutlined /> Search
+          </Link>
+          {navItems.map((item) => (
             <Link
               key={item.to}
               to={item.to}
@@ -177,7 +233,10 @@ const Navbar = ({ sidebarWidth, onMobileMenuToggle, mobileMenuOpen }) => {
             </>
           )}
           {isAuthenticated && (
-            <button onClick={handleLogout} style={{ ...styles.mobileNavLink, background: 'none', border: 'none', color: 'var(--error)', cursor: 'pointer', width: '100%', textAlign: 'left' }}>
+            <button
+              onClick={handleLogout}
+              style={{ ...styles.mobileNavLink, background: 'none', border: 'none', color: 'var(--error)', cursor: 'pointer', width: '100%', textAlign: 'left' }}
+            >
               <LogoutOutlined /> Logout
             </button>
           )}
@@ -200,17 +259,26 @@ const styles = {
     height: '64px', padding: '0 24px',
     display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16
   },
+  navInnerMobile: {
+    padding: '0 12px',
+    gap: 8
+  },
   logo: {
     display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', flexShrink: 0
   },
-  logoIcon: {
-    width: 36, height: 36, borderRadius: 10,
-    background: 'var(--grad-gold)',
-    display: 'flex', alignItems: 'center', justifyContent: 'center'
+  logoMobile: {
+    gap: 8,
+    minWidth: 0
   },
-  logoText: {
-    fontFamily: "'Outfit', sans-serif", fontWeight: 800, fontSize: '1.3rem',
-    background: 'var(--grad-gold)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'
+  logoImage: {
+    height: 44,
+    width: 'auto',
+    display: 'block',
+    objectFit: 'contain',
+    flexShrink: 0
+  },
+  logoImageMobile: {
+    height: 38
   },
   navLinks: {
     display: 'flex', alignItems: 'center', gap: 4, flex: 1, justifyContent: 'center'
@@ -221,11 +289,15 @@ const styles = {
     textDecoration: 'none', transition: 'all 0.2s', whiteSpace: 'nowrap'
   },
   navLinkActive: {
-    background: 'rgba(0,73,194,0.08)', color: '#0049c2',
-    border: '1px solid rgba(0,73,194,0.2)'
+    background: 'rgba(39,162,222,0.08)', color: '#27a2de',
+    border: '1px solid rgba(39,162,222,0.2)'
   },
   navRight: {
-    display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0
+    display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0, marginLeft: 'auto'
+  },
+  navRightMobile: {
+    gap: 6,
+    minWidth: 0
   },
   iconBtn: {
     width: 36, height: 36, borderRadius: 8,
@@ -236,14 +308,40 @@ const styles = {
     textDecoration: 'none', fontSize: '1rem',
     transition: 'all 0.2s'
   },
+  notificationBtn: {
+    padding: 0
+  },
+  notificationBadge: {
+    position: 'absolute',
+    top: -5,
+    right: -5,
+    minWidth: 18,
+    height: 18,
+    padding: '0 4px',
+    borderRadius: 999,
+    background: 'var(--error)',
+    color: '#ffffff',
+    fontSize: '0.62rem',
+    fontWeight: 800,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.16)'
+  },
   profileSection: {
     display: 'flex', alignItems: 'center', gap: 8,
     background: '#f8f9fc', borderRadius: 8,
-    border: '1px solid rgba(0,0,0,0.08)', padding: '4px 8px'
+    border: '1px solid rgba(0,0,0,0.08)', padding: '4px 8px',
+    minWidth: 0
+  },
+  profileSectionMobile: {
+    gap: 4,
+    padding: '3px 4px'
   },
   profileLink: {
     display: 'flex', alignItems: 'center', gap: 6,
-    minHeight: 32
+    minHeight: 32,
+    minWidth: 0
   },
   logoutBtn: {
     width: 32, height: 32,
@@ -252,11 +350,28 @@ const styles = {
     borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center',
     borderLeft: '1px solid rgba(0,0,0,0.08)',
     marginLeft: 2, paddingLeft: 6,
-    transition: 'color 0.2s'
+    transition: 'color 0.2s',
+    flexShrink: 0
+  },
+  logoutBtnMobile: {
+    width: 28,
+    height: 28,
+    marginLeft: 0,
+    paddingLeft: 0,
+    borderLeft: 'none'
   },
   mobileMenuBtn: {
     background: 'none', border: 'none', cursor: 'pointer',
     color: 'var(--text-primary)', fontSize: '1.2rem'
+  },
+  mobileMenuBtnMobile: {
+    width: 36,
+    height: 36,
+    padding: 0,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0
   },
   mobileMenu: {
     background: '#ffffff', borderTop: '1px solid rgba(0,0,0,0.08)',
@@ -270,4 +385,3 @@ const styles = {
 };
 
 export default Navbar;
-

@@ -1,5 +1,6 @@
 const Chat = require('../models/Chat');
 const Connection = require('../models/Connection');
+const { emitUserNotification } = require('../utils/notificationService');
 
 // Send chat message
 exports.sendMessage = async (req, res) => {
@@ -46,6 +47,16 @@ exports.sendMessage = async (req, res) => {
         timestamp: chat.createdAt
       });
     }
+
+    await emitUserNotification(req.app, toUserId, {
+      type: 'Message',
+      title: 'New message',
+      message: messageType === 'text' ? message : 'You received a new attachment.',
+      relatedUser: fromUserId,
+      relatedConnection: connectionId,
+      url: '/connections',
+      tag: `message-${connectionId}`
+    });
 
     res.status(201).json({
       message: 'Message sent',

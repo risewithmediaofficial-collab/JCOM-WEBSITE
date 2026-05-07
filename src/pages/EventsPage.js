@@ -13,7 +13,7 @@ const EventPreviewModal = ({ event, onClose }) => {
     <div className="modal-overlay" style={{ position: 'fixed', inset: 0, background: 'rgba(9,16,35,0.76)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
       <div className="glass-card modal-sheet animate-fadeInUp" style={{ width: 'min(100%, 980px)', padding: 0, overflow: 'hidden', maxHeight: '92vh' }}>
         <div className="responsive-two-col" style={{ gap: 0 }}>
-          <div style={{ background: 'linear-gradient(145deg, rgba(0,73,194,0.08), rgba(0,184,148,0.08))', minHeight: 320, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: 'linear-gradient(145deg, rgba(39,162,222,0.08), rgba(0,184,148,0.08))', minHeight: 320, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             {event.poster ? (
               <img
                 src={buildAssetUrl(event.poster)}
@@ -309,7 +309,7 @@ const EventsPage = () => {
                   style={{ overflow: 'hidden', padding: 0, cursor: 'pointer' }}
                   onClick={() => setSelectedEvent(item)}
                 >
-                  <div style={{ height: 210, background: 'linear-gradient(135deg, rgba(0,73,194,0.08), rgba(0,184,148,0.08))', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                  <div style={{ height: 210, background: 'linear-gradient(135deg, rgba(39,162,222,0.08), rgba(0,184,148,0.08))', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
                     {item.poster ? (
                       <img src={buildAssetUrl(item.poster)} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     ) : (

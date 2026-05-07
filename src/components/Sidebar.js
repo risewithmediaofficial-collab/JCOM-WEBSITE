@@ -7,7 +7,7 @@ const scrollPageToTop = () => {
   window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
 };
 
-const Sidebar = ({ collapsed = false, onCollapse, onClose, isMobileDrawer = false }) => {
+const Sidebar = ({ collapsed = false, onCollapse, onClose, isMobileDrawer = false, drawerWidth = 240 }) => {
   const { user } = useContext(AuthContext);
   const location = useLocation();
 
@@ -31,15 +31,13 @@ const Sidebar = ({ collapsed = false, onCollapse, onClose, isMobileDrawer = fals
   const navLinks = [...adminLinks, ...memberLinks];
 
   const isActive = (to) => location.pathname === to || location.pathname.startsWith(to + '/');
-  const W = collapsed ? 64 : 220;
-
   return (
     <aside style={{
       position: 'fixed',
       left: 0,
       top: isMobileDrawer ? 0 : 64,
       bottom: 0,
-      width: isMobileDrawer ? 240 : (collapsed ? 64 : 220),
+      width: isMobileDrawer ? drawerWidth : (collapsed ? 64 : 220),
       zIndex: 900,
       background: '#ffffff',
       borderRight: '1px solid rgba(0,0,0,0.08)',
@@ -153,8 +151,8 @@ const Sidebar = ({ collapsed = false, onCollapse, onClose, isMobileDrawer = fals
                 padding: collapsed ? '12px 0' : '10px 12px',
                 borderRadius: 10, marginBottom: 4,
                 textDecoration: 'none',
-                background: active ? 'rgba(0,73,194,0.08)' : 'transparent',
-                border: active ? '1px solid rgba(0,73,194,0.2)' : '1px solid transparent',
+                background: active ? 'rgba(39,162,222,0.08)' : 'transparent',
+                border: active ? '1px solid rgba(39,162,222,0.2)' : '1px solid transparent',
                 transition: 'all 0.18s',
                 color: active ? 'var(--primary)' : 'var(--text-secondary)',
               }}
@@ -178,7 +176,7 @@ const Sidebar = ({ collapsed = false, onCollapse, onClose, isMobileDrawer = fals
       {/* Role badge at bottom */}
       {!collapsed && (
         <div style={{ padding: '12px 16px', borderTop: '1px solid rgba(0,0,0,0.06)' }}>
-          <div style={{ background: 'rgba(0,73,194,0.06)', border: '1px solid rgba(0,73,194,0.15)', borderRadius: 8, padding: '8px 12px', textAlign: 'center' }}>
+          <div style={{ background: 'rgba(39,162,222,0.06)', border: '1px solid rgba(39,162,222,0.15)', borderRadius: 8, padding: '8px 12px', textAlign: 'center' }}>
             <div style={{ fontSize: '0.68rem', color: 'var(--primary)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
               {user.role}
               {user.subRole ? ` · ${user.subRole}` : ''}

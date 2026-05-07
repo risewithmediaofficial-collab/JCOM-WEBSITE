@@ -466,7 +466,7 @@ const CRMDashboard = () => {
                     <tr
                       key={location._id || location.name}
                       onClick={() => setSelectedLocation(location._id || location.name)}
-                      style={{ cursor: 'pointer', background: String(selectedLocation) === String(location._id || location.name) ? 'rgba(0,73,194,0.06)' : 'transparent' }}
+                      style={{ cursor: 'pointer', background: String(selectedLocation) === String(location._id || location.name) ? 'rgba(39,162,222,0.06)' : 'transparent' }}
                     >
                       <td>
                         <div style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{location.name}</div>

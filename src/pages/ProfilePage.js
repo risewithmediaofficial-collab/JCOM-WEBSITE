@@ -168,8 +168,8 @@ const ProfilePage = () => {
               marginBottom: 16,
               padding: '12px 14px',
               borderRadius: 10,
-              background: 'rgba(0,73,194,0.08)',
-              border: '1px solid rgba(0,73,194,0.18)',
+              background: 'rgba(39,162,222,0.08)',
+              border: '1px solid rgba(39,162,222,0.18)',
               color: 'var(--primary)'
             }}
           >

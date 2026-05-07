@@ -19,7 +19,7 @@ const ProfileAvatar = ({ member }) => {
     <div style={{
       width: 90, height: 90, borderRadius: 16, flexShrink: 0, overflow: 'hidden',
       border: '2px solid var(--border-accent)',
-      boxShadow: '0 4px 16px rgba(0,73,194,0.15)',
+      boxShadow: '0 4px 16px rgba(39,162,222,0.15)',
       background: hasPhoto ? '#f1f4f9' : 'var(--grad-gold)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       position: 'relative'
@@ -327,7 +327,7 @@ const SuperAdminDashboard = () => {
 
                       {/* Service description */}
                       {member.businessService && (
-                        <div style={{ padding: '10px 14px', background: 'rgba(0,73,194,0.04)', borderRadius: 8, border: '1px solid rgba(0,73,194,0.15)', marginBottom: 14 }}>
+                        <div style={{ padding: '10px 14px', background: 'rgba(39,162,222,0.04)', borderRadius: 8, border: '1px solid rgba(39,162,222,0.15)', marginBottom: 14 }}>
                           <div style={{ fontSize: '0.68rem', color: 'var(--primary)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 700 }}>Service Description</div>
                           <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{member.businessService}</div>
                         </div>
@@ -337,7 +337,7 @@ const SuperAdminDashboard = () => {
                       {member.keywords?.length > 0 && (
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 16 }}>
                           {member.keywords.map((kw, ki) => (
-                            <span key={ki} style={{ background: 'rgba(0,73,194,0.08)', border: '1px solid rgba(0,73,194,0.2)', borderRadius: 20, padding: '3px 10px', fontSize: '0.75rem', color: 'var(--primary)' }}>#{kw}</span>
+                            <span key={ki} style={{ background: 'rgba(39,162,222,0.08)', border: '1px solid rgba(39,162,222,0.2)', borderRadius: 20, padding: '3px 10px', fontSize: '0.75rem', color: 'var(--primary)' }}>#{kw}</span>
                           ))}
                         </div>
                       )}
@@ -561,7 +561,7 @@ const SuperAdminDashboard = () => {
             </p>
 
             {/* Membership ID Box */}
-            <div style={{ background: 'rgba(0,73,194,0.06)', border: '2px solid var(--border-accent)', borderRadius: 12, padding: '16px 20px', marginBottom: 12 }}>
+            <div style={{ background: 'rgba(39,162,222,0.06)', border: '2px solid var(--border-accent)', borderRadius: 12, padding: '16px 20px', marginBottom: 12 }}>
               <div style={{ fontSize: '0.7rem', color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.8px', fontWeight: 700, marginBottom: 8 }}>Membership ID</div>
               <div style={{ fontFamily: "'Outfit',sans-serif", fontSize: '1.6rem', fontWeight: 800, color: 'var(--primary)', letterSpacing: 2, marginBottom: 10 }}>
                 {approveResult.membershipId}
@@ -652,7 +652,7 @@ const SuperAdminDashboard = () => {
         <div className="modal-overlay" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
           <div className="glass-card-gold animate-fadeInUp modal-sheet" style={{ maxWidth: 480, width: '100%', padding: 32 }}>
             <h4 style={{ color: 'var(--text-primary)', marginBottom: 20 }}>👑 Assign Chairman</h4>
-            <div style={{ padding: 12, background: 'rgba(0,73,194,0.06)', borderRadius: 8, border: '1px solid var(--border-accent)', fontSize: '0.82rem', color: 'var(--primary)', marginBottom: 16 }}>
+            <div style={{ padding: 12, background: 'rgba(39,162,222,0.06)', borderRadius: 8, border: '1px solid var(--border-accent)', fontSize: '0.82rem', color: 'var(--primary)', marginBottom: 16 }}>
               ⚠️ Previous chairman will be archived automatically — their data is preserved.
             </div>
             <form onSubmit={assignChairman} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>

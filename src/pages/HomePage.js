@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useLayoutEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { SearchOutlined, ArrowRightOutlined } from '@ant-design/icons';
@@ -32,6 +32,68 @@ const BUSINESS_CATEGORIES = [
 ];
 
 const chartPalette = ['#0f4bcf', '#16a34a', '#7c3aed', '#f59e0b', '#06b6d4'];
+
+const AutoFitHeading = ({
+  text,
+  maxFontSize,
+  minFontSize,
+  reservedWidth,
+  style = {}
+}) => {
+  const headingRef = useRef(null);
+  const [fontSize, setFontSize] = useState(maxFontSize);
+
+  useLayoutEffect(() => {
+    const element = headingRef.current;
+    if (!element) return undefined;
+
+    const fitText = () => {
+      const parentWidth = element.parentElement?.clientWidth || element.clientWidth || 0;
+      const availableWidth = Math.max(parentWidth - reservedWidth, minFontSize * 3);
+
+      let nextSize = maxFontSize;
+      element.style.fontSize = `${nextSize}px`;
+
+      while (nextSize > minFontSize && element.scrollWidth > availableWidth) {
+        nextSize -= 1;
+        element.style.fontSize = `${nextSize}px`;
+      }
+
+      setFontSize(nextSize);
+    };
+
+    fitText();
+
+    const resizeObserver = new ResizeObserver(() => {
+      fitText();
+    });
+
+    if (element.parentElement) {
+      resizeObserver.observe(element.parentElement);
+    }
+
+    window.addEventListener('resize', fitText);
+
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener('resize', fitText);
+    };
+  }, [maxFontSize, minFontSize, reservedWidth, text]);
+
+  return (
+    <h3
+      ref={headingRef}
+      style={{
+        ...style,
+        fontSize,
+        whiteSpace: 'nowrap',
+        overflow: 'visible'
+      }}
+    >
+      {text}
+    </h3>
+  );
+};
 
 const AnalyticsBarChart = ({ data, valueKey, color }) => {
   const chartData = data.slice(0, 5);
@@ -416,6 +478,7 @@ const HomePage = () => {
       revenue: Number(loc.revenue) || 0
     }))
     .sort((a, b) => b.revenue - a.revenue);
+  const topLocationRows = (overallStats.locations || []).slice(0, 3);
 
   return (
     <div ref={pageRef} style={{ minHeight: '100vh', background: '#ffffff' }}>
@@ -582,14 +645,19 @@ const HomePage = () => {
                       {isLeader ? 'Lead Chapter' : 'High Momentum Chapter'}
                     </div>
 
-                    <h3 style={{
-                      color: 'var(--primary)',
-                      marginBottom: 10,
-                      fontSize: isLeader ? 'clamp(2.4rem, 4vw, 3.6rem)' : 'clamp(2rem, 3vw, 2.5rem)',
-                      lineHeight: 0.96
-                    }}>
-                      {loc.name}
-                    </h3>
+                    <AutoFitHeading
+                      text={loc.name}
+                      maxFontSize={isLeader ? 58 : 40}
+                      minFontSize={isLeader ? 28 : 24}
+                      reservedWidth={isLeader ? 92 : 72}
+                      style={{
+                        color: 'var(--primary)',
+                        marginBottom: 10,
+                        lineHeight: 1,
+                        letterSpacing: '-0.04em',
+                        fontWeight: 700
+                      }}
+                    />
 
                     <div style={{ fontSize: '0.92rem', color: 'var(--text-secondary)', marginBottom: 22 }}>
                       Chairman: <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{loc.chairman}</span>
@@ -737,11 +805,16 @@ const HomePage = () => {
           <div className="glass-card">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
               <h3 style={{ color: 'var(--text-primary)', margin: 0 }}>📍 Location-wise Performance</h3>
-              {overallError && (
-                <span style={{ fontSize: '0.8rem', color: 'var(--error)', background: 'rgba(220,38,38,0.08)', padding: '4px 10px', borderRadius: 20, border: '1px solid rgba(220,38,38,0.2)' }}>
-                  ⚠️ Could not reach server
-                </span>
-              )}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                <Link to="/locations-performance" className="btn btn-ghost btn-sm">
+                  See All
+                </Link>
+                {overallError && (
+                  <span style={{ fontSize: '0.8rem', color: 'var(--error)', background: 'rgba(220,38,38,0.08)', padding: '4px 10px', borderRadius: 20, border: '1px solid rgba(220,38,38,0.2)' }}>
+                    ⚠️ Could not reach server
+                  </span>
+                )}
+              </div>
             </div>
             <div style={{ overflowX: 'auto' }}>
               <table className="jcom-table">
@@ -760,7 +833,7 @@ const HomePage = () => {
                         {[1,2,3,4].map(j => <td key={j}><div className="skeleton" style={{ height: 18, borderRadius: 4 }} /></td>)}
                       </tr>
                     ))
-                  ) : overallStats.locations.length > 0 ? overallStats.locations.map((loc, i) => (
+                  ) : topLocationRows.length > 0 ? topLocationRows.map((loc, i) => (
                     <tr key={i}>
                       <td><span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{loc.name}</span></td>
                       <td><span className="badge badge-teal">{loc.members}</span></td>

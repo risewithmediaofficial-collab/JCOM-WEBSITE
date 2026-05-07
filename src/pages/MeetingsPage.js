@@ -207,7 +207,7 @@ const MeetingsPage = () => {
                       {/* Meeting ID row */}
                       {meeting.meetingCode && (
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                          <span style={{ fontFamily: 'monospace', fontSize: '0.82rem', background: 'rgba(0,73,194,0.08)', border: '1px solid var(--border-accent)', borderRadius: 6, padding: '3px 12px', color: 'var(--primary)', fontWeight: 700, letterSpacing: 1 }}>
+                          <span style={{ fontFamily: 'monospace', fontSize: '0.82rem', background: 'rgba(39,162,222,0.08)', border: '1px solid var(--border-accent)', borderRadius: 6, padding: '3px 12px', color: 'var(--primary)', fontWeight: 700, letterSpacing: 1 }}>
                             🆔 {meeting.meetingCode}
                           </span>
                           <button onClick={() => copy(meeting.meetingCode)} title="Copy Meeting ID" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 0 }}>
@@ -237,7 +237,7 @@ const MeetingsPage = () => {
 
                       {/* Member: show mini QR + join hint when not yet attended */}
                       {!isChairman && meeting.status === 'Scheduled' && !hasAttended && meeting.qrCode && (
-                        <div style={{ marginTop: 12, padding: '10px 14px', background: 'rgba(0,73,194,0.04)', border: '1px solid var(--border-accent)', borderRadius: 10, display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <div style={{ marginTop: 12, padding: '10px 14px', background: 'rgba(39,162,222,0.04)', border: '1px solid var(--border-accent)', borderRadius: 10, display: 'flex', alignItems: 'center', gap: 12 }}>
                           <img src={meeting.qrCode} alt="QR" style={{ width: 64, height: 64, borderRadius: 6 }} />
                           <div>
                             <div style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: '0.85rem', marginBottom: 2 }}>Scan QR or enter Meeting ID to mark attendance</div>
@@ -254,7 +254,7 @@ const MeetingsPage = () => {
                           </div>
                           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                             {meeting.attendees.map(a => (
-                              <span key={a._id || a} className="badge" style={{ background: 'rgba(0,73,194,0.06)', color: 'var(--primary)', border: '1px solid var(--border-accent)', fontSize: '0.75rem' }}>
+                              <span key={a._id || a} className="badge" style={{ background: 'rgba(39,162,222,0.06)', color: 'var(--primary)', border: '1px solid var(--border-accent)', fontSize: '0.75rem' }}>
                                 {a.firstName ? `${a.firstName} ${a.lastName}` : 'Unknown Member'}
                               </span>
                             ))}
@@ -349,7 +349,7 @@ const MeetingsPage = () => {
             </p>
 
             {/* Meeting ID */}
-            <div style={{ background: 'rgba(0,73,194,0.06)', border: '2px solid var(--border-accent)', borderRadius: 12, padding: '16px 20px', marginBottom: 16 }}>
+            <div style={{ background: 'rgba(39,162,222,0.06)', border: '2px solid var(--border-accent)', borderRadius: 12, padding: '16px 20px', marginBottom: 16 }}>
               <div style={{ fontSize: '0.7rem', color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.8px', fontWeight: 700, marginBottom: 8 }}>Meeting ID</div>
               <div style={{ fontFamily: 'monospace', fontSize: '1.4rem', fontWeight: 800, color: 'var(--primary)', letterSpacing: 2, marginBottom: 10 }}>
                 {createdMeeting.meetingCode}
@@ -452,7 +452,7 @@ const MeetingsPage = () => {
                 <label className="form-label">Agenda / Description</label>
                 <textarea className="form-textarea" rows={3} placeholder="Meeting agenda..." value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} />
               </div>
-              <div style={{ padding: '10px 14px', background: 'rgba(0,73,194,0.06)', border: '1px solid var(--border-accent)', borderRadius: 8, fontSize: '0.8rem', color: 'var(--primary)' }}>
+              <div style={{ padding: '10px 14px', background: 'rgba(39,162,222,0.06)', border: '1px solid var(--border-accent)', borderRadius: 8, fontSize: '0.8rem', color: 'var(--primary)' }}>
                 💡 A QR Code will be auto-generated from the Meeting ID you enter above. Share the ID or QR with members so they can mark attendance.
               </div>
               <div style={{ display: 'flex', gap: 12 }}>

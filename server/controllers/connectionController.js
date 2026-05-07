@@ -5,6 +5,7 @@ const Deal = require('../models/Deal');
 const Location = require('../models/Location');
 const Rating = require('../models/Rating');
 const { ensureCRMEntry } = require('./crmController');
+const { emitUserNotification } = require('../utils/notificationService');
 
 const recalculateUserRatingStats = async (userId) => {
   const [summary] = await Rating.aggregate([
@@ -85,6 +86,16 @@ exports.sendRequest = async (req, res) => {
       await User.findByIdAndUpdate(fromUser, { $inc: { givenRequests: 1 } });
       await User.findByIdAndUpdate(toUserId, { $inc: { receivedRequests: 1 } });
 
+      await emitUserNotification(req.app, toUserId, {
+        type: 'Connection Request',
+        title: 'Connection request received',
+        message: `${req.user.firstName} ${req.user.lastName} sent you a connection request.`,
+        relatedUser: fromUser,
+        relatedConnection: existing._id,
+        url: '/connections',
+        tag: `connection-request-${existing._id}`
+      });
+
       return res.status(201).json({ message: 'Connection request sent again', connection: existing });
     }
 
@@ -109,6 +120,16 @@ exports.sendRequest = async (req, res) => {
     // Increment sender's given count
     await User.findByIdAndUpdate(fromUser, { $inc: { givenRequests: 1 } });
     await User.findByIdAndUpdate(toUserId, { $inc: { receivedRequests: 1 } });
+
+    await emitUserNotification(req.app, toUserId, {
+      type: 'Connection Request',
+      title: 'Connection request received',
+      message: `${req.user.firstName} ${req.user.lastName} sent you a connection request.`,
+      relatedUser: fromUser,
+      relatedConnection: connection._id,
+      url: '/connections',
+      tag: `connection-request-${connection._id}`
+    });
 
     res.status(201).json({ message: 'Connection request sent', connection });
   } catch (err) {
@@ -146,6 +167,16 @@ exports.acceptRequest = async (req, res) => {
     // Create CRM entries for both
     await ensureCRMEntry(conn.fromUser, conn.toUser, conn._id);
     await ensureCRMEntry(conn.toUser, conn.fromUser, conn._id);
+
+    await emitUserNotification(req.app, conn.fromUser, {
+      type: 'Connection Accepted',
+      title: 'Connection request accepted',
+      message: `${req.user.firstName} ${req.user.lastName} accepted your connection request.`,
+      relatedUser: conn.toUser,
+      relatedConnection: conn._id,
+      url: '/connections',
+      tag: `connection-accepted-${conn._id}`
+    });
 
     res.json({ message: 'Connection accepted', connection: conn });
   } catch (err) {

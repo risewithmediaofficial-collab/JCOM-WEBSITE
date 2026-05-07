@@ -63,6 +63,15 @@ export const meetingAPI = {
   markAttendance: (meetingId, userId) => api.post(`/meetings/${meetingId}/attendance`, { userId })
 };
 
+export const notificationAPI = {
+  getNotifications: (params) => api.get('/notifications', { params }),
+  getUnreadCount: () => api.get('/notifications/unread/count'),
+  markAsRead: (notificationId) => api.patch(`/notifications/${notificationId}/read`),
+  markAllAsRead: () => api.patch('/notifications/read-all'),
+  deleteNotification: (notificationId) => api.delete(`/notifications/${notificationId}`),
+  clearAll: () => api.delete('/notifications')
+};
+
 // Stats API calls
 export const statsAPI = {
   getOverviewStats: () => api.get('/stats/overview'),

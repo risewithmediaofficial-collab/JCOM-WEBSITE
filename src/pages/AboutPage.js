@@ -81,7 +81,7 @@ const AboutPage = () => {
           <div className="grid-4">
             {pillars.map((pillar) => (
               <div key={pillar.title} className="glass-card" style={{ height: '100%', boxShadow: 'none', background: '#ffffff' }}>
-                <div style={{ width: 52, height: 52, borderRadius: 14, background: 'rgba(0,73,194,0.08)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.35rem', marginBottom: 14 }}>
+                <div style={{ width: 52, height: 52, borderRadius: 14, background: 'rgba(39,162,222,0.08)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.35rem', marginBottom: 14 }}>
                   {pillar.icon}
                 </div>
                 <h4 style={{ marginBottom: 8 }}>{pillar.title}</h4>

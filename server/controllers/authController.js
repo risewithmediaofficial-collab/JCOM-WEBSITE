@@ -4,6 +4,7 @@ const Table = require('../models/Table');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
+const { emitUserNotification } = require('../utils/notificationService');
 
 const generateToken = (userId, role) => {
   return jwt.sign({ userId, role }, process.env.JWT_SECRET, { expiresIn: '7d' });
@@ -325,6 +326,14 @@ exports.approveUser = async (req, res) => {
       await location.save();
     }
 
+    await emitUserNotification(req.app, user._id, {
+      type: 'Registration Approved',
+      title: 'Registration approved',
+      message: 'Your JCOM membership has been approved. You can now log in.',
+      url: '/login',
+      tag: `registration-approved-${user._id}`
+    });
+
     res.json({
       message: 'Member approved successfully',
       membershipId,
@@ -368,6 +377,14 @@ exports.rejectUser = async (req, res) => {
     user.rejectionReason = reason || 'Application rejected';
     user.approvedBy = approver._id;
     await user.save();
+
+    await emitUserNotification(req.app, user._id, {
+      type: 'Registration Rejected',
+      title: 'Registration update',
+      message: reason || 'Your membership request was rejected.',
+      url: '/login',
+      tag: `registration-rejected-${user._id}`
+    });
 
     res.json({ message: 'User rejected', userId });
   } catch (err) {

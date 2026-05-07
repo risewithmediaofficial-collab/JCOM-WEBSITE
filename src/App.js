@@ -4,6 +4,7 @@ import './index.css';
 import ProtectedRoute from './components/ProtectedRoute';
 import ScrollToTop from './components/ScrollToTop';
 import { AuthContext } from './context/AuthContext';
+import useWebNotifications from './hooks/useWebNotifications';
 
 // Pages
 import HomePage from './pages/HomePage';
@@ -23,6 +24,7 @@ import SearchBusinessDetailPage from './pages/SearchBusinessDetailPage';
 import BusinessProfile from './pages/BusinessProfile';
 import ProfilePage from './pages/ProfilePage';
 import DealsPage from './pages/DealsPage';
+import LocationsPerformancePage from './pages/LocationsPerformancePage';
 
 function App() {
   const [authState, setAuthState] = useState({
@@ -30,6 +32,11 @@ function App() {
     user: (() => { try { return JSON.parse(localStorage.getItem('user')); } catch { return null; } })(),
     isAuthenticated: !!localStorage.getItem('token')
   });
+  const {
+    unreadCount,
+    permission,
+    requestPermission
+  } = useWebNotifications(authState);
 
   const login = (token, user) => {
     localStorage.setItem('token', token);
@@ -43,15 +50,17 @@ function App() {
     setAuthState({ token: null, user: null, isAuthenticated: false });
   };
 
-  const roleRedirect = (user) => {
-    if (!user) return '/login';
-    if (user.role === 'Super Admin') return '/super-admin';
-    if (user.role === 'Chairman') return '/chairman';
-    return '/dashboard';
-  };
-
   return (
-    <AuthContext.Provider value={{ ...authState, login, logout }}>
+    <AuthContext.Provider
+      value={{
+        ...authState,
+        unreadNotificationCount: unreadCount,
+        notificationPermission: permission,
+        enableNotifications: requestPermission,
+        login,
+        logout
+      }}
+    >
       <Router>
         <ScrollToTop />
         <Routes>
@@ -64,6 +73,7 @@ function App() {
           <Route path="/search" element={<SearchResultsPage />} />
           <Route path="/search/:userId" element={<SearchBusinessDetailPage />} />
           <Route path="/leaderboard" element={<LeaderboardPage />} />
+          <Route path="/locations-performance" element={<LocationsPerformancePage />} />
 
           {/* Auto-redirect from /dashboard based on role */}
           <Route path="/dashboard" element={

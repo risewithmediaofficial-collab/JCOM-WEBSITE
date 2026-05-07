@@ -38,6 +38,7 @@ const SidebarLayout = ({ children, noPadding = false }) => {
   }
 
   const sidebarW = collapsed ? 64 : 220;
+  const mobileDrawerWidth = Math.min(window.innerWidth - 16, 280);
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg-base)' }}>
@@ -67,9 +68,16 @@ const SidebarLayout = ({ children, noPadding = false }) => {
           position: 'fixed', left: 0, top: 0, bottom: 0, zIndex: 900,
           transform: mobileOpen ? 'translateX(0)' : 'translateX(-100%)',
           transition: 'transform 0.28s cubic-bezier(0.4,0,0.2,1)',
-          width: 240,
+          width: mobileDrawerWidth,
+          maxWidth: 'calc(100vw - 16px)',
         }}>
-          <Sidebar collapsed={false} onCollapse={null} onClose={() => setMobileOpen(false)} isMobileDrawer />
+          <Sidebar
+            collapsed={false}
+            onCollapse={null}
+            onClose={() => setMobileOpen(false)}
+            isMobileDrawer
+            drawerWidth={mobileDrawerWidth}
+          />
         </div>
       ) : (
         /* Desktop: pinned collapsible sidebar */
