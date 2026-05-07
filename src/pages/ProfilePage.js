@@ -135,7 +135,7 @@ const ProfilePage = () => {
       <SidebarLayout>
         <div style={{ padding: '80px 24px 40px', maxWidth: 900, margin: '0 auto' }}>
           <div className="glass-card" style={{ padding: 28 }}>
-            <Loader label="Loading profile" />
+            <Loader minHeight="clamp(180px, 26vw, 240px)" />
           </div>
         </div>
       </SidebarLayout>

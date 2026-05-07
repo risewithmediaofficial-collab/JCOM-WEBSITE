@@ -116,7 +116,7 @@ const ChairmanDashboard = () => {
 
         {/* APPROVALS TAB */}
         {tab === 'approvals' && (
-          loading ? <div className="glass-card" style={{ padding: 40 }}><Loader label="Loading approvals" /></div> :
+          loading ? <div className="glass-card" style={{ padding: 40 }}><Loader minHeight="clamp(180px, 28vw, 260px)" /></div> :
           pending.length === 0 ? (
             <div className="glass-card" style={{ textAlign: 'center', padding: 60 }}>
               <div style={{ fontSize: '3rem', marginBottom: 12 }}>🎉</div>
@@ -223,7 +223,7 @@ const ChairmanDashboard = () => {
                 </thead>
                 <tbody>
                   {loading ? (
-                    <tr><td colSpan={8} style={{ textAlign: 'center', padding: 32 }}><Loader label="Loading members" /></td></tr>
+                    <tr><td colSpan={8} style={{ textAlign: 'center', padding: 24 }}><Loader minHeight="120px" /></td></tr>
                   ) : members.map((m, i) => (
                     <tr key={i}>
                       <td>

@@ -931,7 +931,7 @@ a:hover { color: var(--primary-dark); }
   justify-content: center;
   gap: 12px;
   width: 100%;
-  min-height: 96px;
+  min-height: var(--jcom-loader-min-height, clamp(120px, 22vw, 180px));
 }
 
 .jcom-loader-inline {
@@ -939,9 +939,12 @@ a:hover { color: var(--primary-dark); }
   align-items: center;
   justify-content: center;
   gap: 10px;
+  min-width: 0;
 }
 
 .jcom-loader-spinner {
+  width: var(--jcom-loader-size, clamp(2.6rem, 7vw, 3.25rem));
+  height: var(--jcom-loader-size, clamp(2.6rem, 7vw, 3.25rem));
   transform-origin: center;
   animation: jcom-loader-rotate 2s linear infinite;
   flex-shrink: 0;
@@ -950,6 +953,7 @@ a:hover { color: var(--primary-dark); }
 .jcom-loader-circle {
   fill: none;
   stroke-width: 2;
+  stroke: var(--jcom-loader-color, #27a2de);
   stroke-dasharray: 1, 200;
   stroke-dashoffset: 0;
   stroke-linecap: round;
@@ -961,6 +965,17 @@ a:hover { color: var(--primary-dark); }
   font-weight: 600;
   color: var(--text-muted);
   text-align: center;
+  line-height: 1.3;
+}
+
+@media (max-width: 640px) {
+  .jcom-loader-inline {
+    gap: 8px;
+  }
+
+  .jcom-loader-label {
+    font-size: 0.82rem;
+  }
 }
 
 @keyframes jcom-loader-rotate {
