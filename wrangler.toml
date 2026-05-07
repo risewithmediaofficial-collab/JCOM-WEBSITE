@@ -1,4 +1,4 @@
-name = "jcom-website"
+name = 'jcomweb'
 compatibility_date = "2026-05-07"
 
 [assets]
