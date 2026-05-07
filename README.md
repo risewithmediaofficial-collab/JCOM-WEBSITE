@@ -28,10 +28,13 @@ jcom-website/
 
 Run these from the repository root:
 
+- `npm start` — start the frontend app from the root
 - `npm run dev` — start frontend and backend together
 - `npm run frontend` — start the React app
+- `npm run server` — start the API server
 - `npm run backend` — start the API server
 - `npm run build` — build the frontend app
+- `npm test` — run frontend tests
 - `npm run frontend:install` — install frontend dependencies
 - `npm run backend:install` — install backend dependencies
 
