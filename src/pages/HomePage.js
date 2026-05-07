@@ -6,6 +6,7 @@ import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Navbar from '../components/Navbar';
 import StarRating from '../components/StarRating';
+import Loader from '../components/Loader';
 
 import { API_BASE_URL } from '../config/api';
 
@@ -227,6 +228,7 @@ const HomePage = () => {
   const [overallError, setOverallError] = useState(false);
   const [platformLoading, setPlatformLoading] = useState(true);
   const [overallLoading, setOverallLoading] = useState(true);
+  const [searchSubmitting, setSearchSubmitting] = useState(false);
   const [counters, setCounters] = useState({ members: 0, connections: 0, revenue: 0 });
   const topRatedCount = (overallStats.topRatedBusinesses || []).length;
 
@@ -423,6 +425,7 @@ const HomePage = () => {
     const trimmedTable = searchTable.trim();
     const trimmedCategory = searchCategory.trim();
     if (trimmedQuery.length >= 2 || searchLocation || trimmedTable || trimmedCategory) {
+      setSearchSubmitting(true);
       const params = new URLSearchParams();
       if (trimmedQuery) params.set('q', trimmedQuery);
       if (searchLocation) params.set('location', searchLocation);
@@ -520,8 +523,8 @@ const HomePage = () => {
                 value={searchQ} onChange={e => setSearchQ(e.target.value)}
                 style={{ flex: 1, background: 'none', border: 'none', outline: 'none', color: 'var(--text-primary)', fontSize: '0.95rem', padding: '14px 0' }}
               />
-              <button type="submit" className="btn btn-primary" style={{ borderRadius: 50, margin: 6, padding: '10px 24px' }}>
-                Search
+              <button type="submit" className="btn btn-primary" style={{ borderRadius: 50, margin: 6, padding: '10px 24px', justifyContent: 'center', minWidth: 118 }}>
+                {searchSubmitting ? <Loader size={22} color="#ffffff" inline /> : 'Search'}
               </button>
             </form>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, width: '100%' }}>
@@ -828,11 +831,11 @@ const HomePage = () => {
                 </thead>
                 <tbody>
                   {overallLoading ? (
-                    [1,2,3].map(i => (
-                      <tr key={i}>
-                        {[1,2,3,4].map(j => <td key={j}><div className="skeleton" style={{ height: 18, borderRadius: 4 }} /></td>)}
-                      </tr>
-                    ))
+                    <tr>
+                      <td colSpan={4} style={{ textAlign: 'center', padding: 28 }}>
+                        <Loader minHeight="120px" />
+                      </td>
+                    </tr>
                   ) : topLocationRows.length > 0 ? topLocationRows.map((loc, i) => (
                     <tr key={i}>
                       <td><span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{loc.name}</span></td>

@@ -6,6 +6,7 @@ import ChatModal from '../components/ChatModal';
 import ProfileAvatar from '../components/ProfileAvatar';
 import StarRating from '../components/StarRating';
 import useBodyScrollLock from '../hooks/useBodyScrollLock';
+import Loader from '../components/Loader';
 import {
   SearchOutlined,
   CloseCircleOutlined,
@@ -586,20 +587,23 @@ const ConnectionsPage = () => {
           <>
             <div style={{ position: 'relative', maxWidth: 420, marginBottom: 20 }}>
               <SearchOutlined style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+              {loading && (
+                <div style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', display: 'flex', alignItems: 'center', pointerEvents: 'none' }}>
+                  <Loader size={18} inline minHeight="auto" />
+                </div>
+              )}
               <input
                 className="form-input"
                 placeholder="Search members in your table..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                style={{ paddingLeft: 40 }}
+                style={{ paddingLeft: 40, paddingRight: loading ? 46 : undefined }}
               />
             </div>
 
             {loading ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {[1, 2, 3, 4, 5, 6].map((item) => (
-                  <div key={item} className="skeleton" style={{ height: 102, borderRadius: 18 }} />
-                ))}
+              <div className="glass-card" style={{ padding: '20px 18px' }}>
+                <Loader minHeight="clamp(180px, 32vw, 240px)" />
               </div>
             ) : filteredMembers.length === 0 ? (
               <div className="glass-card" style={{ textAlign: 'center', padding: 56 }}>
@@ -672,7 +676,9 @@ const ConnectionsPage = () => {
         {(tab === 'given' || tab === 'received') && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             {loading ? (
-              [1, 2, 3].map((item) => <div key={item} className="skeleton" style={{ height: 138, borderRadius: 18 }} />)
+              <div className="glass-card" style={{ padding: '20px 18px' }}>
+                <Loader minHeight="clamp(180px, 32vw, 240px)" />
+              </div>
             ) : myConnections.filter((connection) => connection.status !== 'Disconnected').length === 0 ? (
               <div className="glass-card" style={{ textAlign: 'center', padding: 56 }}>
                 <h4 style={{ color: 'var(--text-primary)' }}>No {tab === 'given' ? 'sent' : 'received'} requests yet</h4>

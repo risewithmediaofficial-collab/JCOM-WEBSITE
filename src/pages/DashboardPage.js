@@ -4,6 +4,7 @@ import axios from 'axios';
 import SidebarLayout from '../components/SidebarLayout';
 import StatCard from '../components/StatCard';
 import { Link } from 'react-router-dom';
+import Loader from '../components/Loader';
 
 import { API_BASE_URL } from '../config/api';
 
@@ -47,6 +48,7 @@ const DashboardPage = () => {
   const [connStats, setConnStats] = useState(EMPTY_CONNECTION_STATS);
   const [leaderboard, setLeaderboard] = useState([]);
   const [period, setPeriod] = useState('monthly');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchStats();
@@ -55,6 +57,7 @@ const DashboardPage = () => {
   const fetchStats = async () => {
     const token = localStorage.getItem('token');
     const headers = { Authorization: `Bearer ${token}` };
+    setLoading(true);
     try {
       const [memberStatsRes, dealStatsRes, connStatsRes, lbRes] = await Promise.allSettled([
         axios.get(`${API}/stats/member?period=${period}`, { headers }),
@@ -77,6 +80,8 @@ const DashboardPage = () => {
       setConnStats(EMPTY_CONNECTION_STATS);
       setDealStats(EMPTY_DEAL_STATS);
       setLeaderboard([]);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -111,6 +116,13 @@ const DashboardPage = () => {
       <div style={{ marginBottom: 12 }}>
         <h4 style={{ color: 'var(--text-muted)', textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '1px', marginBottom: 16 }}>My Table</h4>
       </div>
+
+      {loading ? (
+        <div className="glass-card" style={{ padding: 36, marginBottom: 24 }}>
+          <Loader minHeight="clamp(220px, 32vw, 300px)" />
+        </div>
+      ) : (
+        <>
 
       <div className="glass-card mb-lg" style={{ marginBottom: 24 }}>
         <h4 style={{ color: 'var(--text-primary)', marginBottom: 16 }}>
@@ -248,6 +260,8 @@ const DashboardPage = () => {
           )}
         </div>
       </div>
+        </>
+      )}
     </SidebarLayout>
   );
 };

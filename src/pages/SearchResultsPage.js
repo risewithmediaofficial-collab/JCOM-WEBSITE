@@ -6,6 +6,7 @@ import Breadcrumbs from '../components/Breadcrumbs';
 import { SearchOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import ProfileAvatar from '../components/ProfileAvatar';
 import StarRating from '../components/StarRating';
+import Loader from '../components/Loader';
 
 import { API_BASE_URL } from '../config/api';
 
@@ -105,8 +106,8 @@ const SearchResultsPage = () => {
               onChange={(e) => setInputVal(e.target.value)}
               style={{ flex: 1, background: 'none', border: 'none', outline: 'none', color: 'var(--text-primary)', fontSize: '1rem', padding: '16px 0' }}
             />
-            <button type="submit" className="btn btn-primary" style={{ borderRadius: 50, margin: 6, padding: '10px 28px' }}>
-              Search
+            <button type="submit" className="btn btn-primary" style={{ borderRadius: 50, margin: 6, padding: '10px 28px', justifyContent: 'center', minWidth: 120 }}>
+              {loading ? <Loader size={22} color="#ffffff" inline /> : 'Search'}
             </button>
           </form>
           <div className="responsive-actions" style={{ justifyContent: 'center', gap: 12, marginTop: 14 }}>
@@ -148,10 +149,8 @@ const SearchResultsPage = () => {
         )}
 
         {loading && (
-          <div className="grid-2" style={{ gap: 16 }}>
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="skeleton" style={{ height: 140, borderRadius: 12 }} />
-            ))}
+          <div className="glass-card" style={{ padding: '32px 20px' }}>
+            <Loader />
           </div>
         )}
 

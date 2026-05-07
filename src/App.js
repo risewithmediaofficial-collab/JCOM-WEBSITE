@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import './index.css';
 import ProtectedRoute from './components/ProtectedRoute';
 import ScrollToTop from './components/ScrollToTop';
+import RouteLoader from './components/RouteLoader';
 import { AuthContext } from './context/AuthContext';
 import useWebNotifications from './hooks/useWebNotifications';
 
@@ -63,6 +64,7 @@ function App() {
     >
       <Router>
         <ScrollToTop />
+        <RouteLoader />
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<HomePage />} />
