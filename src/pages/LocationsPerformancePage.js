@@ -24,7 +24,7 @@ const LocationsPerformancePage = () => {
       try {
         setLoading(true);
         setError('');
-        const { data } = await axios.get(`${API_BASE_URL}/stats/overview`);
+        const { data } = await axios.get(`${API_BASE_URL}/stats/home?period=overall`);
         if (active) {
           setStats(data || emptyStats);
         }
