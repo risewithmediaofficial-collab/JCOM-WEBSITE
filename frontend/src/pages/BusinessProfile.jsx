@@ -190,7 +190,7 @@ const BusinessProfile = () => {
                         <CopyOutlined /> Share Profile
                       </button>
                     )}
-                    {member.businessWebsite && (
+                  {member.businessWebsite && (
                       <a href={member.businessWebsite} target="_blank" rel="noopener noreferrer" className="btn btn-outline">
                         <GlobalOutlined /> Visit Website
                       </a>
@@ -257,6 +257,7 @@ const BusinessProfile = () => {
                 <div className="connection-info-grid" style={{ marginBottom: 18 }}>
                   {[
                     ['Business Name', member.businessName || 'Not available'],
+                    ['Profile Name', member.profileName || member.websiteName || 'Not available'],
                     ['Business Category', member.businessCategory || 'Not available'],
                     ['Service', member.businessService || 'Not available'],
                     ['Membership ID', member.membershipId || 'Not available'],

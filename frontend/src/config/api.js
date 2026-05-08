@@ -5,8 +5,12 @@ const rawApiOrigin = process.env.VITE_API_URL
   || process.env.REACT_APP_API_URL
   || API_URL;
 
-export const API_ORIGIN = rawApiOrigin.replace(/\/+$/, '');
-export const API_BASE_URL = `${API_ORIGIN}/api`;
+const normalizedApiUrl = rawApiOrigin.replace(/\/+$/, '');
+
+export const API_ORIGIN = normalizedApiUrl.replace(/\/api$/, '');
+export const API_BASE_URL = normalizedApiUrl.endsWith('/api')
+  ? normalizedApiUrl
+  : `${API_ORIGIN}/api`;
 
 export const buildAssetUrl = (assetPath) => {
   if (!assetPath) return null;
@@ -19,4 +23,4 @@ export const buildAssetUrl = (assetPath) => {
 axios.defaults.baseURL = API_BASE_URL;
 axios.defaults.withCredentials = true;
 
-export default API_URL;
+export default API_ORIGIN;

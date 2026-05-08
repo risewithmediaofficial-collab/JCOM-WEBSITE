@@ -24,12 +24,17 @@ const getPeriodStartDate = (period) => {
     return startDate;
   }
 
-  if (period === 'yearly') {
-    startDate.setDate(startDate.getDate() - 365);
+  if (period === 'monthly') {
+    startDate.setDate(1);
     return startDate;
   }
 
-  startDate.setDate(startDate.getDate() - 30);
+  if (period === 'yearly') {
+    startDate.setMonth(0, 1);
+    return startDate;
+  }
+
+  startDate.setDate(1);
   return startDate;
 };
 

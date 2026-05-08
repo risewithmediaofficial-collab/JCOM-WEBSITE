@@ -1,8 +1,10 @@
 const mongoose = require('mongoose');
 
 const followUpSchema = new mongoose.Schema({
-  date:  { type: Date, required: true },
-  notes: { type: String, default: '' }
+  date:             { type: Date, required: true },
+  notes:            { type: String, default: '' },
+  internalNotes:    { type: String, default: '' },
+  nextFollowUpDate: { type: Date, default: null }
 }, { _id: false });
 
 // Sub-document for manually added contacts (not in JCOM system)

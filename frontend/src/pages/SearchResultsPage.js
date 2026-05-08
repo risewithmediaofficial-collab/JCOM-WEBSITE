@@ -211,6 +211,11 @@ const SearchResultsPage = () => {
                               <span className="badge badge-gold">{member.businessCategory}</span>
                             </div>
                             <div style={{ fontWeight: 600, color: 'var(--text-secondary)', marginTop: 2, fontSize: '0.9rem' }}>{member.businessName}</div>
+                            {(member.profileName || member.websiteName) && (
+                              <div style={{ color: 'var(--primary)', marginTop: 4, fontSize: '0.8rem', fontWeight: 700 }}>
+                                /{member.profileName || member.websiteName}
+                              </div>
+                            )}
                             <div style={{ marginTop: 6 }}>
                               <StarRating value={member.averageRating || 0} count={member.ratingsCount || 0} size={14} />
                             </div>

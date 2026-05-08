@@ -27,6 +27,8 @@ exports.searchUsers = async (req, res) => {
     if (searchRegex) {
       query.$or = [
         { keywords: { $in: [searchRegex] } },
+        { profileName: searchRegex },
+        { websiteName: searchRegex },
         { businessCategory: searchRegex },
         { businessName: searchRegex },
         { businessService: searchRegex },
@@ -41,7 +43,7 @@ exports.searchUsers = async (req, res) => {
     if (category) query.businessCategory = new RegExp(category, 'i');
 
     const members = await User.find(query)
-      .select('firstName lastName membershipId businessName slug businessCategory businessService businessDescription businessWebsite profilePic keywords locationName tableName phone email totalRevenue totalConnections averageRating ratingsCount')
+      .select('firstName lastName membershipId businessName profileName websiteName slug businessCategory businessService businessDescription businessWebsite profilePic keywords locationName tableName phone email totalRevenue totalConnections averageRating ratingsCount')
       .limit(50)
       .sort('locationName firstName');
 
@@ -114,7 +116,7 @@ exports.getPublicMemberProfile = async (req, res) => {
       status: 'Approved',
       role: { $ne: 'Super Admin' }
     })
-      .select('firstName lastName membershipId role subRole businessName slug businessCategory businessService businessDescription businessWebsite profilePic keywords locationName tableName phone email totalRevenue totalConnections givenRequests receivedRequests meetingsAttended averageRating ratingsCount');
+      .select('firstName lastName membershipId role subRole businessName profileName websiteName slug businessCategory businessService businessDescription businessWebsite profilePic keywords locationName tableName phone email totalRevenue totalConnections givenRequests receivedRequests meetingsAttended averageRating ratingsCount');
 
     if (!user) return res.status(404).json({ message: 'Member not found' });
     res.json({ member: user });
@@ -131,7 +133,7 @@ exports.getPublicProfileBySlug = async (req, res) => {
       status: 'Approved',
       role: { $ne: 'Super Admin' }
     })
-      .select('firstName lastName membershipId role subRole businessName slug businessCategory businessService businessDescription businessWebsite profilePic keywords locationName tableName phone email totalRevenue totalConnections givenRequests receivedRequests meetingsAttended averageRating ratingsCount');
+      .select('firstName lastName membershipId role subRole businessName profileName websiteName slug businessCategory businessService businessDescription businessWebsite profilePic keywords locationName tableName phone email totalRevenue totalConnections givenRequests receivedRequests meetingsAttended averageRating ratingsCount');
 
     if (!user) {
       return res.status(404).json({ message: 'Profile not found' });
@@ -148,7 +150,7 @@ exports.updateUserProfile = async (req, res) => {
   try {
     const userId = req.user._id;
     const allowedUpdates = [
-      'firstName', 'lastName', 'phone', 'businessName',
+      'firstName', 'lastName', 'phone', 'businessName', 'profileName',
       'businessDescription', 'businessService', 'businessWebsite', 'keywords'
     ];
 

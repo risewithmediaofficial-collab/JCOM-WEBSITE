@@ -41,6 +41,25 @@ exports.getCRMDashboard = async (req, res) => {
   }
 };
 
+exports.getCRMEntry = async (req, res) => {
+  try {
+    const { entryId } = req.params;
+    const entry = await CRMEntry.findOne({ _id: entryId, ownerId: req.user._id })
+      .populate('contactId', 'firstName lastName businessName businessCategory businessService businessDescription profilePic membershipId phone email locationName tableName')
+      .populate('connectionId', 'status createdAt')
+      .populate('dealId', 'amount status completedAt')
+      .populate('ownerId', 'firstName lastName membershipId');
+
+    if (!entry) {
+      return res.status(404).json({ message: 'CRM entry not found' });
+    }
+
+    res.json({ entry });
+  } catch (err) {
+    res.status(500).json({ message: 'Fetch CRM entry failed', error: err.message });
+  }
+};
+
 // ─── UPDATE CRM ENTRY ──────────────────────────────────────────────────────────
 exports.updateCRMEntry = async (req, res) => {
   try {
@@ -55,6 +74,11 @@ exports.updateCRMEntry = async (req, res) => {
 
     const entry = await CRMEntry.findOne({ _id: entryId, ownerId: req.user._id });
     if (!entry) return res.status(404).json({ message: 'CRM entry not found' });
+
+    const previousNotes = (entry.notes || '').trim();
+    const trimmedNotes = typeof notes === 'string' ? notes.trim() : '';
+    const trimmedFollowUpNotes = typeof followUpNotes === 'string' ? followUpNotes.trim() : '';
+    const notesChanged = notes !== undefined && trimmedNotes !== previousNotes;
 
     if (spoke !== undefined) {
       entry.spoke = spoke;
@@ -74,8 +98,16 @@ exports.updateCRMEntry = async (req, res) => {
       entry.manualContact = { ...entry.manualContact.toObject(), ...manualContact };
     }
 
+    if (followUpDate || trimmedFollowUpNotes || notesChanged) {
+      entry.followUps.push({
+        date: new Date(),
+        notes: trimmedFollowUpNotes || trimmedNotes || 'No notes added',
+        internalNotes: trimmedNotes || '',
+        nextFollowUpDate: followUpDate ? new Date(followUpDate) : null
+      });
+    }
+
     if (followUpDate) {
-      entry.followUps.push({ date: new Date(followUpDate), notes: followUpNotes || '' });
       entry.nextFollowUpDate = new Date(followUpDate);
     }
 
@@ -173,8 +205,16 @@ exports.createManualEntry = async (req, res) => {
       notes: notes || ''
     };
 
+    if (followUpDate || notes || followUpNotes) {
+      entryData.followUps = [{
+        date: new Date(),
+        notes: (followUpNotes || notes || '').trim(),
+        internalNotes: (notes || '').trim(),
+        nextFollowUpDate: followUpDate ? new Date(followUpDate) : null
+      }];
+    }
+
     if (followUpDate) {
-      entryData.followUps = [{ date: new Date(followUpDate), notes: followUpNotes || '' }];
       entryData.nextFollowUpDate = new Date(followUpDate);
     }
 
@@ -319,6 +359,11 @@ exports.updateCRMEntry = async (req, res) => {
     const entry = await CRMEntry.findOne({ _id: entryId, ownerId: req.user._id });
     if (!entry) return res.status(404).json({ message: 'CRM entry not found' });
 
+    const previousNotes = (entry.notes || '').trim();
+    const trimmedNotes = typeof notes === 'string' ? notes.trim() : '';
+    const trimmedFollowUpNotes = typeof followUpNotes === 'string' ? followUpNotes.trim() : '';
+    const notesChanged = notes !== undefined && trimmedNotes !== previousNotes;
+
     if (spoke !== undefined) {
       entry.spoke = spoke;
       if (spoke && !entry.spokeAt) entry.spokeAt = new Date();
@@ -332,8 +377,16 @@ exports.updateCRMEntry = async (req, res) => {
       if (workCompleted) entry.workCompletedAt = new Date();
     }
 
+    if (followUpDate || trimmedFollowUpNotes || notesChanged) {
+      entry.followUps.push({
+        date: new Date(),
+        notes: trimmedFollowUpNotes || trimmedNotes || 'No notes added',
+        internalNotes: trimmedNotes || '',
+        nextFollowUpDate: followUpDate ? new Date(followUpDate) : null
+      });
+    }
+
     if (followUpDate) {
-      entry.followUps.push({ date: new Date(followUpDate), notes: followUpNotes || '' });
       entry.nextFollowUpDate = new Date(followUpDate);
     }
 

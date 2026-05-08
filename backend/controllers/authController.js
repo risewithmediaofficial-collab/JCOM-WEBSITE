@@ -31,6 +31,7 @@ exports.seedSuperAdmin = async () => {
       email: process.env.SUPER_ADMIN_EMAIL || 'superadmin@jcom.in',
       phone: '9999999999',
       businessName: 'JCOM Administration',
+      profileName: 'jcomadmin',
       businessCategory: 'Administration',
       locationName: 'Head Office',
       role: 'Super Admin',
@@ -52,11 +53,11 @@ exports.registerUser = async (req, res) => {
       firstName, lastName, email, phone,
       locationId, tableId,
       aadharNumber, panNumber,
-      businessName, businessCategory, businessDescription,
+      businessName, profileName, businessCategory, businessDescription,
       businessService, businessWebsite, keywords
     } = req.body;
 
-    if (!firstName || !lastName || !email || !phone || !locationId || !businessName || !businessCategory) {
+    if (!firstName || !lastName || !email || !phone || !locationId || !businessName || !profileName || !businessCategory) {
       return res.status(400).json({ message: 'Required fields missing' });
     }
 
@@ -81,6 +82,7 @@ exports.registerUser = async (req, res) => {
         existingApplicant.aadharNumber = aadharNumber || existingApplicant.aadharNumber;
         existingApplicant.panNumber = panNumber || existingApplicant.panNumber;
         existingApplicant.businessName = businessName;
+        existingApplicant.profileName = profileName;
         existingApplicant.businessCategory = businessCategory;
         existingApplicant.businessDescription = businessDescription || '';
         existingApplicant.businessService = businessService || '';
@@ -164,6 +166,7 @@ exports.registerUser = async (req, res) => {
       tableName: table ? table.name : null,
       aadharNumber, panNumber,
       businessName, businessCategory,
+      profileName,
       businessDescription: businessDescription || '',
       businessService: businessService || '',
       businessWebsite: businessWebsite || null,
@@ -227,6 +230,7 @@ exports.login = async (req, res) => {
       tableId: user.tableId,
       tableName: user.tableName,
       profilePic: user.profilePic,
+      profileName: user.profileName,
       slug: user.slug
     };
 

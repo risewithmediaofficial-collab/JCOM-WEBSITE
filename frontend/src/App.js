@@ -18,6 +18,7 @@ import SuperAdminDashboard from './pages/SuperAdminDashboard';
 import ChairmanDashboard from './pages/ChairmanDashboard';
 import ConnectionsPage from './pages/ConnectionsPage';
 import CRMDashboard from './pages/CRMDashboard';
+import CRMEntryDetail from './pages/CRMEntryDetail';
 import MeetingsPage from './pages/MeetingsPage';
 import LeaderboardPage from './pages/LeaderboardPage';
 import SearchResultsPage from './pages/SearchResultsPage';
@@ -62,7 +63,12 @@ function App() {
         logout
       }}
     >
-      <Router>
+      <Router
+        future={{
+          v7_startTransition: true,
+          v7_relativeSplatPath: true
+        }}
+      >
         <ScrollToTop />
         <RouteLoader />
         <Routes>
@@ -108,6 +114,12 @@ function App() {
           <Route path="/crm" element={
             <ProtectedRoute>
               <CRMDashboard />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/crm/entry/:entryId" element={
+            <ProtectedRoute>
+              <CRMEntryDetail />
             </ProtectedRoute>
           } />
 

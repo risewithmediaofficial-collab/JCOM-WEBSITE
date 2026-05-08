@@ -24,6 +24,7 @@ const ProfilePage = () => {
     lastName: '',
     phone: '',
     businessName: '',
+    profileName: '',
     businessService: '',
     businessDescription: '',
     businessWebsite: '',
@@ -44,6 +45,7 @@ const ProfilePage = () => {
           lastName: nextUser.lastName || '',
           phone: nextUser.phone || '',
           businessName: nextUser.businessName || '',
+          profileName: nextUser.profileName || nextUser.websiteName || '',
           businessService: nextUser.businessService || '',
           businessDescription: nextUser.businessDescription || '',
           businessWebsite: nextUser.businessWebsite || '',
@@ -101,6 +103,7 @@ const ProfilePage = () => {
           lastName: updatedUser.lastName,
           phone: updatedUser.phone,
           businessName: updatedUser.businessName,
+          profileName: updatedUser.profileName,
           businessService: updatedUser.businessService,
           businessDescription: updatedUser.businessDescription,
           businessWebsite: updatedUser.businessWebsite,
@@ -250,6 +253,11 @@ const ProfilePage = () => {
               <label className="form-label">Business Name</label>
               <input className="form-input" value={form.businessName} onChange={(e) => setField('businessName', e.target.value)} />
             </div>
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Profile Name</label>
+            <input className="form-input" value={form.profileName} onChange={(e) => setField('profileName', e.target.value)} />
           </div>
 
           <div className="form-group">

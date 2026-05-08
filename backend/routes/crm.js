@@ -5,6 +5,7 @@ const { authenticateToken } = require('../middleware/auth');
 
 router.post('/public-enquiry/:userId', crmController.createPublicEnquiry);
 router.get('/dashboard', authenticateToken, crmController.getCRMDashboard);
+router.get('/entry/:entryId', authenticateToken, crmController.getCRMEntry);
 router.patch('/entry/:entryId', authenticateToken, crmController.updateCRMEntry);
 router.delete('/entry/:entryId', authenticateToken, crmController.deleteEntry);
 router.post('/manual', authenticateToken, crmController.createManualEntry);

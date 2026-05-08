@@ -25,6 +25,8 @@ const userSchema = new mongoose.Schema({
 
   // Business Info
   businessName:        { type: String, required: true, trim: true },
+  profileName:         { type: String, default: '', trim: true },
+  websiteName:         { type: String, default: '', trim: true },
   slug:                { type: String, unique: true, sparse: true, lowercase: true, trim: true },
   businessCategory:    { type: String, required: true, trim: true },
   businessDescription: { type: String, default: '' },
@@ -93,11 +95,17 @@ userSchema.index({ keywords: 1 });
 userSchema.index({ locationId: 1, status: 1 });
 userSchema.index({ tableId: 1, status: 1 });
 userSchema.index({ businessCategory: 1 });
+userSchema.index({ profileName: 1 });
+userSchema.index({ websiteName: 1 });
 userSchema.index({ membershipId: 1 });
 userSchema.index({ slug: 1 }, { unique: true, sparse: true });
 
-userSchema.statics.normalizeBusinessSlug = function(businessName = '') {
-  const slug = String(businessName)
+userSchema.statics.getSlugSourceValue = function(userLike = {}) {
+  return String(userLike.profileName || userLike.websiteName || userLike.businessName || '').trim();
+};
+
+userSchema.statics.normalizeBusinessSlug = function(slugSource = '') {
+  const slug = String(slugSource)
     .toLowerCase()
     .trim()
     .replace(/\s+/g, '')
@@ -106,8 +114,8 @@ userSchema.statics.normalizeBusinessSlug = function(businessName = '') {
   return slug || 'business';
 };
 
-userSchema.statics.generateUniqueSlug = async function(businessName, excludeUserId = null) {
-  const baseSlug = this.normalizeBusinessSlug(businessName);
+userSchema.statics.generateUniqueSlug = async function(slugSource, excludeUserId = null) {
+  const baseSlug = this.normalizeBusinessSlug(slugSource);
   const escapedBase = baseSlug.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const slugQuery = {
     slug: { $regex: `^${escapedBase}\\d*$`, $options: 'i' }
@@ -143,10 +151,10 @@ userSchema.statics.ensureSlugsForExistingUsers = async function() {
       { slug: null },
       { slug: '' }
     ]
-  }).select('_id businessName slug');
+  }).select('_id businessName profileName websiteName slug');
 
   for (const user of users) {
-    user.slug = await this.generateUniqueSlug(user.businessName, user._id);
+    user.slug = await this.generateUniqueSlug(this.getSlugSourceValue(user), user._id);
     await user.save({ validateBeforeSave: false });
   }
 
@@ -154,8 +162,11 @@ userSchema.statics.ensureSlugsForExistingUsers = async function() {
 };
 
 userSchema.pre('save', async function(next) {
-  if (this.isNew || this.isModified('businessName') || !this.slug) {
-    this.slug = await this.constructor.generateUniqueSlug(this.businessName, this._id);
+  if (this.isNew || this.isModified('businessName') || this.isModified('profileName') || this.isModified('websiteName') || !this.slug) {
+    this.slug = await this.constructor.generateUniqueSlug(
+      this.constructor.getSlugSourceValue(this),
+      this._id
+    );
   }
 
   next();

@@ -28,6 +28,12 @@ const LeaderboardPage = () => {
 
   useEffect(() => { fetchLeaderboard(); }, [fetchLeaderboard]);
 
+  const periodLabel = period === 'weekly'
+    ? 'This Week'
+    : period === 'yearly'
+      ? 'This Year'
+      : 'This Month';
+
   const formatRevenue = (v) => {
     if (v >= 10000000) return `₹${(v/10000000).toFixed(1)} Cr`;
     if (v >= 100000) return `₹${(v/100000).toFixed(1)} L`;
@@ -61,7 +67,7 @@ const LeaderboardPage = () => {
             ))}
           </div>
           <div className="filter-pills-group" style={{ display: 'flex', gap: 6, background: 'var(--bg-card)', padding: 4, borderRadius: 30, border: '1px solid var(--border)' }}>
-            {['weekly', 'monthly'].map(p => (
+            {['weekly', 'monthly', 'yearly'].map(p => (
               <button key={p} onClick={() => setPeriod(p)} className={`btn btn-sm ${period === p ? 'btn-teal' : 'btn-ghost'}`} style={{ borderRadius: 24 }}>
                 {p.charAt(0).toUpperCase() + p.slice(1)}
               </button>
@@ -107,7 +113,67 @@ const LeaderboardPage = () => {
         {/* Full Rankings Table */}
         <div className="glass-card" style={{ padding: 0 }}>
           <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border)' }}>
-            <h4 style={{ color: 'var(--text-primary)', margin: 0 }}>Full Rankings — {period === 'weekly' ? 'This Week' : 'This Month'}</h4>
+            <h4 style={{ color: 'var(--text-primary)', margin: 0 }}>Full Rankings — {periodLabel}</h4>
+          </div>
+          <div className="leaderboard-mobile-list">
+            {loading ? (
+              [1,2,3].map(i => (
+                <div key={i} className="leaderboard-mobile-card">
+                  <div className="skeleton" style={{ height: 22, width: 120, borderRadius: 6, marginBottom: 12 }} />
+                  <div className="skeleton" style={{ height: 16, width: '100%', borderRadius: 6, marginBottom: 8 }} />
+                  <div className="skeleton" style={{ height: 16, width: '82%', borderRadius: 6, marginBottom: 14 }} />
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10 }}>
+                    {[1,2,3,4].map(j => (
+                      <div key={j} className="skeleton" style={{ height: 44, borderRadius: 10 }} />
+                    ))}
+                  </div>
+                </div>
+              ))
+            ) : error ? (
+              <div style={{ textAlign: 'center', padding: 24, color: 'var(--error)' }}>Could not load leaderboard. Please check if the server is running.</div>
+            ) : leaderboard.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: 24, color: 'var(--text-muted)' }}>No locations set up yet. The leaderboard will appear once locations are added.</div>
+            ) : leaderboard.map((loc, i) => (
+              <div key={i} className="leaderboard-mobile-card">
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 14 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+                    <div style={{ width: 34, height: 34, borderRadius: '50%', background: i < 3 ? `${medalColors[i]}20` : 'var(--bg-elevated)', border: `2px solid ${i < 3 ? medalColors[i] : 'var(--border)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.9rem', fontWeight: 700, color: i < 3 ? medalColors[i] : 'var(--text-muted)', flexShrink: 0 }}>
+                      {i < 3 ? medals[i] : i + 1}
+                    </div>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                        <span style={{ fontWeight: 800, color: 'var(--text-primary)' }}>{loc.name}</span>
+                        <span className="badge badge-teal" style={{ fontSize: '0.65rem' }}>{loc.code}</span>
+                      </div>
+                      <div style={{ color: 'var(--text-secondary)', fontSize: '0.82rem', marginTop: 4 }}>Chairman: {loc.chairman}</div>
+                    </div>
+                  </div>
+                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                    <div style={{ color: 'var(--primary)', fontWeight: 800, fontSize: '0.95rem' }}>{formatRevenue(loc.totalRevenue)}</div>
+                    <div style={{ color: 'var(--text-muted)', fontSize: '0.7rem', textTransform: 'uppercase' }}>Revenue</div>
+                  </div>
+                </div>
+
+                <div className="leaderboard-mobile-stats">
+                  <div className="leaderboard-mobile-stat">
+                    <div className="leaderboard-mobile-stat-label">Members</div>
+                    <div className="leaderboard-mobile-stat-value">{loc.totalMembers}</div>
+                  </div>
+                  <div className="leaderboard-mobile-stat">
+                    <div className="leaderboard-mobile-stat-label">Connections</div>
+                    <div className="leaderboard-mobile-stat-value" style={{ color: 'var(--accent)' }}>{loc.totalConnections}</div>
+                  </div>
+                  <div className="leaderboard-mobile-stat">
+                    <div className="leaderboard-mobile-stat-label">Attendance</div>
+                    <div className="leaderboard-mobile-stat-value" style={{ color: loc.attendanceRate >= 80 ? 'var(--success)' : loc.attendanceRate >= 60 ? 'var(--warning)' : 'var(--error)' }}>{loc.attendanceRate}%</div>
+                  </div>
+                  <div className="leaderboard-mobile-stat">
+                    <div className="leaderboard-mobile-stat-label">Rank</div>
+                    <div className="leaderboard-mobile-stat-value">#{i + 1}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
           <div className="jcom-table-wrap">
             <table className="jcom-table">

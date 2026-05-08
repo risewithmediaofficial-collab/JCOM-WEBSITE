@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useContext, useCallback, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import axios from 'axios';
 import SidebarLayout from '../components/SidebarLayout';
@@ -89,6 +90,7 @@ const statLabelStyle = {
 
 const CRMDashboard = () => {
   const { user } = useContext(AuthContext);
+  const navigate = useNavigate();
   const isSuperAdmin = user?.role === 'Super Admin';
 
   const [entries, setEntries] = useState([]);
@@ -98,11 +100,6 @@ const CRMDashboard = () => {
   const [stats, setStats] = useState(EMPTY_STATS);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
-  const [editEntry, setEditEntry] = useState(null);
-  const [editForm, setEditForm] = useState({});
-  const [saving, setSaving] = useState(false);
-  const [followUpInput, setFollowUpInput] = useState('');
-  const [followUpNote, setFollowUpNote] = useState('');
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [addForm, setAddForm] = useState({
@@ -121,7 +118,7 @@ const CRMDashboard = () => {
   const [addSaving, setAddSaving] = useState(false);
   const [addError, setAddError] = useState('');
 
-  useBodyScrollLock(Boolean(showAddModal || editEntry));
+  useBodyScrollLock(Boolean(showAddModal));
 
   const token = localStorage.getItem('token');
   const headers = useMemo(() => ({ Authorization: `Bearer ${token}` }), [token]);
@@ -157,37 +154,6 @@ const CRMDashboard = () => {
   useEffect(() => {
     fetchCRM();
   }, [fetchCRM]);
-
-  const openEdit = (entry) => {
-    setEditEntry(entry);
-    setEditForm({
-      status: entry.status,
-      estimatedValue: entry.estimatedValue,
-      notes: entry.notes,
-      spoke: entry.spoke,
-      workCompleted: entry.workCompleted
-    });
-    setFollowUpInput('');
-    setFollowUpNote('');
-  };
-
-  const saveEntry = async () => {
-    if (!editEntry) return;
-    setSaving(true);
-    try {
-      const payload = { ...editForm };
-      if (followUpInput) {
-        payload.followUpDate = followUpInput;
-        payload.followUpNotes = followUpNote;
-      }
-      await axios.patch(`${API}/crm/entry/${editEntry._id}`, payload, { headers });
-      setEditEntry(null);
-      fetchCRM();
-    } catch (err) {
-      alert(err.response?.data?.message || 'Save failed');
-    }
-    setSaving(false);
-  };
 
   const openAddModal = () => {
     const defaultOwnerId = isSuperAdmin
@@ -587,7 +553,11 @@ const CRMDashboard = () => {
                       : `${contact?.firstName?.[0] || ''}${contact?.lastName?.[0] || ''}`;
 
                     return (
-                      <tr key={entry._id}>
+                      <tr
+                        key={entry._id}
+                        onClick={() => navigate(`/crm/entry/${entry._id}`, { state: { entry } })}
+                        style={{ cursor: 'pointer' }}
+                      >
                         <td>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                             <div style={{ width: 36, height: 36, borderRadius: '50%', background: entry.isManual ? 'linear-gradient(135deg,#667eea,#764ba2)' : 'var(--grad-gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.75rem', color: entry.isManual ? '#fff' : '#000', flexShrink: 0 }}>
@@ -603,7 +573,7 @@ const CRMDashboard = () => {
                                 )}
                               </div>
                               <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                                {entry.isManual ? [contact?.phone, contact?.email, contact?.location].filter(Boolean).join(' · ') : contact?.membershipId}
+                                {entry.isManual ? [contact?.phone, contact?.email, contact?.location].filter(Boolean).join(' | ') : contact?.membershipId}
                               </div>
                             </div>
                           </div>
@@ -640,11 +610,24 @@ const CRMDashboard = () => {
                         </td>
                         <td>
                           <div style={{ display: 'flex', gap: 6 }}>
-                            <button onClick={() => openEdit(entry)} className="btn btn-ghost btn-sm">
-                              <EditOutlined /> Edit
+                              <button
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  navigate(`/crm/entry/${entry._id}`, { state: { entry } });
+                                }}
+                                className="btn btn-ghost btn-sm"
+                              >
+                              <EditOutlined /> Open
                             </button>
                             {entry.isManual && (
-                              <button onClick={() => deleteEntry(entry._id)} className="btn btn-ghost btn-sm" style={{ color: 'var(--error)' }}>
+                              <button
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  deleteEntry(entry._id);
+                                }}
+                                className="btn btn-ghost btn-sm"
+                                style={{ color: 'var(--error)' }}
+                              >
                                 <DeleteOutlined />
                               </button>
                             )}
@@ -753,55 +736,6 @@ const CRMDashboard = () => {
         </div>
       )}
 
-      {!isSuperAdmin && editEntry && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-          <div className="glass-card-gold animate-fadeInUp" style={{ maxWidth: 500, width: '100%', padding: 32, maxHeight: '90vh', overflowY: 'auto' }}>
-            <h4 style={{ color: 'var(--text-primary)', marginBottom: 20 }}>
-              Update: {editEntry.isManual ? editEntry.manualContact?.name : `${editEntry.contactId?.firstName} ${editEntry.contactId?.lastName}`}
-            </h4>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <div className="form-group">
-                <label className="form-label">Status</label>
-                <select className="form-select" value={editForm.status} onChange={(e) => setEditForm((form) => ({ ...form, status: e.target.value }))}>
-                  {Object.keys(STATUS_CONFIG).map((status) => <option key={status} value={status}>{STATUS_CONFIG[status].label}</option>)}
-                </select>
-              </div>
-              <div className="grid-2">
-                <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', color: 'var(--text-secondary)' }}>
-                  <input type="checkbox" checked={editForm.spoke} onChange={(e) => setEditForm((form) => ({ ...form, spoke: e.target.checked }))} /> Spoke
-                </label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', color: 'var(--text-secondary)' }}>
-                  <input type="checkbox" checked={editForm.workCompleted} onChange={(e) => setEditForm((form) => ({ ...form, workCompleted: e.target.checked }))} /> Work Completed
-                </label>
-              </div>
-              <div className="form-group">
-                <label className="form-label">Estimated Value (Rs.)</label>
-                <input type="number" className="form-input" value={editForm.estimatedValue || ''} onChange={(e) => setEditForm((form) => ({ ...form, estimatedValue: Number(e.target.value) }))} />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Schedule Follow-up</label>
-                <input type="date" className="form-input" value={followUpInput} onChange={(e) => setFollowUpInput(e.target.value)} min={new Date().toISOString().split('T')[0]} />
-              </div>
-              {followUpInput && (
-                <div className="form-group">
-                  <label className="form-label">Follow-up Notes</label>
-                  <input className="form-input" placeholder="What to discuss..." value={followUpNote} onChange={(e) => setFollowUpNote(e.target.value)} />
-                </div>
-              )}
-              <div className="form-group">
-                <label className="form-label">Notes</label>
-                <textarea className="form-textarea" rows={3} value={editForm.notes || ''} onChange={(e) => setEditForm((form) => ({ ...form, notes: e.target.value }))} placeholder="Internal notes about this connection..." />
-              </div>
-            </div>
-            <div style={{ display: 'flex', gap: 12, marginTop: 20 }}>
-              <button onClick={() => setEditEntry(null)} className="btn btn-ghost" style={{ flex: 1 }}>Cancel</button>
-              <button onClick={saveEntry} disabled={saving} className="btn btn-primary" style={{ flex: 1 }}>
-                {saving ? 'Saving...' : 'Save Changes'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </SidebarLayout>
   );
 };
