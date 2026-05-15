@@ -7,6 +7,7 @@ import { CopyOutlined, EnvironmentOutlined, GlobalOutlined, MailOutlined, PhoneO
 import ProfileAvatar from '../components/ProfileAvatar';
 import StarRating from '../components/StarRating';
 import useBodyScrollLock from '../hooks/useBodyScrollLock';
+import SEOHead from '../components/SEOHead';
 
 import { API_BASE_URL } from '../config/api';
 
@@ -81,6 +82,35 @@ const SearchBusinessDetailPage = () => {
     return items;
   }, [location, member, query]);
 
+  const seoTitle = member
+    ? `${member.businessName || `${member.firstName} ${member.lastName}`} | ${member.businessCategory || 'JCOM Member'}`
+    : 'Business Detail | JCOM Members';
+  const seoDescription = member
+    ? `${member.businessService || member.businessDescription || `${member.businessName || `${member.firstName} ${member.lastName}`} is a verified JCOM member`}${member.locationName ? ` in ${member.locationName}` : ''}.`
+    : 'View JCOM business details, services, keywords, and contact information.';
+  const seoKeywords = member
+    ? [
+        member.businessName,
+        member.businessCategory,
+        member.locationName,
+        ...(member.keywords || []),
+        'JCOM member detail'
+      ].filter(Boolean).join(', ')
+    : 'JCOM member detail, business profile';
+  const seoStructuredData = member ? {
+    '@context': 'https://schema.org',
+    '@type': 'LocalBusiness',
+    name: member.businessName || `${member.firstName} ${member.lastName}`,
+    description: member.businessDescription || member.businessService || 'Verified JCOM member business profile',
+    url: `${window.location.origin}/${member.slug || `search/${userId}`}`,
+    image: member.profilePic || undefined,
+    telephone: member.phone || undefined,
+    email: member.email || undefined,
+    category: member.businessCategory || undefined,
+    keywords: member.keywords?.join(', ') || undefined,
+    areaServed: member.locationName || undefined
+  } : null;
+
   const submitEnquiry = async () => {
     if (!enquiryForm.name.trim() || !enquiryForm.phone.trim() || !enquiryForm.location.trim() || !enquiryForm.requirement.trim()) {
       setEnquiryMessage('Please fill name, phone, location, and requirement');
@@ -127,6 +157,15 @@ const SearchBusinessDetailPage = () => {
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg-base)' }}>
+      <SEOHead
+        title={seoTitle}
+        description={seoDescription}
+        keywords={seoKeywords}
+        canonicalPath={member?.slug ? `/${member.slug}` : `/search/${userId}`}
+        type="profile"
+        noindex={Boolean(member?.slug)}
+        structuredData={seoStructuredData}
+      />
       <Navbar />
       <div className="page-shell">
         <Breadcrumbs items={breadcrumbs} />

@@ -7,6 +7,7 @@ import Breadcrumbs from '../components/Breadcrumbs';
 import ProfileAvatar from '../components/ProfileAvatar';
 import StarRating from '../components/StarRating';
 import useBodyScrollLock from '../hooks/useBodyScrollLock';
+import SEOHead from '../components/SEOHead';
 import { API_BASE_URL } from '../config/api';
 
 const API = API_BASE_URL;
@@ -79,6 +80,37 @@ const BusinessProfile = () => {
     return items;
   }, [location, member, query]);
 
+  const seoTitle = member
+    ? `${member.businessName || `${member.firstName} ${member.lastName}`} | ${member.businessCategory || 'JCOM Member'} in ${member.locationName || 'JCOM'}`
+    : 'Business Profile | JCOM Members';
+  const seoDescription = member
+    ? `${member.businessService || member.businessDescription || `${member.businessName || `${member.firstName} ${member.lastName}`} is a verified JCOM member`}${member.locationName ? ` in ${member.locationName}` : ''}. Contact details, keywords, and profile information.`
+    : 'View verified JCOM business member profiles, services, and contact details.';
+  const seoKeywords = member
+    ? [
+        member.businessName,
+        member.businessCategory,
+        member.locationName,
+        member.tableName,
+        ...(member.keywords || []),
+        'JCOM member profile',
+        'verified business profile'
+      ].filter(Boolean).join(', ')
+    : 'JCOM, business profile, member profile';
+  const seoStructuredData = member ? {
+    '@context': 'https://schema.org',
+    '@type': 'LocalBusiness',
+    name: member.businessName || `${member.firstName} ${member.lastName}`,
+    description: member.businessDescription || member.businessService || 'Verified JCOM member business profile',
+    url: `${window.location.origin}/${member.slug || slug}`,
+    image: member.profilePic || undefined,
+    telephone: member.phone || undefined,
+    email: member.email || undefined,
+    category: member.businessCategory || undefined,
+    keywords: member.keywords?.join(', ') || undefined,
+    areaServed: member.locationName || undefined
+  } : null;
+
   const submitEnquiry = async () => {
     if (!enquiryForm.name.trim() || !enquiryForm.phone.trim() || !enquiryForm.location.trim() || !enquiryForm.requirement.trim()) {
       setEnquiryMessage('Please fill name, phone, location, and requirement');
@@ -130,6 +162,14 @@ const BusinessProfile = () => {
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg-base)' }}>
+      <SEOHead
+        title={seoTitle}
+        description={seoDescription}
+        keywords={seoKeywords}
+        canonicalPath={member?.slug ? `/${member.slug}` : `/${slug}`}
+        type="profile"
+        structuredData={seoStructuredData}
+      />
       <Navbar />
       <div className="page-shell">
         <Breadcrumbs items={breadcrumbs} />

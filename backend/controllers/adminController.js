@@ -265,12 +265,17 @@ exports.getPendingApprovals = async (req, res) => {
 exports.getMembersByLocation = async (req, res) => {
   try {
     const { locationId } = req.params;
-    const query = { status: 'Approved' };
+    const { tableId } = req.query;
+    const query = {
+      status: 'Approved',
+      role: { $ne: 'Super Admin' }
+    };
 
     if (req.user?.role === 'Chairman' && req.user?.tableId) {
       query.tableId = req.user.tableId;
     } else {
       query.locationId = locationId;
+      if (tableId) query.tableId = tableId;
     }
 
     const members = await User.find(query)

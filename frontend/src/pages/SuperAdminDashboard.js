@@ -47,9 +47,10 @@ const SuperAdminDashboard = () => {
   const [locations, setLocations] = useState([]);
   const [allUsers, setAllUsers] = useState([]);
   const [crmMembers, setCrmMembers] = useState([]);
-  const [approvedUsers, setApprovedUsers] = useState([]);
   const [pending, setPending] = useState([]);
   const [tables, setTables] = useState({});          // { locationId: [tables] }
+  const [chairmanCandidates, setChairmanCandidates] = useState([]);
+  const [chairmanCandidatesLoading, setChairmanCandidatesLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [approveForm, setApproveForm] = useState({}); // { memberId: { tableId } }
   const [approveResult, setApproveResult] = useState(null); // { membershipId, tempPassword, name }
@@ -85,8 +86,6 @@ const SuperAdminDashboard = () => {
     if (usersRes.status === 'fulfilled') {
       const usersData = usersRes.value.data.users || [];
       setAllUsers(usersData);
-      const approved = usersData.filter(u => u.status === 'Approved');
-      if (approved.length > 0) setApprovedUsers(approved);
     }
 
     if (pendingRes.status === 'fulfilled') setPending(pendingRes.value.data.members || []);
@@ -118,17 +117,28 @@ const SuperAdminDashboard = () => {
   // Fetch everything when tab changes
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
-  // Always fetch approved users on mount (needed for chairman assignment dropdown)
-  useEffect(() => {
-    const fetchApproved = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const headers = { Authorization: `Bearer ${token}` };
-        const res = await axios.get(`${API}/users/all?status=Approved`, { headers });
-        setApprovedUsers(res.data.users || []);
-      } catch { setApprovedUsers([]); }
-    };
-    fetchApproved();
+  const loadChairmanCandidates = useCallback(async (locationId, tableId) => {
+    if (!locationId || !tableId) {
+      setChairmanCandidates([]);
+      setChairmanCandidatesLoading(false);
+      return;
+    }
+
+    setChairmanCandidatesLoading(true);
+
+    try {
+      const token = localStorage.getItem('token');
+      const headers = { Authorization: `Bearer ${token}` };
+      const res = await axios.get(`${API}/admin/members/${locationId}/approved`, {
+        headers,
+        params: { tableId }
+      });
+      setChairmanCandidates(res.data.members || []);
+    } catch {
+      setChairmanCandidates([]);
+    } finally {
+      setChairmanCandidatesLoading(false);
+    }
   }, []);
 
   // ── APPROVE ──
@@ -198,6 +208,7 @@ const SuperAdminDashboard = () => {
   };
 
   const handleChairmanLocationChange = async (locationId) => {
+    setChairmanCandidates([]);
     setChairmanForm(f => ({ ...f, locationId, tableId: '', userId: '' }));
   };
 
@@ -216,11 +227,6 @@ const SuperAdminDashboard = () => {
   };
 
   const chairmanTableOptions = chairmanForm.locationId ? (tables[chairmanForm.locationId] || []) : [];
-  const chairmanCandidates = approvedUsers.filter((approvedUser) => {
-    if (approvedUser.role === 'Super Admin') return false;
-    if (!chairmanForm.locationId || !chairmanForm.tableId) return false;
-    return String(approvedUser.locationId) === String(chairmanForm.locationId) && String(approvedUser.tableId) === String(chairmanForm.tableId);
-  });
 
   const pendingCount = pending.length;
 
@@ -690,7 +696,11 @@ const SuperAdminDashboard = () => {
                 <select
                   className="form-select"
                   value={chairmanForm.tableId}
-                  onChange={e => setChairmanForm(f => ({ ...f, tableId: e.target.value, userId: '' }))}
+                  onChange={async (e) => {
+                    const nextTableId = e.target.value;
+                    setChairmanForm(f => ({ ...f, tableId: nextTableId, userId: '' }));
+                    await loadChairmanCandidates(chairmanForm.locationId, nextTableId);
+                  }}
                   required
                   disabled={!chairmanForm.locationId}
                 >
@@ -721,7 +731,10 @@ const SuperAdminDashboard = () => {
                     </option>
                   ))}
                 </select>
-                {chairmanForm.tableId && chairmanCandidates.length === 0 && (
+                {chairmanForm.tableId && chairmanCandidatesLoading && (
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 4 }}>Loading approved members from this table...</div>
+                )}
+                {chairmanForm.tableId && !chairmanCandidatesLoading && chairmanCandidates.length === 0 && (
                   <div style={{ fontSize: '0.75rem', color: 'var(--error)', marginTop: 4 }}>⚠️ No approved members are assigned to this table yet.</div>
                 )}
               </div>
@@ -731,7 +744,7 @@ const SuperAdminDashboard = () => {
                 <input type="number" className="form-input" value={chairmanForm.year} onChange={e => setChairmanForm(f => ({ ...f, year: Number(e.target.value) }))} min={2024} max={2030} />
               </div>
               <div className="stack-mobile" style={{ display: 'flex', gap: 12 }}>
-                <button type="button" onClick={() => { setShowAssignChairman(false); setChairmanForm({ userId: '', locationId: '', tableId: '', year: new Date().getFullYear() }); }} className="btn btn-ghost w-full-sm" style={{ flex: 1 }}>Cancel</button>
+                <button type="button" onClick={() => { setShowAssignChairman(false); setChairmanCandidates([]); setChairmanForm({ userId: '', locationId: '', tableId: '', year: new Date().getFullYear() }); }} className="btn btn-ghost w-full-sm" style={{ flex: 1 }}>Cancel</button>
                 <button type="submit" disabled={formSaving || !chairmanForm.userId || !chairmanForm.locationId || !chairmanForm.tableId} className="btn btn-primary" style={{ flex: 1 }}>{formSaving ? 'Assigning...' : '👑 Assign Chairman'}</button>
               </div>
             </form>

@@ -26,6 +26,7 @@ const BUSINESS_CATEGORIES = [
 ];
 
 const STEPS = ['Personal Info', 'Location & Table', 'Business Info', 'Documents & Keywords', 'Review'];
+const MOBILE_STEPS = ['Personal', 'Location', 'Business', 'Docs', 'Review'];
 
 const buildProfileSlugPreview = (value = '') => {
   const slug = String(value)
@@ -47,6 +48,7 @@ const RegisterPage = () => {
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
+  const [submissionMeta, setSubmissionMeta] = useState({ approvalTarget: 'chairman', approvalMessage: '' });
 
   const [form, setForm] = useState({
     firstName: '',
@@ -105,6 +107,34 @@ const RegisterPage = () => {
     if (typeof window === 'undefined') return `your-domain.com/${slug}`;
     return `${window.location.origin}/${slug}`;
   }, [form.profileName]);
+
+  const selectedTable = useMemo(
+    () => tables.find((table) => table._id === form.tableId) || null,
+    [form.tableId, tables]
+  );
+
+  const locationHasAnyChairman = useMemo(
+    () => tables.some((table) => Boolean(table.chairmanId)),
+    [tables]
+  );
+
+  const approvalHint = useMemo(() => {
+    if (!form.locationId) {
+      return 'Each table has its own chairman. Your application will be sent to the chairman of the table you choose here.';
+    }
+
+    if (selectedTable) {
+      return selectedTable.chairmanId
+        ? 'This table already has a chairman. Your application will be sent to that chairman for approval.'
+        : 'This table does not have a chairman yet. Your application will go to Super Admin for approval.';
+    }
+
+    if (tables.length === 0 || !locationHasAnyChairman) {
+      return 'This location does not have a chairman assigned yet. Your application will go to Super Admin for approval.';
+    }
+
+    return 'Choose your table to route the application to the correct chairman.';
+  }, [form.locationId, locationHasAnyChairman, selectedTable, tables.length]);
 
   const handleProfilePic = (event) => {
     const file = event.target.files?.[0];
@@ -175,8 +205,12 @@ const RegisterPage = () => {
       if (form.profilePic) data.append('profilePic', form.profilePic);
       data.append('keywords', keywords.join(','));
 
-      await axios.post(`${API}/auth/register`, data, {
+      const response = await axios.post(`${API}/auth/register`, data, {
         headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      setSubmissionMeta({
+        approvalTarget: response.data.approvalTarget || 'chairman',
+        approvalMessage: response.data.approvalMessage || 'Registration submitted successfully. Awaiting chairman approval.'
       });
       setSubmitted(true);
     } catch (requestError) {
@@ -194,7 +228,16 @@ const RegisterPage = () => {
           <div className="glass-card-gold animate-fadeInUp" style={{ maxWidth: 520, textAlign: 'center', padding: 48 }}>
             <div style={{ fontSize: '4rem', marginBottom: 20 }}>Submitted</div>
             <h2 style={{ color: 'var(--primary)', marginBottom: 12 }}>Registration Submitted!</h2>
-            <p>Your application has been sent to the chairman of your selected table. You will receive your <strong>Member ID and password</strong> after approval.</p>
+            <p>
+              {submissionMeta.approvalTarget === 'super_admin'
+                ? 'No chairman is assigned for your selected location or table yet, so your application has been sent to the Super Admin for approval.'
+                : 'Your application has been sent to the chairman of your selected table. You will receive your Member ID and password after approval.'}
+            </p>
+            {submissionMeta.approvalMessage && (
+              <div style={{ marginTop: 16, padding: 14, borderRadius: 10, background: 'rgba(39,162,222,0.08)', border: '1px solid rgba(39,162,222,0.18)', fontSize: '0.84rem', color: 'var(--text-secondary)' }}>
+                {submissionMeta.approvalMessage}
+              </div>
+            )}
             <div style={{ marginTop: 16, padding: 14, borderRadius: 10, background: 'rgba(39,162,222,0.08)', border: '1px solid rgba(39,162,222,0.18)', fontSize: '0.84rem', color: 'var(--text-secondary)' }}>
               Requested public profile URL: <strong style={{ color: 'var(--primary)' }}>{publicProfilePreview}</strong>
             </div>
@@ -256,7 +299,7 @@ const RegisterPage = () => {
 
     <div key={1} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       <div style={{ padding: 16, background: 'rgba(0,212,170,0.08)', borderRadius: 10, border: '1px solid var(--border-teal)', fontSize: '0.85rem', color: 'var(--accent)' }}>
-        Each table has its own chairman. Your application will be sent to the chairman of the table you choose here.
+        {approvalHint}
       </div>
 
       <div className="form-group">
@@ -344,7 +387,7 @@ const RegisterPage = () => {
 
       <div className="form-group">
         <label className="form-label">Business Keywords <span style={{ color: 'var(--text-muted)' }}>(for search visibility - max 10)</span></label>
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div className="register-keyword-row">
           <input
             className="form-input"
             placeholder="e.g. tax, gst, audit..."
@@ -357,7 +400,7 @@ const RegisterPage = () => {
               }
             }}
           />
-          <button type="button" onClick={addKeyword} className="btn btn-teal btn-sm"><PlusOutlined /></button>
+          <button type="button" onClick={addKeyword} className="btn btn-teal btn-sm register-keyword-add"><PlusOutlined /></button>
         </div>
 
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 10 }}>
@@ -373,7 +416,7 @@ const RegisterPage = () => {
 
     <div key={4} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div style={{ padding: 20, background: 'var(--bg-elevated)', borderRadius: 12, border: '1px solid var(--border)' }}>
-        <div style={{ display: 'flex', gap: 16, alignItems: 'center', marginBottom: 16 }}>
+        <div className="register-review-header">
           <ProfileAvatar
             src={profilePicPreview}
             firstName={form.firstName}
@@ -399,8 +442,8 @@ const RegisterPage = () => {
           ['Service', form.businessService || '-'],
           ['Keywords', keywords.join(', ') || 'None added']
         ].map(([label, value]) => (
-          <div key={label} style={{ display: 'flex', gap: 12, padding: '8px 0', borderBottom: '1px solid var(--border)', fontSize: '0.88rem' }}>
-            <span style={{ color: 'var(--text-muted)', width: 100, flexShrink: 0, fontWeight: 600 }}>{label}</span>
+          <div key={label} className="register-review-row">
+            <span className="register-review-label">{label}</span>
             <span style={{ color: 'var(--text-secondary)' }}>{value}</span>
           </div>
         ))}
@@ -418,7 +461,7 @@ const RegisterPage = () => {
             <p>Fill in the details below to submit your membership application</p>
           </div>
 
-          <div style={{ display: 'flex', gap: 0, marginBottom: 32 }}>
+          <div className="register-stepper">
             {STEPS.map((stepLabel, index) => (
               <div key={stepLabel} style={{ flex: 1, textAlign: 'center' }}>
                 <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -443,8 +486,9 @@ const RegisterPage = () => {
                   </div>
                   {index < STEPS.length - 1 && <div style={{ flex: 1, height: 2, background: index < step ? 'var(--primary)' : 'var(--border)' }} />}
                 </div>
-                <div style={{ fontSize: '0.65rem', color: index === step ? 'var(--primary)' : 'var(--text-muted)', marginTop: 6, fontWeight: index === step ? 700 : 400 }}>
-                  {stepLabel}
+                <div className="register-step-label" style={{ color: index === step ? 'var(--primary)' : 'var(--text-muted)', fontWeight: index === step ? 700 : 400 }}>
+                  <span className="hide-xs">{stepLabel}</span>
+                  <span className="show-xs">{MOBILE_STEPS[index]}</span>
                 </div>
               </div>
             ))}

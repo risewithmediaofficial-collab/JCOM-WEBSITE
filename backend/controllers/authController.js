@@ -20,6 +20,28 @@ const generateMembershipId = (locationCode, year, sequence) => {
   return `JCOM-${locationCode}-${year}-${seq}`;
 };
 
+const buildApprovalRoutingMeta = async ({ location, tableId }) => {
+  let table = null;
+
+  if (tableId) {
+    table = await Table.findOne({
+      _id: tableId,
+      locationId: location?._id,
+      isActive: true
+    }).select('name chairmanId');
+  }
+
+  const hasChairman = Boolean(table?.chairmanId || location?.chairmanId);
+
+  return {
+    hasChairman,
+    approvalTarget: hasChairman ? 'chairman' : 'super_admin',
+    approvalMessage: hasChairman
+      ? 'Registration submitted successfully. Awaiting chairman approval.'
+      : 'Registration submitted successfully. No chairman is assigned yet, so your request has been sent to Super Admin for approval.'
+  };
+};
+
 // ─── SEED SUPER ADMIN ────────────────────────────────────────────────────────
 exports.seedSuperAdmin = async () => {
   try {
@@ -122,10 +144,19 @@ exports.registerUser = async (req, res) => {
 
         await existingApplicant.save();
 
+        const approvalRouting = await buildApprovalRoutingMeta({
+          location,
+          tableId: existingApplicant.tableId
+        });
+
         return res.status(201).json({
-          message: 'Registration resubmitted successfully. Awaiting chairman approval.',
+          message: approvalRouting.hasChairman
+            ? 'Registration resubmitted successfully. Awaiting chairman approval.'
+            : 'Registration resubmitted successfully. No chairman is assigned yet, so your request has been sent to Super Admin for approval.',
           userId: existingApplicant._id,
-          locationName: location.name
+          locationName: location.name,
+          approvalTarget: approvalRouting.approvalTarget,
+          approvalMessage: approvalRouting.approvalMessage
         });
       }
 
@@ -177,10 +208,17 @@ exports.registerUser = async (req, res) => {
 
     await user.save();
 
+    const approvalRouting = await buildApprovalRoutingMeta({
+      location,
+      tableId: user.tableId
+    });
+
     res.status(201).json({
-      message: 'Registration submitted successfully. Awaiting chairman approval.',
+      message: approvalRouting.approvalMessage,
       userId: user._id,
-      locationName: location.name
+      locationName: location.name,
+      approvalTarget: approvalRouting.approvalTarget,
+      approvalMessage: approvalRouting.approvalMessage
     });
   } catch (err) {
     console.error('Register error:', err);

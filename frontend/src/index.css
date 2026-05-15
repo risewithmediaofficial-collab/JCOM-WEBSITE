@@ -978,6 +978,80 @@ a:hover { color: var(--primary-dark); }
 @media (max-width: 1024px) { .hide-tablet { display: none !important; } }
 @media (min-width: 1025px) { .show-tablet-only { display: none !important; } }
 @media (max-width: 480px)  { .hide-xs { display: none !important; } }
+@media (min-width: 481px)  { .show-xs { display: none !important; } }
+
+.register-stepper {
+  display: flex;
+  gap: 0;
+  margin-bottom: 32px;
+}
+
+.register-step-label {
+  font-size: 0.65rem;
+  margin-top: 6px;
+  line-height: 1.25;
+  padding-inline: 4px;
+  white-space: normal;
+}
+
+.register-keyword-row {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.register-keyword-add {
+  justify-content: center;
+  min-width: 48px;
+}
+
+.register-review-header {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.register-review-row {
+  display: flex;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.88rem;
+}
+
+.register-review-label {
+  color: var(--text-muted);
+  width: 100px;
+  flex-shrink: 0;
+  font-weight: 600;
+}
+
+@media (max-width: 640px) {
+  .register-step-label {
+    font-size: 0.58rem;
+    padding-inline: 2px;
+  }
+
+  .register-keyword-row {
+    flex-direction: column;
+  }
+
+  .register-keyword-add {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .register-review-header,
+  .register-review-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .register-review-label {
+    width: auto;
+  }
+}
 
 .jcom-loader-block {
   display: flex;

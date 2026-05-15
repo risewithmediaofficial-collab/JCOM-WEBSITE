@@ -134,6 +134,67 @@ app.get('/', (req, res) => {
   return res.status(200).send('JCOM API is running. Use /api/health to verify the backend.');
 });
 
+app.get('/sitemap-members.xml', async (req, res) => {
+  try {
+    const User = require('./models/User');
+    const frontendOrigin = normalizeOrigin(process.env.FRONTEND_URL || defaultFrontendUrl);
+    const members = await User.find({
+      status: 'Approved',
+      role: { $ne: 'Super Admin' },
+      slug: { $exists: true, $ne: null, $ne: '' }
+    })
+      .select('slug updatedAt')
+      .sort('-updatedAt')
+      .lean();
+
+    const categories = await User.distinct('businessCategory', {
+      status: 'Approved',
+      role: { $ne: 'Super Admin' }
+    });
+
+    const staticUrls = [
+      '/',
+      '/about',
+      '/events',
+      '/register',
+      '/search',
+      '/leaderboard',
+      '/locations-performance'
+    ].map((pathName) => ({
+      loc: `${frontendOrigin}${pathName}`,
+      lastmod: new Date().toISOString()
+    }));
+
+    const categoryUrls = (categories || [])
+      .filter(Boolean)
+      .map((category) => ({
+        loc: `${frontendOrigin}/search?category=${encodeURIComponent(category)}`,
+        lastmod: new Date().toISOString()
+      }));
+
+    const memberUrls = members.map((member) => ({
+      loc: `${frontendOrigin}/${member.slug}`,
+      lastmod: member.updatedAt ? new Date(member.updatedAt).toISOString() : new Date().toISOString()
+    }));
+
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${[...staticUrls, ...categoryUrls, ...memberUrls].map((entry) => `  <url>
+    <loc>${entry.loc}</loc>
+    <lastmod>${entry.lastmod}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>${entry.loc.includes('/search') ? '0.8' : '0.7'}</priority>
+  </url>`).join('\n')}
+</urlset>`;
+
+    res.header('Content-Type', 'application/xml');
+    return res.status(200).send(xml);
+  } catch (error) {
+    console.error('Sitemap generation failed:', error);
+    return res.status(500).send('Unable to generate sitemap');
+  }
+});
+
 // Health check
 app.get('/api/health', (req, res) => {
   res.status(200).json({ message: 'JCOM Server running ✅', timestamp: new Date() });

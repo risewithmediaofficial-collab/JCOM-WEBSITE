@@ -7,6 +7,7 @@ import { SearchOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import ProfileAvatar from '../components/ProfileAvatar';
 import StarRating from '../components/StarRating';
 import Loader from '../components/Loader';
+import SEOHead from '../components/SEOHead';
 
 import { API_BASE_URL } from '../config/api';
 
@@ -81,6 +82,45 @@ const SearchResultsPage = () => {
     [locationFilter, results]
   );
 
+  const primarySearchTerm = categoryFilter || query || 'Business Members';
+  const pageTitle = query || categoryFilter
+    ? `${primarySearchTerm} in JCOM | Verified Business Members Directory`
+    : 'Search JCOM Members | Business Directory and Services';
+  const pageDescription = query || categoryFilter
+    ? `Explore ${totalResults ? `${totalResults} ` : ''}verified JCOM members for ${primarySearchTerm}${locationFilter ? ` in ${locationFilter}` : ''}. Discover services, contact details, and business profiles.`
+    : 'Search verified JCOM members by business category, keyword, service, table, or location.';
+  const pageKeywords = [
+    primarySearchTerm,
+    `${primarySearchTerm} JCOM`,
+    categoryFilter,
+    query,
+    locationFilter,
+    tableFilter,
+    'JCOM members',
+    'business directory',
+    'professional services'
+  ].filter(Boolean).join(', ');
+  const searchHeading = query || categoryFilter
+    ? `${primarySearchTerm} in JCOM`
+    : 'Find Business Professionals';
+  const searchSubheading = query || categoryFilter
+    ? `Browse verified JCOM member profiles${locationFilter ? ` in ${locationFilter}` : ''} for ${primarySearchTerm}.`
+    : 'Search by keyword, business category, service, or name';
+  const canonicalPath = `/search${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
+  const flatMembers = visibleResults.flatMap((group) => group.members || []);
+  const structuredData = flatMembers.length > 0 ? {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: searchHeading,
+    description: pageDescription,
+    itemListElement: flatMembers.slice(0, 20).map((member, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      url: `${window.location.origin}${member.slug ? `/${member.slug}` : `/search/${member._id}`}`,
+      name: member.businessName || `${member.firstName} ${member.lastName}`
+    }))
+  } : null;
+
   const breadcrumbs = [
     { label: 'Home', to: '/' },
     { label: 'Search Results' }
@@ -88,15 +128,22 @@ const SearchResultsPage = () => {
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg-base)' }}>
+      <SEOHead
+        title={pageTitle}
+        description={pageDescription}
+        keywords={pageKeywords}
+        canonicalPath={canonicalPath}
+        structuredData={structuredData}
+      />
       <Navbar />
       <div className="page-shell">
         <Breadcrumbs items={breadcrumbs} />
 
         <div style={{ marginBottom: 36, textAlign: 'center' }}>
           <h2 style={{ color: 'var(--text-primary)', marginBottom: 12 }}>
-            Find Business <span className="highlight-gold">Professionals</span>
+            {query || categoryFilter ? searchHeading : <>Find Business <span className="highlight-gold">Professionals</span></>}
           </h2>
-          <p style={{ marginBottom: 24 }}>Search by keyword, business category, service, or name</p>
+          <p style={{ marginBottom: 24 }}>{searchSubheading}</p>
           <form onSubmit={handleSearch} className="hero-search" style={{ maxWidth: 680 }}>
             <SearchOutlined className="hero-search-icon" style={{ padding: '0 16px', color: 'var(--primary)', fontSize: '1.2rem' }} />
             <input
