@@ -125,6 +125,7 @@ app.use('/api/notifications',require('./routes/notifications'));
 app.use('/api/stats',       require('./routes/stats'));
 app.use('/api/crm',         require('./routes/crm'));
 app.use('/api/events',      require('./routes/events'));
+app.use('/',                require('./routes/seo')); // SEO routes (robots.txt, sitemaps, etc.)
 
 app.get('/', (req, res) => {
   if (process.env.NODE_ENV === 'production' && process.env.FRONTEND_URL) {

@@ -43,17 +43,20 @@ const SEOHead = ({
   description,
   keywords,
   canonicalPath,
-  imagePath = '/logo%20web.jpg',
+  canonical, // Alternative canonical prop
+  imagePath,
+  image, // Alternative image prop
   type = 'website',
   noindex = false,
-  structuredData
+  structuredData,
+  schemaData // Alternative structured data prop
 }) => {
   useEffect(() => {
     const resolvedTitle = title || DEFAULT_TITLE;
     const resolvedDescription = description || DEFAULT_DESCRIPTION;
     const resolvedKeywords = keywords || DEFAULT_KEYWORDS;
-    const canonicalUrl = getAbsoluteUrl(canonicalPath || (typeof window !== 'undefined' ? window.location.pathname + window.location.search : '/'));
-    const imageUrl = getAbsoluteUrl(imagePath);
+    const canonicalUrl = canonical || getAbsoluteUrl(canonicalPath || (typeof window !== 'undefined' ? window.location.pathname + window.location.search : '/'));
+    const imageUrl = getAbsoluteUrl(image || imagePath || '/logo%20web.jpg');
 
     document.title = resolvedTitle;
 
@@ -77,14 +80,15 @@ const SEOHead = ({
     const previousJsonLd = document.head.querySelector('script[data-jcom-seo="json-ld"]');
     if (previousJsonLd) previousJsonLd.remove();
 
-    if (structuredData) {
+    const schema = schemaData || structuredData;
+    if (schema) {
       const script = document.createElement('script');
       script.type = 'application/ld+json';
       script.dataset.jcomSeo = 'json-ld';
-      script.textContent = JSON.stringify(structuredData);
+      script.textContent = JSON.stringify(schema);
       document.head.appendChild(script);
     }
-  }, [canonicalPath, description, imagePath, keywords, noindex, structuredData, title, type]);
+  }, [canonical, canonicalPath, description, image, imagePath, keywords, noindex, schemaData, structuredData, title, type]);
 
   return null;
 };

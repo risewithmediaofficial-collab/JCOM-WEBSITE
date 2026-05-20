@@ -27,6 +27,8 @@ import BusinessProfile from './pages/BusinessProfile';
 import ProfilePage from './pages/ProfilePage';
 import DealsPage from './pages/DealsPage';
 import LocationsPerformancePage from './pages/LocationsPerformancePage';
+import ServiceLocationPage from './pages/ServiceLocationPage';
+import BusinessProfilePage from './pages/BusinessProfilePage';
 
 function App() {
   const [authState, setAuthState] = useState({
@@ -82,6 +84,12 @@ function App() {
           <Route path="/search/:userId" element={<SearchBusinessDetailPage />} />
           <Route path="/leaderboard" element={<LeaderboardPage />} />
           <Route path="/locations-performance" element={<LocationsPerformancePage />} />
+
+          {/* SEO Pages - Service & Location Listings */}
+          <Route path="/services/:serviceSlug/:locationSlug" element={<ServiceLocationPage />} />
+
+          {/* SEO Pages - Business Profiles */}
+          <Route path="/business/:businessSlug" element={<BusinessProfilePage />} />
 
           {/* Auto-redirect from /dashboard based on role */}
           <Route path="/dashboard" element={
